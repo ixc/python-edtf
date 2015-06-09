@@ -262,11 +262,12 @@ class EDTFDate(object):
                 self.year = yt
             else:
                 raise ParseError(
-                    "text to parse ('%s') does not contain a year section" % text
+                    "text to parse ('%s') does not contain a year section"
+                    % text
                 )
 
         text, self.is_approximate = re.subn(r'~$', '', text)  # ~ at the end
-        text, self.is_uncertain = re.subn(r'\?$', '', text)  # ? (now) at the end
+        text, self.is_uncertain = re.subn(r'\?$', '', text)  # ? at the end
 
         remainder = text[len(yt)+1:]
         month_string = remainder[:2]
@@ -286,7 +287,6 @@ class EDTFDate(object):
             return 1 if lean == EARLIEST else 12
         else:
             return self.month
-
 
     def _precise_day(self, lean):
         if not self.day or self.day == 'uu':
@@ -362,7 +362,9 @@ class EDTFDate(object):
                 if lean == EARLIEST:
                     parts['day'] = 1
                 else:
-                    parts['day'] = self._days_in_month(self._precise_year(lean), self._precise_month(lean))
+                    parts['day'] = self._days_in_month(
+                        self._precise_year(lean), self._precise_month(lean)
+                    )
         elif precision == PRECISION_SEASON:
                 parts['month'] = self._month_of_season(lean)
                 if lean == EARLIEST:
@@ -374,7 +376,7 @@ class EDTFDate(object):
 
         isoish = u"%(year)s-%(month)02d-%(day)02d" % parts
 
-        _min = date.min.isoformat() # parser ignores the '-' sign in the year
+        _min = date.min.isoformat()  # parser ignores the '-' sign in the year
         if isoish < _min:
             return date.min
 

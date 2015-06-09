@@ -19,6 +19,7 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from os.path import join, dirname
 
 import setuptools
 
@@ -32,7 +33,7 @@ setuptools.setup(
     author_email='greg@interaction.net.au',
     description=('Python implementation of Library of Congress EDTF '
                  '(Extended Date Time Format) specification'),
-    long_description='See https://github.com/ixc/python-edtf/blob/master/README.md',
+    long_description=open(join(dirname(__file__), "README.rst")).read(),
     license='MIT',
     packages=setuptools.find_packages(),
     install_requires=[

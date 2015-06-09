@@ -1,12 +1,11 @@
 from datetime import date
 import re
 from dateutil.relativedelta import relativedelta
-from edtf_date import EDTFDate, PRECISION_DAY, PRECISION_MONTH, PRECISION_SEASON, \
-    PRECISION_YEAR, PRECISION_DECADE, PRECISION_CENTURY, PRECISION_MILLENIUM
-import edtf_exceptions
+from edtf_exceptions import ParseError
+from edtf_date import EDTFDate, PRECISION_DAY, PRECISION_MONTH, \
+    PRECISION_SEASON, PRECISION_YEAR, PRECISION_DECADE, PRECISION_CENTURY, \
+    PRECISION_MILLENIUM
 
-# me no work python modules good
-ParseError = edtf_exceptions.ParseError
 
 class EDTFInterval(object):
     """
@@ -31,7 +30,8 @@ class EDTFInterval(object):
         else:
             raise ParseError("An interval needs to contain a '/'")
 
-    def parse_part(self, part):
+    @staticmethod
+    def parse_part(part):
         if part in ['open', 'unknown']:
             return part
         return EDTFDate(part)
@@ -99,7 +99,8 @@ class EDTFInterval(object):
             return date.max
 
         if self.end == "unknown":
-            return self.start.latest_date() + self._get_unknown_offset(self.start.precision)
+            return self.start.latest_date() + \
+                self._get_unknown_offset(self.start.precision)
         elif self.end == "open":
             return date.max
         else:
