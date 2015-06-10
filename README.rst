@@ -6,6 +6,10 @@ A partial implementation of EDTF format in Python.
 
 See <http://www.loc.gov/standards/datetime/> for the draft specification.
 
+To install
+
+    pip install edtf
+
 Includes:
 =========
 
@@ -31,7 +35,6 @@ Also
 * A rough and ready plain text parser
 * Basic conversion to python dates for sorting and range testing
 
-
 Does not include (ie still to be implemented):
 ==============================================
 
@@ -56,8 +59,8 @@ Usage
 =====
 
 >>> from edtf import EDTF
->>> e = EDTF('1898-uu~') #approximately a month in 1898
->>> e.earliest_date()
+>>> e = EDTF('1898-uu~')  # approximately a month in 1898
+>>> e.earliest_date()  # approximate dates get a bit of padding
 datetime.date(1897, 12, 16)
 >>> e.latest_date()
 datetime.date(1899, 1, 16)
@@ -66,7 +69,7 @@ datetime.date(1898, 12, 31)
 >>> e.is_interval
 False
 
->>> i = EDTF('1898/1903-08-30') # between 1898 and August 30th 1903
+>>> i = EDTF('1898/1903-08-30')  # between 1898 and August 30th 1903
 >>> i.earliest_date()
 datetime.date(1898, 1, 1)
 >>> i.latest_date()

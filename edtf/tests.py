@@ -39,6 +39,10 @@ class TestStringMethods(unittest.TestCase):
         e = EDTFDate('2001-02')
         self.assertEqual(unicode(e), '2001-02')
 
+        e = EDTF.from_natural_text(None)
+        self.assertEqual(e, None)
+
+
     def test_attributes(self):
         e = EDTFDate('2012-09-17')
         self.assertEqual(e.year, '2012')

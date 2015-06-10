@@ -76,6 +76,8 @@ class EDTF(object):
         dates. Then compare the results to see what differs - the parts that
         differ are undefined.
         """
+        if text is None:
+            return None
 
         t = text.lower()
         result = ''
