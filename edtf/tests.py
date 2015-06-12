@@ -651,6 +651,39 @@ class TestStringMethods(unittest.TestCase):
             # just showing off now...
             ('a day in about Spring 1849?', '1849-21-uu?~'),
 
+            # simple ranges. Not all of these results are correct EDTF, but
+            # this is as good as the EDTF implementation and simple natural
+            # language parser we have.
+            ('1851-1852', '1851/1852'),
+            ('1851-1852; printed 1853-1854', '1851/1852'),
+            ('1851-52', '1851/1852'),
+            ('1852 - 1860', '1852/1860'),
+            ('1856-ca. 1865', '1856/1865~'),
+            ('1857-mid 1860s', '1857/186x'),
+            ('1858/1860', '1858/1860'),
+            ('1860s-1870s', '186x/187x'),
+            ('1861, printed 1869', '1861'),
+            ('1861-67', '1861/1867'),
+            ('1861-67 (later print)', '1861/1867'),
+            ('1863 or 1864', '1863'),
+            ('1863, printed 1870', '1863'),
+            ('1863, printed ca. 1866', '1863'),
+            ('1864 or 1866', '1864'),
+            ('1864, printed ca. 1864', '1864'),
+            ('1864-1872, printed 1870s', '1864/1872'),
+            ('1868-1871?', '1868/1871?'),
+            ('1869-70', '1869/1870'),
+            ('1870s, printed ca. 1880s', '187x'),
+            ('1900-1903, cast before 1929', '1900/1903'),
+            ('1900; 1973', '1900'),
+            ('1900; printed 1912', '1900'),
+            ('1915 late - autumn 1916', '1915/1916-23'),
+            ('1915, from Camerawork, October 1916', '1915'),
+            ('1920s -early 1930s', '192x/193x'),
+            ('1930s, printed early 1960s', '193x'),
+            ('1932, printed 1976 by Gunther Sander', '1932'),
+            ('1938, printed 1940s-1950s', '1938'),
+
             # for these to work we need to recast is_uncertain and is_approximate
             # such that they work on different parts. Probably worth rolling our own
             # dateparser at this point.

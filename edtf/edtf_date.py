@@ -427,9 +427,7 @@ class EDTFDate(object):
     @classmethod
     def from_natural_text(cls, text):
         """
-
-        Rough, ready, partial parser for US natural language date text into an
-        EDTF date. See http://www.loc.gov/standards/datetime/
+        Return EDTF string equivalent of a given natural language date string.
 
         The approach here is to parse the text twice, with different default
         dates. Then compare the results to see what differs - the parts that
@@ -562,12 +560,5 @@ class EDTFDate(object):
 
         if is_approximate:
             result += "~"
-
-        is_before = re.findall(r'\bbefore\b', t)
-        is_before = is_before or re.findall(r'\bearlier\b', t)
-
-        is_after = re.findall(r'\bafter\b', t)
-        is_after = is_after or re.findall(r'\bsince\b', t)
-        is_after = is_after or re.findall(r'\blater\b', t)
 
         return result
