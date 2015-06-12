@@ -34,13 +34,13 @@ class TestStringMethods(unittest.TestCase):
 
     def test_init(self):
         e = EDTFDate()
-        self.assertEqual(unicode(e), date.today().isoformat())
+        self.assertEqual(unicode(e), "")
 
         e = EDTFDate('2001-02')
         self.assertEqual(unicode(e), '2001-02')
 
         e = EDTF.from_natural_text(None)
-        self.assertEqual(e, None)
+        self.assertEqual(unicode(e), "")
 
 
     def test_attributes(self):
@@ -80,7 +80,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_precision(self):
         for i, o in [
-            (None, 'day'),
+            (None, None),
             ('1xxx', 'millenium'),
             ('19xx', 'century'),
             ('198x', 'decade'),
@@ -98,30 +98,12 @@ class TestStringMethods(unittest.TestCase):
             self.assertEqual(e.precision, o)
 
     def test_parse_errors(self):
-        self.assertRaises(
-            ParseError, EDTFDate, (1968,))
-        self.assertRaises(
-            ParseError, EDTFDate, ('x',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('20x4',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('x0x4',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('xxxx',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('201x-10',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-1x',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-10-0x',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-10-0u',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-1u-0u',))
-        self.assertRaises(
-            ParseError, EDTFDate, ('2010-u1-0u',))
+        self.assertEqual(unicode(EDTFDate('xxxx')), "")
+        self.assertEqual(unicode(EDTFDate('2010-1x')), "2010")
+        self.assertEqual(unicode(EDTFDate('2010-10-0x')), "2010-10")
+        self.assertEqual(unicode(EDTFDate('2010-10-0u')), "2010-10")
+        self.assertEqual(unicode(EDTFDate('2010-1u-0u')), "2010")
+        self.assertEqual(unicode(EDTFDate('2010-u1-0u')), "2010")
 
     def test_nullify(self):
         # set components to None
@@ -154,6 +136,10 @@ class TestStringMethods(unittest.TestCase):
         e.month = 12
         self.assertEqual(unicode(e), '201x-12')
         self.assertEqual(e.precision, 'month')
+
+        e.year = ""
+        self.assertEqual(unicode(e), '')
+
 
     def test_uncertain(self):
         for i, o, o2 in [
@@ -190,7 +176,7 @@ class TestStringMethods(unittest.TestCase):
         e = EDTFDate('0000')
         self.assertEqual(unicode(e), '0000')
         e.is_negative = True
-        self.assertEqual(unicode(e), '-0000')
+        self.assertEqual(unicode(e), '-0000') # TODO: no such year; shouldn't be allowed.
 
     def test_unspecified(self):
         e = EDTFDate('199u')
@@ -292,6 +278,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_iso_range(self):
         for i, o in [
+            ('', (None, None)),
             ('2001-02-03', ('2001-02-03', '2001-02-03')),
             ('2008-12', ('2008-12-01', '2008-12-31')),
             ('2008', ('2008-01-01', '2008-12-31')),
@@ -340,11 +327,16 @@ class TestStringMethods(unittest.TestCase):
         ]:
             e = EDTFDate(i)
             o1, o2 = o
-            self.assertEqual(e.date_earliest().isoformat(), o1)
-            self.assertEqual(e.date_latest().isoformat(), o2)
+            earl = e.date_earliest()
+            late = e.date_latest()
+            if earl:
+                self.assertEqual(earl.isoformat(), o1)
+            if late:
+                self.assertEqual(late.isoformat(), o2)
 
     def test_sort_value(self):
         for i, o1, o2 in [
+            ('', None, None),
             ('2001-02-03', '2001-02-03', '2001-02-03'),
             ('2008-12', '2008-12-31', '2008-12-01'),
             ('2008', '2008-12-31', '2008-01-01'),
@@ -381,8 +373,12 @@ class TestStringMethods(unittest.TestCase):
             ('2001-21~', '2001-05-31', '2001-03-01'),  # northern hemisphere
         ]:
             e = EDTFDate(i)
-            self.assertEqual(e.sort_date_latest().isoformat(), o1)
-            self.assertEqual(e.sort_date_earliest().isoformat(), o2)
+            earl = e.sort_date_earliest()
+            late = e.sort_date_latest()
+            if earl:
+                self.assertEqual(earl.isoformat(), o2)
+            if late:
+                self.assertEqual(late.isoformat(), o1)
 
     def test_interval_sort_value(self):
         for i, o1, o2 in [
@@ -539,8 +535,8 @@ class TestStringMethods(unittest.TestCase):
     def test_natural_language(self):
         for i, o in [
 
-            ('', None),
-            ('this isn\'t a date', None),
+            ('', ''),
+            ('this isn\'t a date', ''),
             ('90', '1990'), #implied century
             ('1860', '1860'),
             ('the year 1800', '1800'),
