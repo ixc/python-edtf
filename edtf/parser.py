@@ -1,69 +1,79 @@
-from pyparsing import Literal, ParseException, Optional, OneOrMore, Word, \
-    ZeroOrMore, Regex
+from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
+    ZeroOrMore, Regex, Or, Combine
 
 # (* ************************** Level 0 *************************** *)
+from edtf._level_0 import Date, DateAndTime
 
-
-oneThru12 = Literal("01") ^ "02" ^ "03" ^ "04" ^ "05" ^ "06" ^ "07" ^ "08" ^ \
+oneThru12 = L("01") ^ "02" ^ "03" ^ "04" ^ "05" ^ "06" ^ "07" ^ "08" ^ \
     "09" ^ "10" ^ "11" ^ "12"
 oneThru13 = oneThru12 ^ "13"
 oneThru23 = oneThru13 ^ "14" ^ "15" ^ "16" ^ "17" ^ "18" ^ "19" ^ "20" ^ \
     "21" ^ "22" ^ "23"
-zeroThru23 = Literal("00") ^ oneThru23
+zeroThru23 = L("00") ^ oneThru23
 oneThru29 = oneThru23 ^ "24" ^ "25" ^ "26" ^ "27" ^ "28" ^ "29"
 oneThru30 = oneThru29 ^ "30"
 oneThru31 = oneThru30 ^ "31"
 oneThru59 = oneThru31 ^ "32" ^ "33" ^ "34" ^ "35" ^ "36" ^ "37" ^ "38" ^ \
     "39" ^ "40" ^ "41" ^ "42" ^ "43" ^ "44" ^ "45" ^ "46" ^ "47" ^ "48" ^ \
     "49" ^ "50" ^ "51" ^ "52" ^ "53" ^ "54" ^ "55" ^ "56" ^ "57" ^ "58" ^ "59"
-zeroThru59 = Literal("00") ^ oneThru59
+zeroThru59 = L("00") ^ oneThru59
 
-positiveDigit = Literal("1") ^ "2" ^ "3" ^ "4" ^ "5" ^ "6" ^ "7" ^ "8" ^ "9"
+positiveDigit = L("1") ^ "2" ^ "3" ^ "4" ^ "5" ^ "6" ^ "7" ^ "8" ^ "9"
 digit = positiveDigit ^ "0"
 
-second = zeroThru59("second")
+second = zeroThru59
 minute = zeroThru59
 hour = zeroThru23
-day = oneThru31
+day = oneThru31("day")
 
-month = oneThru12
+month = oneThru12("month")
 monthDay = \
     (
-        (Literal("01") ^ "03" ^ "05" ^ "07" ^ "08" ^ "10" ^ "12") + "-"
-        + oneThru31
+        (L("01") ^ "03" ^ "05" ^ "07" ^ "08" ^ "10" ^ "12")("month") + "-"
+        + oneThru31("day")
     ) \
-    ^ ((Literal("04") ^ "06" ^ "09" ^ "11") + "-" + oneThru30) \
-    ^ ("02-" + oneThru29)
+    ^ ((L("04") ^ "06" ^ "09" ^ "11")("month") + "-" + oneThru30("day")) \
+    ^ (L("02")("month") + "-" + oneThru29("day"))
 
-positiveYear = (positiveDigit + digit + digit + digit) \
-    ^ (digit + positiveDigit + digit + digit) \
-    ^ (digit + digit + positiveDigit + digit) \
+positiveYear = (
+    (positiveDigit + digit + digit + digit)
+    ^ (digit + positiveDigit + digit + digit)
+    ^ (digit + digit + positiveDigit + digit)
     ^ (digit + digit + digit + positiveDigit)
+) #4 digits, at least one of which is positive
 
-negativeYear = "-" + positiveYear
+negativeYear = ("-" + positiveYear)
 
-year = positiveYear ^ negativeYear ^ "0000"
-
+year = Combine(positiveYear ^ negativeYear ^ L("0000"))("year")
 
 yearMonth = year + "-" + month
-yearMonthDay = year + "-" + monthDay
+yearMonthDay = year + "-" + monthDay  # o hai iso date
 
-date = year ^ yearMonth ^ yearMonthDay
+date = Combine(year ^ yearMonth ^ yearMonthDay)
+Date.set_parser(date)
 
 zoneOffsetHour = oneThru13
-zoneOffset = Literal("Z") ^ (Literal("+") ^ "-") ^ (
-    (zoneOffsetHour + Optional(":" + minute)) ^
-    "14:00" ^
-    ("00:" + oneThru59)
-)
+zoneOffset = Combine(L("Z") ^ \
+    (
+        (L("+") ^ "-") + (
+            (zoneOffsetHour + Optional(":" + minute)) ^
+            "14:00" ^
+            ("00:" + oneThru59)
+        )
+    ))("timezone")
 
-baseTime = hour + ":" + minute + ":" + second ^ "24:00:00"
+baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
-time = baseTime + Optional(zoneOffset)
+time = Combine(baseTime + Optional(zoneOffset))
 
-dateAndTime = date + "T" + time
+dateAndTime = date("date") + "T" + time("time")
+DateAndTime.set_parser(dateAndTime)
 
-L0Interval = date + "/" + date
+L0Interval = date("date1") + "/" + date("date2")
+
+# register_parser_class(date, Date)
+# register_parser_class(dateAndTime, DateAndTime)
+# register_parser_class(L0Interval, Level0Interval)
 
 level0Expression = date ^ dateAndTime ^ L0Interval
 
@@ -71,8 +81,8 @@ level0Expression = date ^ dateAndTime ^ L0Interval
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = (Literal("?") ^ "~" ^ "?~")
-seasonNumber = Literal("21") ^ "22" ^ "23" ^ "24"
+UASymbol = (L("?")("uncertain") ^ L("~")("approximate") ^ L("?~")("uncertain_and_approximate"))
+seasonNumber = L("21") ^ "22" ^ "23" ^ "24"
 
 # (* *** Season (unqualified) *** *)
 season = year + "-" + seasonNumber
@@ -117,7 +127,7 @@ level1Expression = uncertainOrApproxDate \
 
 positiveDigitOrU = positiveDigit ^ "u"
 digitOrU = positiveDigitOrU ^ "0"
-oneThru3 = Literal("1") ^ "2" ^ "3"
+oneThru3 = L("1") ^ "2" ^ "3"
 
 dayWithU = oneThru31 \
     ^ ("u" + digitOrU) \
@@ -125,7 +135,7 @@ dayWithU = oneThru31 \
 
 monthWithU = oneThru12 ^ "0u" ^ "1u" ^ ("u" + digitOrU)
 
-yearWithU = (Literal("u") + digitOrU + digitOrU + digitOrU) \
+yearWithU = (L("u") + digitOrU + digitOrU + digitOrU) \
     ^ (digitOrU + "u" + digitOrU + digitOrU) \
     ^ (digitOrU + digitOrU + "u" + digitOrU) \
     ^ (digitOrU + digitOrU + digitOrU + "u")
@@ -163,7 +173,6 @@ IUABase = \
     ^ (season + UASymbol) \
 
 internalUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol)
-
 
 dateWithInternalUncertainty = internalUncertainOrApproximate \
     ^ internalUnspecified
@@ -220,84 +229,23 @@ level2Expression = internalUncertainOrApproximate \
     ^ seasonQualified
 
 # putting it all together
-dateTimeString = level0Expression ^ level1Expression ^ level2Expression
+parser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
 
 
-if __name__ == "__main__":
-    tests = """\
-2001-02-03
-2008-12
-2008
--0999
-0000
-2001-02-03T09:30:01
-2001-01-01T10:10:10Z
-2004-01-01T10:10:10+05:00
-1964/2008
-2004-06/2008-08
-2004-02-01/2004-02-08
-2004-02-01/2005-02
-2004-02-01/2005
-2005/2006-02
-1984?
-2004-06?
-2004-06-11^
-1984~
-1984?~
-199u
-19uu
-1999-uu
-1999-01-uu
-1999-uu-uu
-unknown/2006
-2004-06-01/unknown
-2004-01-01/open
-1984~/2004-06
-1984/2004-06~
-1984~/2004~
-1984?/2004?~
-1984-06?/2004-08?
-1984-05-02?/2004-08-08~
-1984-06-02?/2004-08-08~
-1986-06-02?/unknown
-y170000002
-y-170000002
-2001-21
-2003-22
-2000-23
-2010-24
-2004?-06-11
-2004-06~-11
-2004-(06)?-11
-2004-06-(11)~
-2004-(06)?~
-2004-(06-11)?
-2004-?06-(11)~
-(2004-(06)~)?
-2004?-(06)?~
-(2004)?-05-04~
-(2011)-06-04~
-2011-23~
-156u-12-25
-15uu-12-25
-15uu-12-uu
-1560-uu-25
-[1667,1668, 1670..1672]
-[..1760-12-03]
-[1760-12..]
-[1760-01, 1760-02, 1760-12..]
-[1667, 1760-12]
-{1667,1668, 1670..1672}
-{1960, 1961-12}
-196x
-19xx
-2004-05-(01)~/2004-05-(20)~
-2004-05-uu/2004-08-03
-y17e7
-y-17e7
-y17101e4p3""".splitlines()
-    for s in tests:
+class EDTFParser(object):
+    def __init__(self, str, parseAll=True):
         try:
-            print(s, dateTimeString.parseString(s, parseAll=True))
+            self.p = parser.parseString(str, parseAll=parseAll)
         except ParseException as pe:
-            print(s, pe)
+            raise pe
+
+    @property
+    def level(self):
+        k = self.p.keys()
+        if "level0" in k:
+            return 0
+        elif "level1" in k:
+            return 1
+        elif "level2" in k:
+            return 2
+        assert False
