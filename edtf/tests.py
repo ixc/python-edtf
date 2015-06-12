@@ -1,7 +1,7 @@
 from datetime import date
 import unittest
 from edtf import EDTF, EDTFDate, EDTFInterval
-
+from edtf_exceptions import ParseError
 
 """
 Tests for EDTF compliance according to the features set out in
@@ -99,29 +99,29 @@ class TestStringMethods(unittest.TestCase):
 
     def test_parse_errors(self):
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, (1968,))
+            ParseError, EDTFDate, (1968,))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('x',))
+            ParseError, EDTFDate, ('x',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('20x4',))
+            ParseError, EDTFDate, ('20x4',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('x0x4',))
+            ParseError, EDTFDate, ('x0x4',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('xxxx',))
+            ParseError, EDTFDate, ('xxxx',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('201x-10',))
+            ParseError, EDTFDate, ('201x-10',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-',))
+            ParseError, EDTFDate, ('2010-',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-1x',))
+            ParseError, EDTFDate, ('2010-1x',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-10-0x',))
+            ParseError, EDTFDate, ('2010-10-0x',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-10-0u',))
+            ParseError, EDTFDate, ('2010-10-0u',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-1u-0u',))
+            ParseError, EDTFDate, ('2010-1u-0u',))
         self.assertRaises(
-            edtf_date.ParseError, EDTFDate, ('2010-u1-0u',))
+            ParseError, EDTFDate, ('2010-u1-0u',))
 
     def test_nullify(self):
         # set components to None
@@ -340,58 +340,60 @@ class TestStringMethods(unittest.TestCase):
         ]:
             e = EDTFDate(i)
             o1, o2 = o
-            self.assertEqual(e.earliest_date().isoformat(), o1)
-            self.assertEqual(e.latest_date().isoformat(), o2)
+            self.assertEqual(e.date_earliest().isoformat(), o1)
+            self.assertEqual(e.date_latest().isoformat(), o2)
 
     def test_sort_value(self):
-        for i, o in [
-            ('2001-02-03', '2001-02-03'),
-            ('2008-12', '2008-12-31'),
-            ('2008', '2008-12-31'),
-            ('-0999', MIN_ISO),  # can we do better?
-            ('0000', MIN_ISO),
-            ('1984?', '1984-12-31'),
-            ('1984~', '1984-12-31'),
-            ('1984?~', '1984-12-31'),
-            ('2004-06?', '2004-06-30'),
-            ('2004-06?~', '2004-06-30'),
-            ('2000-01-01~', '2000-01-01'),
-            ('2000-01-01?~', '2000-01-01'),
-            ('1984-12-31~', '1984-12-31'),
-            ('1984-01~', '1984-01-31'),
-            ('1984-12~', '1984-12-31'),
-            ('199u', '1999-12-31'),
-            ('190u', '1909-12-31'),
-            ('19uu', '1999-12-31'),
-            ('1999-uu', '1999-12-31'),
-            ('1999-uu-uu', '1999-12-31'),
-            ('y170000002', MAX_ISO),  # can we do better?
-            ('y-170000002', MIN_ISO),
-            ('2001-21', '2001-05-31'),  # northern hemisphere
-            ('2001-22', '2001-08-31'),  # northern hemisphere
-            ('2001-23', '2001-11-30'),  # northern hemisphere
-            ('2001-24', '2001-12-31'),  # northern hemisphere
-            ('156u-12-25', '1569-12-25'),
-            ('15uu-12-25', '1599-12-25'),
-            ('15uu-12-uu', '1599-12-31'),
-            ('1560-uu-25', '1560-12-25'),
-            ('198x', '1989-12-31'),
-            ('19xx', '1999-12-31'),
-            ('1xxx', '1999-12-31'),
-            ('2001-21~', '2001-05-31'),  # northern hemisphere
+        for i, o1, o2 in [
+            ('2001-02-03', '2001-02-03', '2001-02-03'),
+            ('2008-12', '2008-12-31', '2008-12-01'),
+            ('2008', '2008-12-31', '2008-01-01'),
+            ('-0999', MIN_ISO, MIN_ISO),  # can we do better?
+            ('0000', MIN_ISO, MIN_ISO),
+            ('1984?', '1984-12-31', '1984-01-01'),
+            ('1984~', '1984-12-31', '1984-01-01'),
+            ('1984?~', '1984-12-31', '1984-01-01'),
+            ('2004-06?', '2004-06-30', '2004-06-01'),
+            ('2004-06?~', '2004-06-30', '2004-06-01'),
+            ('2000-01-01~', '2000-01-01', '2000-01-01'),
+            ('2000-01-01?~', '2000-01-01', '2000-01-01'),
+            ('1984-12-31~', '1984-12-31', '1984-12-31'),
+            ('1984-01~', '1984-01-31', '1984-01-01'),
+            ('1984-12~', '1984-12-31', '1984-12-01'),
+            ('199u', '1999-12-31', '1990-01-01'),
+            ('190u', '1909-12-31', '1900-01-01'),
+            ('19uu', '1999-12-31', '1900-01-01'),
+            ('1999-uu', '1999-12-31', '1999-01-01'),
+            ('1999-uu-uu', '1999-12-31', '1999-01-01'),
+            ('y170000002', MAX_ISO, MAX_ISO),  # can we do better?
+            ('y-170000002', MIN_ISO, MIN_ISO),
+            ('2001-21', '2001-05-31', '2001-03-01'),  # northern hemisphere
+            ('2001-22', '2001-08-31', '2001-06-01'),  # northern hemisphere
+            ('2001-23', '2001-11-30', '2001-09-01'),  # northern hemisphere
+            ('2001-24', '2001-12-31', '2001-12-01'),  # northern hemisphere
+            ('156u-12-25', '1569-12-25', '1560-12-25'),
+            ('15uu-12-25', '1599-12-25', '1500-12-25'),
+            ('15uu-12-uu', '1599-12-31', '1500-12-01'),
+            ('1560-uu-25', '1560-12-25', '1560-01-25'),
+            ('198x', '1989-12-31', '1980-01-01'),
+            ('19xx', '1999-12-31', '1900-01-01'),
+            ('1xxx', '1999-12-31', '1000-01-01'),
+            ('2001-21~', '2001-05-31', '2001-03-01'),  # northern hemisphere
         ]:
             e = EDTFDate(i)
-            self.assertEqual(e.sort_date().isoformat(), o)
+            self.assertEqual(e.sort_date_latest().isoformat(), o1)
+            self.assertEqual(e.sort_date_earliest().isoformat(), o2)
 
     def test_interval_sort_value(self):
-        for i, o in [
-            ('2001/2004', '2001-12-31'),
-            ('2001/unknown', '2001-12-31'),
-            ('unknown/2001', '2001-12-31'),
-            ('unknown/unknown', MAX_ISO),
+        for i, o1, o2 in [
+            ('2001/2004', '2004-12-31', '2001-01-01'),
+            ('2001/unknown', '2001-12-31', '2001-01-01'),
+            ('unknown/2001', '2001-12-31', '2001-01-01'),
+            ('unknown/unknown', MAX_ISO, MIN_ISO),
         ]:
             e = EDTFInterval(i)
-            self.assertEqual(e.sort_date().isoformat(), o)
+            self.assertEqual(e.sort_date_earliest().isoformat(), o2)
+            self.assertEqual(e.sort_date_latest().isoformat(), o1)
 
     def test_interval_level_0(self):
         for i, o, r in [
@@ -421,10 +423,10 @@ class TestStringMethods(unittest.TestCase):
             self.assertEqual(unicode(e.end), o2)
 
             start_earliest, start_latest, end_earliest, end_latest = r
-            self.assertEqual(e.start_earliest_date().isoformat(), start_earliest)
-            self.assertEqual(e.start_latest_date().isoformat(), start_latest)
-            self.assertEqual(e.end_earliest_date().isoformat(), end_earliest)
-            self.assertEqual(e.end_latest_date().isoformat(), end_latest)
+            self.assertEqual(e.start_date_earliest().isoformat(), start_earliest)
+            self.assertEqual(e.start_date_latest().isoformat(), start_latest)
+            self.assertEqual(e.end_date_earliest().isoformat(), end_earliest)
+            self.assertEqual(e.end_date_latest().isoformat(), end_latest)
 
     def test_interval_level_1(self):
 
@@ -505,31 +507,33 @@ class TestStringMethods(unittest.TestCase):
         ]:
             e = EDTFInterval(i)
             start_earliest, start_latest, end_earliest, end_latest = r
-            self.assertEqual(e.start_earliest_date().isoformat(), start_earliest)
-            self.assertEqual(e.start_latest_date().isoformat(), start_latest)
-            self.assertEqual(e.end_earliest_date().isoformat(), end_earliest)
-            self.assertEqual(e.end_latest_date().isoformat(), end_latest)
+            self.assertEqual(e.start_date_earliest().isoformat(), start_earliest)
+            self.assertEqual(e.start_date_latest().isoformat(), start_latest)
+            self.assertEqual(e.end_date_earliest().isoformat(), end_earliest)
+            self.assertEqual(e.end_date_latest().isoformat(), end_latest)
 
     def test_different_types(self):
         e = EDTF('1983')
         self.assertEqual(e.is_interval, False)
-        self.assertEqual(e.sort_date().isoformat(), '1983-12-31')
-        self.assertEqual(e.earliest_date().isoformat(), '1983-01-01')
-        self.assertEqual(e.latest_date().isoformat(), '1983-12-31')
-        self.assertEqual(e.start_earliest_date().isoformat(), '1983-01-01')
-        self.assertEqual(e.start_latest_date().isoformat(), '1983-01-01')
-        self.assertEqual(e.end_earliest_date().isoformat(), '1983-12-31')
-        self.assertEqual(e.end_latest_date().isoformat(), '1983-12-31')
+        self.assertEqual(e.sort_date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.sort_date_latest().isoformat(), '1983-12-31')
+        self.assertEqual(e.date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.date_latest().isoformat(), '1983-12-31')
+        self.assertEqual(e.start_date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.start_date_latest().isoformat(), '1983-01-01')
+        self.assertEqual(e.end_date_earliest().isoformat(), '1983-12-31')
+        self.assertEqual(e.end_date_latest().isoformat(), '1983-12-31')
 
         e = EDTF('1983/1985')
         self.assertEqual(e.is_interval, True)
-        self.assertEqual(e.sort_date().isoformat(), '1983-12-31')
-        self.assertEqual(e.earliest_date().isoformat(), '1983-01-01')
-        self.assertEqual(e.latest_date().isoformat(), '1985-12-31')
-        self.assertEqual(e.start_earliest_date().isoformat(), '1983-01-01')
-        self.assertEqual(e.start_latest_date().isoformat(), '1983-12-31')
-        self.assertEqual(e.end_earliest_date().isoformat(), '1985-01-01')
-        self.assertEqual(e.end_latest_date().isoformat(), '1985-12-31')
+        self.assertEqual(e.sort_date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.sort_date_latest().isoformat(), '1985-12-31')
+        self.assertEqual(e.date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.date_latest().isoformat(), '1985-12-31')
+        self.assertEqual(e.start_date_earliest().isoformat(), '1983-01-01')
+        self.assertEqual(e.start_date_latest().isoformat(), '1983-12-31')
+        self.assertEqual(e.end_date_earliest().isoformat(), '1985-01-01')
+        self.assertEqual(e.end_date_latest().isoformat(), '1985-12-31')
 
 
     def test_natural_language(self):

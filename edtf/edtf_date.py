@@ -334,7 +334,7 @@ class EDTFDate(object):
     def _days_in_month(yr, month):
         return calendar.monthrange(int(yr), int(month))[1]
 
-    def sort_date(self, lean=LATEST):
+    def _sort_date(self, lean=LATEST):
         """
         Use sort_date to return the date that a human might use when sorting
         imprecise dates. For now, we'll assume that imprecise dates come after
@@ -396,7 +396,13 @@ class EDTFDate(object):
 
         return dt
 
-    def latest_date(self):
+    def sort_date_earliest(self):
+        return self._sort_date(EARLIEST)
+
+    def sort_date_latest(self):
+        return self._sort_date(LATEST)
+
+    def date_latest(self):
         """
         Return the latest actual date this could reasonably be. Useful for
         returning dates that overlap a query.
@@ -405,9 +411,9 @@ class EDTFDate(object):
         half the precision in each direction. If it is both approximate and
         uncertain, we add 1 x the precision in each direction.
         """
-        dt = self.sort_date(LATEST)
+        dt = self.sort_date_latest()
         return self._adjust_for_precision(dt, 1.0)
 
-    def earliest_date(self):
-        dt = self.sort_date(EARLIEST)
+    def date_earliest(self):
+        dt = self.sort_date_earliest()
         return self._adjust_for_precision(dt, -1.0)

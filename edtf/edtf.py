@@ -34,36 +34,39 @@ class EDTF(object):
     def __unicode__(self):
         return unicode(self.date_obj)
 
-    def sort_date(self):
-        return self.date_obj.sort_date()
+    def sort_date_earliest(self):
+        return self.date_obj.sort_date_earliest()
 
-    def start_earliest_date(self):
+    def sort_date_latest(self):
+        return self.date_obj.sort_date_latest()
+
+    def start_date_earliest(self):
         if self.is_interval:
-            return self.date_obj.start_earliest_date()
+            return self.date_obj.start_date_earliest()
         else:
-            return self.date_obj.earliest_date()
+            return self.date_obj.date_earliest()
 
-    earliest_date = start_earliest_date
+    date_earliest = start_date_earliest
 
-    def start_latest_date(self):
+    def start_date_latest(self):
         if self.is_interval:
-            return self.date_obj.start_latest_date()
+            return self.date_obj.start_date_latest()
         else:
-            return self.date_obj.earliest_date()
+            return self.date_obj.date_earliest()
 
-    def end_earliest_date(self):
+    def end_date_earliest(self):
         if self.is_interval:
-            return self.date_obj.end_earliest_date()
+            return self.date_obj.end_date_earliest()
         else:
-            return self.date_obj.latest_date()
+            return self.date_obj.date_latest()
 
-    def end_latest_date(self):
+    def end_date_latest(self):
         if self.is_interval:
-            return self.date_obj.end_latest_date()
+            return self.date_obj.end_date_latest()
         else:
-            return self.date_obj.latest_date()
+            return self.date_obj.date_latest()
 
-    latest_date = end_latest_date
+    date_latest = end_date_latest
 
     @classmethod
     def from_natural_text(cls, text):

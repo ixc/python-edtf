@@ -60,11 +60,13 @@ Usage
 
 >>> from edtf import EDTF
 >>> e = EDTF('1898-uu~')  # approximately a month in 1898
->>> e.earliest_date()  # approximate dates get a bit of padding
+>>> e.date_earliest()  # approximate dates get a bit of padding
 datetime.date(1897, 12, 16)
->>> e.latest_date()
+>>> e.date_latest()
 datetime.date(1899, 1, 16)
->>> e.sort_date() # defaults to be at the end of the range
+>>> e.sort_date_earliest() # defaults to be at the start of the range
+datetime.date(1898, 01, 01)
+>>> e.sort_date_latest() # defaults to be at the end of the range
 datetime.date(1898, 12, 31)
 >>> e.is_interval
 False
@@ -72,15 +74,19 @@ False
 >>> i = EDTF('1898/1903-08-30')  # between 1898 and August 30th 1903
 >>> i.earliest_date()
 datetime.date(1898, 1, 1)
->>> i.latest_date()
+>>> i.date_latest()
 datetime.date(1903, 8, 30)
->>> i.sort_date()
-datetime.date(1898, 12, 31)
+>>> i.sort_date_earliest()
+datetime.date(1898, 01, 01)
+>>> i.sort_date_latest()
+datetime.date(1903, 08, 30)
 >>> i.is_interval
 True
 
 >>> p = EDTF.from_natural_text("circa April 1912")
 >>> unicode(p)
 u'1912-04~'
->>> p.sort_date()
+>>> p.sort_date_earliest()
+datetime.date(1912, 4, 01)
+>>> p.sort_date_latest()
 datetime.date(1912, 4, 30)

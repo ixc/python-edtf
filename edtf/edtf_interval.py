@@ -56,60 +56,69 @@ class EDTFInterval(object):
         if precision == PRECISION_MILLENIUM:
             return relativedelta(years=2500)
 
-    def start_earliest_date(self):
+    def start_date_earliest(self):
         if self.start in ['open', 'unknown'] \
                 and self.end in ['open', 'unknown']:
             return date.min
 
         if self.start == "unknown":
-            return self.end.earliest_date() - \
+            return self.end.date_earliest() - \
                 self._get_unknown_offset(self.end.precision)
         elif self.start == "open":
             return date.min
         else:
-            return self.start.earliest_date()
+            return self.start.date_earliest()
 
-    def start_latest_date(self):
+    def start_date_latest(self):
         if self.start in ['open', 'unknown'] \
                 and self.end in ['open', 'unknown']:
             return date.max
 
         if self.start == "unknown":
-            return self.end.latest_date()
+            return self.end.date_latest()
         elif self.start == "open":
-            return self.end.latest_date()
+            return self.end.date_latest()
         else:
-            return self.start.latest_date()
+            return self.start.date_latest()
 
-    def end_earliest_date(self):
+    def end_date_earliest(self):
         if self.start in ['open', 'unknown'] \
                 and self.end in ['open', 'unknown']:
             return date.min
 
         if self.end == "unknown":
-            return self.start.earliest_date()
+            return self.start.date_earliest()
         elif self.end == "open":
-            return self.start.earliest_date()
+            return self.start.date_earliest()
         else:
-            return self.end.earliest_date()
+            return self.end.date_earliest()
 
-    def end_latest_date(self):
+    def end_date_latest(self):
         if self.start in ['open', 'unknown'] \
                 and self.end in ['open', 'unknown']:
             return date.max
 
         if self.end == "unknown":
-            return self.start.latest_date() + \
+            return self.start.date_latest() + \
                 self._get_unknown_offset(self.start.precision)
         elif self.end == "open":
             return date.max
         else:
-            return self.end.latest_date()
+            return self.end.date_latest()
 
-    def sort_date(self):
+    def sort_date_earliest(self):
         if self.start not in ['unknown', 'open']:
-            return self.start.sort_date()
+            return self.start.sort_date_earliest()
         elif self.end not in ['unknown', 'open']:
-            return self.end.sort_date()
-        else:
+            return self.end.sort_date_earliest()
+        else: # both sides are unknown/open
+            return date.min
+
+
+    def sort_date_latest(self):
+        if self.end not in ['unknown', 'open']:
+            return self.end.sort_date_latest()
+        elif self.start not in ['unknown', 'open']:
+            return self.start.sort_date_latest()
+        else: # both sides are unknown/open
             return date.max
