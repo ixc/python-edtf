@@ -23,11 +23,10 @@ from os.path import join, dirname
 
 import setuptools
 
-from edtf import __version__
 
 setuptools.setup(
     name='edtf',
-    version=__version__,
+    version='0.9.2',
     url='https://github.com/ixc/python-edtf',
     author='Greg Turner',
     author_email='greg@interaction.net.au',
