@@ -1,40 +1,35 @@
-#
-# Copyright (c) Interaction Consortium
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from os.path import join, dirname
+from __future__ import print_function
 
 import setuptools
+import sys
 
+version = '0.9.2'
+
+# Convert README.md to reStructuredText.
+if {'bdist_wheel', 'sdist'}.intersection(sys.argv):
+    try:
+        import pypandoc
+    except ImportError:
+        print('WARNING: You should install `pypandoc` to convert `README.md` '
+              'to reStructuredText to use as long description.',
+              file=sys.stderr)
+    else:
+        print('Converting `README.md` to reStructuredText to use as long '
+              'description.')
+        long_description = pypandoc.convert('README.md', 'rst')
 
 setuptools.setup(
     name='edtf',
-    version='0.9.2',
-    url='https://github.com/ixc/python-edtf',
+    version=version,
     author='Greg Turner',
     author_email='greg@interaction.net.au',
-    description=('Python implementation of Library of Congress EDTF '
-                 '(Extended Date Time Format) specification'),
-    long_description=open(join(dirname(__file__), "README.rst")).read(),
+    url='https://github.com/ixc/python-edtf',
+    description='Python implementation of Library of Congress EDTF (Extended '
+                'Date Time Format) specification',
+    long_description=locals().get('long_description', ''),
     license='MIT',
     packages=setuptools.find_packages(),
+    include_package_data=True,
     install_requires=[
         'python-dateutil'
     ],
