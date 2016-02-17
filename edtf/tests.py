@@ -569,7 +569,7 @@ class TestStringMethods(unittest.TestCase):
             ('about 1860', '1860~'),
             ('about Spring 1849', '1849-21~'),
             ('notcirca 1860', '1860'), # avoid words containing circa
-            ('attica 1802', '1802'), #avoid false positive circa
+            ('attica 1802', '1802'), #avoid false positive circa at the end of preceding word
             ('attic. 1802', '1802'), #avoid false positive circa
 
             # masked precision
@@ -631,7 +631,7 @@ class TestStringMethods(unittest.TestCase):
             ('day in Spring 1849', '1849-21-uu'),
             ('day in January 1872', '1872-01-uu'),
             ('day in 1872', '1872-uu-uu'),
-            ('birthday in 1872', '1872'), #avoid false positive
+            ('birthday in 1872', '1872'), #avoid false positive at end of preceding word
 
             #centuries
             ('1st century', '00xx'),
