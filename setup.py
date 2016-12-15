@@ -26,7 +26,7 @@ import setuptools
 
 setuptools.setup(
     name='edtf',
-    version='0.9.2',
+    use_scm_version={'version_scheme': 'post-release'},
     url='https://github.com/ixc/python-edtf',
     author='Greg Turner',
     author_email='greg@interaction.net.au',
@@ -37,6 +37,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'python-dateutil'
+    ],
+    setup_requires=[
+        'setuptools_scm',
     ],
     keywords=[
         'edtf',
