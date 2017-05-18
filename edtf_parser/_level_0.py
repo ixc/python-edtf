@@ -71,7 +71,6 @@ class DateAndTime(ParserObject):
         return cls(**toks.asDict())
 
     def __init__(self, date=None, time=None):
-        import pdb; pdb.set_trace()
         self.date = date
         self.time = time
 
