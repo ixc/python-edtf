@@ -26,7 +26,7 @@ import setuptools
 
 setuptools.setup(
     name='edtf',
-    version='0.9.2',
+    version='1.0',
     url='https://github.com/ixc/python-edtf',
     author='Greg Turner',
     author_email='greg@interaction.net.au',

@@ -1,76 +1,169 @@
-from datetime import datetime, date
-from dateutil.parser import parse
 import re
+
+from datetime import date
+
 from edtf_date import EDTFDate
 from edtf_interval import EDTFInterval
 
 
 class EDTF(object):
-    def __init__(self, text=None):
-        self.date_obj = None
-        self.parse_text(text)
+    def __init__(self, edtf_text='', natural_text=''):
+        """
+        :param edtf_text: A valid EDTF string 
+        :param natural_text: A natural language representation of the string.
+         
+        If `natural_text` is given without `edtf_text` then we attempt to parse
+        the natural text.
+        
+        If both are given, `natural_text` is stored but not parsed.
+        """
+        self.edtf_text = edtf_text
+        self.natural_text = natural_text
+        self._date_obj = None
+
+        if self.edtf_text:
+            self._parse_edtf_text()
+        else:
+            if self.natural_text:
+                self._parse_natural_text()
+            else:
+                self._parse_edtf_text() # return an empty date object
+    @property
+    def combined_text(self):
+        if self.edtf_text:
+            if self.natural_text:
+                return u"%s `%s`" % (self.natural_text, self.edtf_text)
+            else:
+                return u"`%s`" % (self.edtf_text,)
+        else:
+            if self.natural_text:
+                return self.natural_text
+            else:
+                return u""
+
+    @property
+    def display_text(self):
+        return self.natural_text or self.edtf_text or ""
+
+    def __unicode__(self):
+        return self.display_text
+
+    def __repr__(self):
+        if self.natural_text:
+            if self.edtf_text:
+                return u"EDTF(edtf_text='%s', natural_text='%s')" % (self.edtf_text, self.natural_text)
+            else:
+                return u"EDTF(natural_text='%s')" % (self.natural_text, )
+        else:
+            if self.edtf_text:
+                return u"EDTF('%s')" % self.edtf_text
+            else:
+                return u"EDTF()"
+
+    # Comparison operators
+
+    def __eq__(self, other):
+        if isinstance(other, EDTF):
+            return self.edtf_text == other.edtf_text
+        else:
+            return False
+
+    def __ne__(self, other):
+        if isinstance(other, EDTF):
+            return self.edtf_text != other.edtf_text
+        else:
+            return True
+
+    def __lt__(self, other):
+        if isinstance(other, EDTF):
+            return self.sort_date_earliest() < other.sort_date_earliest()
+        elif isinstance(other, date):
+            return self.sort_date_earliest() < other
+        else:
+            raise TypeError("Trying to compare incomparable types.")
+
+    def __le__(self, other):
+        if isinstance(other, EDTF):
+            return self.sort_date_earliest() <= other.sort_date_earliest()
+        elif isinstance(other, date):
+            return self.sort_date_earliest() <= other
+        else:
+            raise TypeError("Trying to compare incomparable types.")
+
+    def __gt__(self, other):
+        if isinstance(other, EDTF):
+            return self.sort_date_earliest() > other.sort_date_earliest()
+        elif isinstance(other, date):
+            return self.sort_date_earliest() > other
+        else:
+            raise TypeError("Trying to compare incomparable types.")
+
+    def __ge__(self, other):
+        if isinstance(other, EDTF):
+            return self.sort_date_earliest() >= other.sort_date_earliest()
+        elif isinstance(other, date):
+            return self.sort_date_earliest() >= other
+        else:
+            raise TypeError("Trying to compare incomparable types.")
 
     @property
     def is_interval(self):
-        return isinstance(self.date_obj, EDTFInterval)
+        return isinstance(self._date_obj, EDTFInterval)
 
-    def parse_text(self, text):
-        if not text:
-            self.date_obj = EDTFDate()
-        elif "/" in text:
-            self.date_obj = EDTFInterval(text)
+    def _parse_edtf_text(self):
+        if not self.edtf_text:
+            self._date_obj = EDTFDate()
+        elif "/" in self.edtf_text:
+            self._date_obj = EDTFInterval(self.edtf_text)
         else:
-            self.date_obj = EDTFDate(text)
+            self._date_obj = EDTFDate(self.edtf_text)
 
-    def __unicode__(self):
-        return unicode(self.date_obj)
 
     def sort_date_earliest(self):
-        return self.date_obj.sort_date_earliest()
+        return self._date_obj.sort_date_earliest()
 
     def sort_date_latest(self):
-        return self.date_obj.sort_date_latest()
+        return self._date_obj.sort_date_latest()
 
     def start_date_earliest(self):
         if self.is_interval:
-            return self.date_obj.start_date_earliest()
+            return self._date_obj.start_date_earliest()
         else:
-            return self.date_obj.date_earliest()
+            return self._date_obj.date_earliest()
 
     date_earliest = start_date_earliest
 
     def start_date_latest(self):
         if self.is_interval:
-            return self.date_obj.start_date_latest()
+            return self._date_obj.start_date_latest()
         else:
-            return self.date_obj.date_earliest()
+            return self._date_obj.date_earliest()
 
     def end_date_earliest(self):
         if self.is_interval:
-            return self.date_obj.end_date_earliest()
+            return self._date_obj.end_date_earliest()
         else:
-            return self.date_obj.date_latest()
+            return self._date_obj.date_latest()
 
     def end_date_latest(self):
         if self.is_interval:
-            return self.date_obj.end_date_latest()
+            return self._date_obj.end_date_latest()
         else:
-            return self.date_obj.date_latest()
+            return self._date_obj.date_latest()
 
     date_latest = end_date_latest
 
-    @classmethod
-    def from_natural_text(cls, text):
+    def _parse_natural_text(self):
         """
         Return EDTF string equivalent of a given natural language date string.
         """
-        if not text:
-            return cls()
+        if not self.natural_text:
+            return
 
-        t = text.lower()
+        t = self.natural_text.lower()
 
         # try parsing the whole thing
-        result = EDTFDate.from_natural_text(t)
+        result = EDTFDate(natural_text=t).edtf_text
         if not result:
             # split by list delims and move fwd with the first thing that returns a non-empty string.
             for split in [",", ";", "or"]:
@@ -89,23 +182,27 @@ class EDTF(object):
                             if re.match(r'\b\d\d\d\d$', d1):
                                 d2 = d1[-4:-2] + d2
 
-                        r1 = EDTFDate.from_natural_text(d1)
-                        r2 = EDTFDate.from_natural_text(d2)
+                        r1 = EDTFDate(natural_text=d1).edtf_text
+                        r2 = EDTFDate(natural_text=d2).edtf_text
 
                         if r1 and r2:
-                            return cls(r1+"/"+r2)
+                            self.edtf_text = r1+"/"+r2
+                            self._parse_edtf_text()
+                            return
 
-                    elif re.match(r"\d\d\d\d\/\d\d\d\d", t):
-                        return cls(t) # already a 2-year interval
+                    # is it a year-to-year interval
+                    elif re.match(r"\d\d\d\d\/\d\d\d\d", list_item):
+                        self.edtf_text = list_item
+                        self._parse_edtf_text()
+                        return
 
-
-                    result = EDTFDate.from_natural_text(list_item)
+                    result = EDTFDate(natural_text=list_item).edtf_text
                     if result:
                         break
                 if result:
                     break
             else:
-                return cls()
+                return
 
         is_before = re.findall(r'\bbefore\b', t)
         is_before = is_before or re.findall(r'\bearlier\b', t)
@@ -119,5 +216,22 @@ class EDTF(object):
         elif is_after:
             result = u"%s/unknown" % result
 
-        return cls(result)
+        self.edtf_text = result
+        self._parse_edtf_text()
 
+    @classmethod
+    def from_combined_text(cls, combined_text):
+        edtf_only_re = r'`(.+)`'
+        combined_re = r'\s*(.*)\s+`(.+)`'
+        m = re.match(edtf_only_re, combined_text)
+        if m:
+            edtf_text = m.group(1)
+            return cls(edtf_text=edtf_text)
+        else:
+            m2 = re.match(combined_re, combined_text)
+            if m2:
+                natural_text = m2.group(1)
+                edtf_text = m2.group(2)
+                return cls(edtf_text=edtf_text, natural_text=natural_text)
+            else:
+                return cls(natural_text=combined_text)

@@ -1,7 +1,7 @@
 from datetime import date
 import unittest
 from edtf import EDTF, EDTFDate, EDTFInterval
-from edtf_exceptions import ParseError
+from .exceptions import EDTFParseError
 
 """
 Tests for EDTF compliance according to the features set out in
@@ -30,7 +30,7 @@ MAX_ISO = date.max.isoformat()
 
 
 
-class TestStringMethods(unittest.TestCase):
+class TestEDTF(unittest.TestCase):
 
     def test_init(self):
         e = EDTFDate()
@@ -39,8 +39,62 @@ class TestStringMethods(unittest.TestCase):
         e = EDTFDate('2001-02')
         self.assertEqual(unicode(e), '2001-02')
 
-        e = EDTF.from_natural_text(None)
+        e = EDTFDate(natural_text=None)
         self.assertEqual(unicode(e), "")
+
+    def test_text(self):
+        e = EDTF('1912-04-07~')
+        self.assertEqual(e.edtf_text, '1912-04-07~')
+        self.assertEqual(e.natural_text, '')
+        self.assertEqual(e.display_text, '1912-04-07~')
+        self.assertEqual(unicode(e), e.display_text)
+        self.assertEqual(e.combined_text, u'`1912-04-07~`')
+
+        e = EDTF(edtf_text='1912-04-07~', natural_text="Easter, 1912")
+        self.assertEqual(e.edtf_text, '1912-04-07~')
+        self.assertEqual(e.natural_text, 'Easter, 1912')
+        self.assertEqual(e.display_text, u'Easter, 1912')
+        self.assertEqual(unicode(e), e.display_text)
+        self.assertEqual(e.combined_text, u'Easter, 1912 `1912-04-07~`')
+
+        e = EDTF(natural_text="unparseable")
+        self.assertEqual(e.edtf_text, '')
+        self.assertEqual(e.natural_text, 'unparseable')
+        self.assertEqual(e.display_text, u'unparseable')
+        self.assertEqual(unicode(e), e.display_text)
+        self.assertEqual(e.combined_text, u'unparseable')
+
+        e = EDTF(natural_text="approx 7 april 1912")
+        self.assertEqual(e.edtf_text, '1912-04-07~')
+        self.assertEqual(e.natural_text, 'approx 7 april 1912')
+        self.assertEqual(e.display_text, u'approx 7 april 1912')
+        self.assertEqual(unicode(e), e.display_text)
+        self.assertEqual(e.combined_text, u'approx 7 april 1912 `1912-04-07~`')
+
+    def test_combined_text(self):
+
+        e = EDTF('1912-04-07~')
+        self.assertEqual(e.combined_text, u'`1912-04-07~`')
+        f = EDTF.from_combined_text(e.combined_text)
+        self.assertEqual(f, e)
+
+        e = EDTF(edtf_text='1912-04-07~', natural_text="Easter, 1912")
+        self.assertEqual(e.combined_text, u'Easter, 1912 `1912-04-07~`')
+        f = EDTF.from_combined_text(e.combined_text)
+        self.assertEqual(f, e)
+
+        e = EDTF(natural_text="unparseable")
+        self.assertEqual(e.combined_text, u'unparseable')
+        f = EDTF.from_combined_text(e.combined_text)
+        self.assertEqual(f, e)
+
+        e = EDTF(natural_text="approx 7 april 1912")
+        self.assertEqual(e.combined_text, u'approx 7 april 1912 `1912-04-07~`')
+        f = EDTF.from_combined_text(e.combined_text)
+        self.assertEqual(f, e)
+
+        # Currently invalid edtf is kept
+        # self.assertRaises(EDTFParseError, EDTF.from_combined_text, ('April `showers`'))
 
 
     def test_attributes(self):
@@ -156,17 +210,20 @@ class TestStringMethods(unittest.TestCase):
             self.assertAlmostEqual(unicode(e), o2)
 
     def test_approximate(self):
-        for i, o, o2 in [
-            ('2010-09-03', False, '2010-09-03~'),
-            ('2010-09-03~', True, '2010-09-03'),
-            ('2010-09-03?~', True, '2010-09-03?'),
+        for i, o1, o2, o3 in [
+            # date, is_approximate, is_uncertain, date for almost-equal test
+            ('2010-09-03', False, False, '2010-09-03~'),
+            ('2010-09-03~', True, False, '2010-09-03'),
+            ('2010-09-03?', False, True, '2010-09-03?~'),
+            ('2010-09-03?~', True, True, '2010-09-03?'),
         ]:
             e = EDTFDate(i)
-            self.assertEqual(e.is_approximate, o)
+            self.assertEqual(e.is_approximate, o1)
+            self.assertEqual(e.is_uncertain, o2)
             self.assertEqual(unicode(e), i)
-            #change the value
-            e.is_approximate = not o
-            self.assertAlmostEqual(unicode(e), o2)
+            #change the is_approximate value
+            e.is_approximate = not o1
+            self.assertAlmostEqual(unicode(e), o3)
 
     def test_negative_year(self):
         e = EDTFDate('-0999')
@@ -695,9 +752,9 @@ class TestStringMethods(unittest.TestCase):
             # ('maybe January in some year in about the 1830s', '183u~-01?'),
             # ('about July? in about 1849', '1849~-07?~'),
         ]:
-            e = EDTF.from_natural_text(i)
+            e = EDTF(natural_text=i)
             if e:
-                self.assertEqual(unicode(e), o)
+                self.assertEqual(e.edtf_text, o)
             else:
                 self.assertEqual(e, o)
 
