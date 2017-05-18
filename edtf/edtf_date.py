@@ -1,10 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 import re
 import calendar
-import edtf_exceptions
-ParseError = edtf_exceptions.ParseError
+import appsettings
 
 PRECISION_MILLENIUM = "millenium"
 PRECISION_CENTURY = "century"
@@ -17,27 +16,15 @@ PRECISION_DAY = "day"
 EARLIEST = 'earliest'
 LATEST = 'latest'
 
-SEASONS = {
-    21: "spring",
-    22: "summer",
-    23: "autumn",
-    24: "winter",
-}
-INV_SEASONS = {v: k for k, v in SEASONS.items()}
-INV_SEASONS['fall'] = 23
-SEASON_MONTHS_RANGE = {
-    21: [3, 5],
-    22: [6, 8],
-    23: [9, 11],
-    # winter in the northern hemisphere wraps the end of the year, so
-    # Winter 2010 could wrap into 2011.
-    # For simplicity, we assume it falls at the end of the year, esp since the
-    # spec says that sort order goes spring > summer > autumn > winter
-    24: [12, 12],
-}
+# two dates where every digit of an ISO date representation is different,
+# and one is in the past and one is in the future.
+# This is used in the dateutil parse to detect which elements weren't parsed.
+DEFAULT_DATE_1 = datetime(1234, 01, 01, 0, 0)
+DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
 SHORT_YEAR_RE = r'(-?)([\du])([\dxu])([\dxu])([\dxu])'
 LONG_YEAR_RE = r'y(-?)([1-9]\d\d\d\d+)'
+CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)'
 
 
 def padded_string(val):
@@ -51,7 +38,11 @@ def padded_string(val):
 
 class EDTFDate(object):
 
-    def __init__(self, text=None):
+    def __init__(self, edtf_text='', natural_text=''):
+
+        self.edtf_text = edtf_text
+        self.natural_text = natural_text
+
         # self.day can be None (not used), 'uu' (used but not specified) or
         # a positive integer <= 31 (not checking calendar validity yet)
         self.day = None
@@ -69,16 +60,23 @@ class EDTFDate(object):
         self._month = None
         self._day = None
 
-        if not text:
-            text = date.today().isoformat()
-        self.parse_text(text)
+        if self.edtf_text:
+            self._parse_edtf_text()
+        else:
+            if self.natural_text:
+                return self._parse_natural_text()
+            else:
+                self._parse_edtf_text() # return an empty date object
 
     @property
     def precision(self):
+        if not self.year:
+            return None
+
         if self.day:
             return PRECISION_DAY
         elif self.month:
-            if self.month in SEASONS:
+            if self.month in appsettings.SEASONS:
                 return PRECISION_SEASON
             return PRECISION_MONTH
 
@@ -136,16 +134,14 @@ class EDTFDate(object):
         self._parsed_year = re.match(SHORT_YEAR_RE, val)
         if self._parsed_year:
             self._is_long_year = False
+            self._year = self._parsed_year.group(0)
         else:
             self._parsed_year = re.match(LONG_YEAR_RE, val)
             if self._parsed_year:
                 self._is_long_year = True
+                self._year = self._parsed_year.group(0)
             else:
-                raise ParseError(
-                    "years must have 4 digits (or 'x' or 'u' in place of "
-                    "rightmost digits) (and an optional '-' sign)"
-                )
-        self._year = self._parsed_year.group(0)
+                self._year = ""
 
     year = property(get_year, set_year)
 
@@ -164,14 +160,10 @@ class EDTFDate(object):
             try:
                 i = int(val)
                 assert i > 0
-                assert i <= 12 or i in SEASONS.keys()
+                assert i <= 12 or i in appsettings.SEASONS.keys()
                 self._month = i
             except:
-                raise AttributeError(
-                    "I don't know what to do with a month value of '%s'. "
-                    "Month must be None, 'uu', or an integer between 1 and 12"
-                    % val
-                )
+                self._month = None
 
     month = property(get_month, set_month)
 
@@ -180,14 +172,12 @@ class EDTFDate(object):
         return padded_string(self.month)
 
     def get_season(self):
-        return SEASONS.get(self.month)
+        return appsettings.SEASONS.get(self.month)
 
     def set_season(self, val):
-        season = INV_SEASONS.get(val)
+        season = appsettings.INVERSE_SEASONS.get(val)
         if not season:
-            raise AttributeError(
-                "season must be one of %s" % (INV_SEASONS.keys())
-            )
+            self.month = None
         else:
             self.month = season
 
@@ -208,9 +198,7 @@ class EDTFDate(object):
                 assert i <= 31
                 self._day = i
             except:
-                raise AttributeError(
-                    "day must be None, 'uu', or an integer between 1 and 31."
-                )
+                self.day = None
 
     day = property(get_day, set_day)
 
@@ -219,6 +207,8 @@ class EDTFDate(object):
         return padded_string(self.day)
 
     def isoish_string(self):
+        if not self.year:
+            return ""
         precision = self.precision
 
         if precision == PRECISION_DAY:
@@ -237,6 +227,15 @@ class EDTFDate(object):
 
         return result
 
+    def __repr__(self):
+        if self.natural_text:
+            if self.edtf_text:
+                return "EDTFDate(edtf_text='%s', natural_text='%s')" % (self.edtf_text, self.natural_text)
+            else:
+                return "EDTFDate(natural_text='%s')" % (self.natural_text,  )
+        else:
+            return "EDTFDate('%s')" % self.edtf_text
+
     def __unicode__(self):
         result = self.isoish_string()
 
@@ -247,27 +246,27 @@ class EDTFDate(object):
 
         return result
 
-    def parse_text(self, text):
+    def _parse_edtf_text(self):
+        if not self.edtf_text:
+            return
         try:
-            year_text = re.match(r'-?[\dxu]{4}', text)
+            year_text = re.match(r'-?[\dxu]{4}', self.edtf_text)
         except TypeError:
-            raise ParseError("'%s' doesn't seem to be a valid string" % text)
+            return
         if year_text:
             yt = year_text.group(0)
             self.year = yt
         else:
-            long_year = re.match(LONG_YEAR_RE, text)
+            long_year = re.match(LONG_YEAR_RE, self.edtf_text)
             if long_year:
                 yt = long_year.group(0)
                 self.year = yt
             else:
-                raise ParseError(
-                    "text to parse ('%s') does not contain a year section"
-                    % text
-                )
+                self.year = ""
+                return
 
-        text, self.is_approximate = re.subn(r'~$', '', text)  # ~ at the end
-        text, self.is_uncertain = re.subn(r'\?$', '', text)  # ? at the end
+        text, self.is_approximate = re.subn(r'~\??$', '', self.edtf_text)  # ~ at the end, possibly followed by a ?
+        text, self.is_uncertain = re.subn(r'\?~?$', '', self.edtf_text)  # ? at the end, possibly followed by a ~
 
         remainder = text[len(yt)+1:]
         month_string = remainder[:2]
@@ -300,13 +299,13 @@ class EDTFDate(object):
             return self.day
 
     def _month_of_season(self, lean):
-        rng = SEASON_MONTHS_RANGE.get(self.month, [self.month, self.month])
+        rng = appsettings.SEASON_MONTHS_RANGE.get(self.month, [self.month, self.month])
         if lean == EARLIEST:
             return rng[0]
         else:
             return rng[1]
 
-    def _adjust_for_precision(self, dt, multiplier=1.0):
+    def _adjust_for_precision(self, dt, multiplier=appsettings.PADDING_MULTIPLIER):
         precision = self.precision
         if self.is_approximate or self.is_uncertain:
             multiplier = multiplier
@@ -334,7 +333,7 @@ class EDTFDate(object):
     def _days_in_month(yr, month):
         return calendar.monthrange(int(yr), int(month))[1]
 
-    def sort_date(self, lean=LATEST):
+    def _sort_date(self, lean=LATEST):
         """
         Use sort_date to return the date that a human might use when sorting
         imprecise dates. For now, we'll assume that imprecise dates come after
@@ -344,6 +343,9 @@ class EDTFDate(object):
         Uncertainty and approximation information is ignored, just as a human
         would.
         """
+
+        if not self.year:
+            return None
 
         precision = self.precision
 
@@ -396,7 +398,13 @@ class EDTFDate(object):
 
         return dt
 
-    def latest_date(self):
+    def sort_date_earliest(self):
+        return self._sort_date(EARLIEST)
+
+    def sort_date_latest(self):
+        return self._sort_date(LATEST)
+
+    def date_latest(self):
         """
         Return the latest actual date this could reasonably be. Useful for
         returning dates that overlap a query.
@@ -405,9 +413,152 @@ class EDTFDate(object):
         half the precision in each direction. If it is both approximate and
         uncertain, we add 1 x the precision in each direction.
         """
-        dt = self.sort_date(LATEST)
-        return self._adjust_for_precision(dt, 1.0)
+        dt = self.sort_date_latest()
+        return self._adjust_for_precision(dt, appsettings.PADDING_MULTIPLIER)
 
-    def earliest_date(self):
-        dt = self.sort_date(EARLIEST)
-        return self._adjust_for_precision(dt, -1.0)
+    def date_earliest(self):
+        dt = self.sort_date_earliest()
+        return self._adjust_for_precision(dt, -appsettings.PADDING_MULTIPLIER)
+
+
+    def _parse_natural_text(self):
+        """
+        Return EDTF string equivalent of a given natural language date string.
+
+        The approach here is to parse the text twice, with different default
+        dates. Then compare the results to see what differs - the parts that
+        differ are undefined.
+        """
+        if not self.natural_text:
+            return
+
+        t = self.natural_text.lower()
+        result = ''
+
+        # matches on '1800s'. Needs to happen before is_decade.
+        could_be_century = re.findall(r'(\d{2}00)s', t)
+        # matches on '1800s' and '1910s'. Removes the 's'.
+        # Needs to happen before is_uncertain because e.g. "1860s?"
+        t, is_decade = re.subn(r'(\d{3}0)s', r'\1', t)
+
+        # detect approximation signifiers
+        # a few 'circa' abbreviations just before the year
+        is_approximate = re.findall(r'\b(ca?\.?) ?\d{4}', t)
+        # the word 'circa' anywhere
+        is_approximate = is_approximate or re.findall(r'\bcirca\b', t)
+        # the word 'approx'/'around'/'about' anywhere
+        is_approximate = is_approximate or \
+            re.findall(r'\b(approx|around|about)', t)
+        # a ~ before a year-ish number
+        is_approximate = is_approximate or re.findall(r'\b~\d{4}', t)
+        # a ~ at the beginning
+        is_approximate = is_approximate or re.findall(r'^~', t)
+
+        # detect uncertainty signifiers
+        t, is_uncertain = re.subn(r'(\d{4})\?', r'\1', t)
+        # the words uncertain/maybe/guess anywhere
+        is_uncertain = is_uncertain or re.findall(
+            r'\b(uncertain|possibly|maybe|guess)', t)
+
+        # detect century forms
+        is_century = re.findall(CENTURY_RE, t)
+        if is_century:
+            result = "%02dxx" % (int(is_century[0][0]) - 1,)
+            is_approximate = is_approximate or \
+                re.findall(r'\b(ca?\.?) ?'+CENTURY_RE, t)
+            is_uncertain = is_uncertain or re.findall(CENTURY_RE+r'\?', t)
+        else:
+            #try dateutil.parse
+
+            try:
+                # parse twice, using different defaults to see what was
+                # parsed and what was guessed.
+                dt1 = parse(
+                    t,
+                    dayfirst=appsettings.DAY_FIRST,
+                    yearfirst=False,
+                    fuzzy=True,  # force a match, even if it's default date
+                    default=DEFAULT_DATE_1
+                )
+
+                dt2 = parse(
+                    t,
+                    dayfirst=appsettings.DAY_FIRST,
+                    yearfirst=False,
+                    fuzzy=True,  # force a match, even if it's default date
+                    default=DEFAULT_DATE_2
+                )
+
+            except ValueError:
+                return
+
+            if dt1.date() == DEFAULT_DATE_1.date() and \
+                    dt2.date() == DEFAULT_DATE_2.date():
+                # couldn't parse anything - defaults are untouched.
+                return
+
+            date1 = dt1.isoformat()[:10]
+            date2 = dt2.isoformat()[:10]
+
+            #guess precision of 'unspecified' characters to use
+            mentions_year = re.findall(r'\byear\b.+(in|during)\b', t)
+            mentions_month = re.findall(r'\bmonth\b.+(in|during)\b', t)
+            mentions_day = re.findall(r'\bday\b.+(in|during)\b', t)
+
+            for i in xrange(len(date1)):
+                # if the given year could be a century (e.g. '1800s') then use
+                # approximate/uncertain markers to decide whether we treat it as
+                # a century or a decade.
+                if i == 2 and could_be_century and \
+                        not (is_approximate or is_uncertain):
+                    result += 'x'
+                elif i == 3 and is_decade > 0:
+                    if mentions_year:
+                        result += 'u'  # year precision
+                    else:
+                        result += 'x'  # decade precision
+                elif date1[i] == date2[i]:
+                    # since both attempts at parsing produced the same result
+                    # it must be parsed value, not a default
+                    result += date1[i]
+                else:
+                    # different values were produced, meaning that it's likely
+                    # a default. Use 'unspecified'
+                    result += "u"
+
+            # strip off unknown chars from end of string - except the first 4
+
+            for i in reversed(xrange(len(result))):
+                if result[i] not in ('u', 'x', '-'):
+                    smallest_length = 4
+
+                    if mentions_month:
+                        smallest_length = 7
+                    if mentions_day:
+                        smallest_length = 10
+
+                    limit = max(smallest_length, i+1)
+                    result = result[:limit]
+                    break
+
+            #check for seasons
+            if "spring" in t:
+                result = result[:4] + "-21" + result[7:]
+            elif "summer" in t:
+                result = result[:4] + "-22" + result[7:]
+            elif "autumn" in t or "fall" in t:
+                result = result[:4] + "-23" + result[7:]
+            elif "winter" in t:
+                result = result[:4] + "-24" + result[7:]
+
+            # end dateutil post-parsing
+
+        if is_uncertain:
+            result += "?"
+
+        if is_approximate:
+            result += "~"
+
+        # overwrite the stored edtf value and parse it
+        self.edtf_text = result
+        self._parse_edtf_text()
