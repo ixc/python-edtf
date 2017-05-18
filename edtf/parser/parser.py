@@ -2,7 +2,11 @@ from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
     ZeroOrMore, Regex, Or, Combine
 
 # (* ************************** Level 0 *************************** *)
-from edtf._level_0 import Date, DateAndTime
+from parser_classes import Date, DateAndTime, Interval, UncertainOrApproximate, \
+    Unspecified, Level1Interval, LongYear, Season, \
+    PartialUncertainOrApproximate, UA
+
+from edtf_exceptions import EDTFParseException
 
 oneThru12 = L("01") ^ "02" ^ "03" ^ "04" ^ "05" ^ "06" ^ "07" ^ "08" ^ \
     "09" ^ "10" ^ "11" ^ "12"
@@ -49,75 +53,88 @@ year = Combine(positiveYear ^ negativeYear ^ L("0000"))("year")
 yearMonth = year + "-" + month
 yearMonthDay = year + "-" + monthDay  # o hai iso date
 
-date = Combine(year ^ yearMonth ^ yearMonthDay)
+date = Combine(year ^ yearMonth ^ yearMonthDay)("date")
 Date.set_parser(date)
 
 zoneOffsetHour = oneThru13
-zoneOffset = Combine(L("Z") ^ \
+zoneOffset = L("Z") ^ \
     (
         (L("+") ^ "-") + (
             (zoneOffsetHour + Optional(":" + minute)) ^
             "14:00" ^
             ("00:" + oneThru59)
         )
-    ))("timezone")
+    )
 
 baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
-time = Combine(baseTime + Optional(zoneOffset))
+time = Combine(baseTime + Optional(zoneOffset))("time")
 
-dateAndTime = date("date") + "T" + time("time")
+dateAndTime = date + "T" + time
 DateAndTime.set_parser(dateAndTime)
 
-L0Interval = date("date1") + "/" + date("date2")
+l0Interval = date("lower") + "/" + date("upper")
+Interval.set_parser(l0Interval)
 
-# register_parser_class(date, Date)
-# register_parser_class(dateAndTime, DateAndTime)
-# register_parser_class(L0Interval, Level0Interval)
-
-level0Expression = date ^ dateAndTime ^ L0Interval
+level0Expression = date ^ dateAndTime ^ l0Interval
 
 
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = (L("?")("uncertain") ^ L("~")("approximate") ^ L("?~")("uncertain_and_approximate"))
+UASymbol = Combine(L("?") ^ L("~") ^ L("?~"))
+UA.set_parser(UASymbol)
+
 seasonNumber = L("21") ^ "22" ^ "23" ^ "24"
 
 # (* *** Season (unqualified) *** *)
-season = year + "-" + seasonNumber
+season = year + "-" + seasonNumber("season")
+Season.set_parser(season)
 
-dateOrSeason = date ^ season
+dateOrSeason = date("") ^ season
 
 # (* *** Long Year - Simple Form *** *)
 
-longYearSimple = "y" + Optional("-") + \
-                 positiveDigit + digit + digit + digit + OneOrMore(digit)
-
+longYearSimple = "y" + Combine(
+    Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit)
+)("year")
+LongYear.set_parser(longYearSimple)
 
 # (* *** L1Interval *** *)
-L1Start = (dateOrSeason + Optional(UASymbol)) ^ "unknown"
-L1End = L1Start ^ "open"
-L1Interval = L1Start + "/" + L1End
+uaDateOrSeason = dateOrSeason + Optional(UASymbol)
+l1Start = uaDateOrSeason ^ "unknown"
+def f(toks):
+    try:
+        return {'date': toks[0], 'ua': toks[1]}
+    except IndexError:
+        return {'date': toks[0], 'ua': None}
+l1Start.addParseAction(f)
+l1End = uaDateOrSeason ^ "unknown" ^ "open"
+l1End.addParseAction(f)
+
+level1Interval = l1Start("lower") + "/" + l1End("upper")
+Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
-yearWithOneOrTwoUnspecifedDigits = digit + digit + (digit ^ 'u') + 'u'
-monthUnspecified = year + "-uu"
-dayUnspecified = yearMonth + "-uu"
-dayAndMonthUnspecified = year + "-uu-uu"
+yearWithOneOrTwoUnspecifedDigits = Combine(digit + digit + (digit ^ 'u') + 'u')("year")
+monthUnspecified = year + "-" + Combine("uu")("month")
+dayUnspecified = yearMonth + "-" + Combine("uu")("day")
+dayAndMonthUnspecified = year + "-" + Combine("uu")("month") + "-" + Combine("uu")("day")
 
 unspecified = yearWithOneOrTwoUnspecifedDigits \
     ^ monthUnspecified \
     ^ dayUnspecified \
     ^ dayAndMonthUnspecified
+Unspecified.set_parser(unspecified)
 
 # (* *** uncertainOrApproxDate *** *)
 
-uncertainOrApproxDate = date + UASymbol
+uncertainOrApproxDate = date('date') + UASymbol("ua")
+UncertainOrApproximate.set_parser(uncertainOrApproxDate)
 
 level1Expression = uncertainOrApproxDate \
     ^ unspecified \
-    ^ L1Interval \
+    ^ level1Interval \
     ^ longYearSimple \
     ^ season
 
@@ -150,32 +167,40 @@ monthDayWithU = ((month ^ monthWithU) + "-" + dayWithU) \
 yearMonthDayWithU = ((yearWithU ^ year) + "-" + monthDayWithU) \
     ^ (yearWithU + "-" + monthDay)
 
-internalUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
+partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
 
 
 # (* ** Internal Uncertain or Approximate** *)
 
+# this line is out of spec, but the given examples (e.g. '(2004)?-06-04~')
+# appear to require it.
+year_with_brackets = year ^ ("(" + year + ")")
+
+# second clause below needed Optional() around the "year_ua" UASymbol, for dates
+# like '(2011)-06-04~' to work.
+
 IUABase = \
-    (year + UASymbol + "-" + month + Optional("-(" + day + ")" + UASymbol)) \
-    ^ (year + UASymbol + "-" + monthDay + Optional(UASymbol)) \
+    (year_with_brackets + UASymbol("year_ua") + "-" + month + Optional("-(" + day + ")" + UASymbol("day_ua"))) \
+    ^ (year_with_brackets + Optional(UASymbol)("year_ua") + "-" + monthDay + Optional(UASymbol)("month_day_ua")) \
     ^ (
-        year + Optional(UASymbol) + "-(" + month + ")" + UASymbol +
-        Optional("-(" + day + ")" + UASymbol)
+        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua") +
+        Optional("-(" + day + ")" + UASymbol("day_ua"))
     ) \
     ^ (
-        year + Optional(UASymbol) + "-(" + month + ")" + UASymbol +
+        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua") +
         Optional("-" + day)
     ) \
-    ^ (yearMonth + UASymbol + "-(" + day + ")" + UASymbol) \
-    ^ (yearMonth + UASymbol + "-" + day) \
-    ^ (yearMonth + "-(" + day + ")" + UASymbol) \
-    ^ (year + "-(" + monthDay + ")" + UASymbol) \
-    ^ (season + UASymbol) \
+    ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua")) \
+    ^ (yearMonth + UASymbol("year_month_ua") + "-" + day) \
+    ^ (yearMonth + "-(" + day + ")" + UASymbol("day_ua")) \
+    ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua")) \
+    ^ (season("ssn") + UASymbol("season_ua"))
 
-internalUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol)
+partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_ua"))
+PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
-dateWithInternalUncertainty = internalUncertainOrApproximate \
-    ^ internalUnspecified
+dateWithInternalUncertainty = partialUncertainOrApproximate \
+                              ^ partialUnspecified
 
 qualifyingString = Regex(r'\S')  # any nonwhitespace char
 
@@ -219,33 +244,22 @@ listContent = (earlier + ZeroOrMore("," + listElement)) \
 choiceList = "[" + listContent + "]"
 inclusiveList = "{" + listContent + "}"
 
-level2Expression = internalUncertainOrApproximate \
-    ^ internalUnspecified \
-    ^ choiceList \
-    ^ inclusiveList \
-    ^ maskedPrecision \
-    ^ L2Interval \
-    ^ longYearScientific \
-    ^ seasonQualified
+level2Expression = partialUncertainOrApproximate \
+                   ^ partialUnspecified \
+                   ^ choiceList \
+                   ^ inclusiveList \
+                   ^ maskedPrecision \
+                   ^ L2Interval \
+                   ^ longYearScientific \
+                   ^ seasonQualified
 
 # putting it all together
-parser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
+edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
 
-
-class EDTFParser(object):
-    def __init__(self, str, parseAll=True):
-        try:
-            self.p = parser.parseString(str, parseAll=parseAll)
-        except ParseException as pe:
-            raise pe
-
-    @property
-    def level(self):
-        k = self.p.keys()
-        if "level0" in k:
-            return 0
-        elif "level1" in k:
-            return 1
-        elif "level2" in k:
-            return 2
-        assert False
+def parse(str, parseAll=True):
+    try:
+        p = edtfParser.parseString(str, parseAll)
+        if p:
+            return p[0]
+    except ParseException as e:
+        raise EDTFParseException(e)
