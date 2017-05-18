@@ -588,6 +588,18 @@ class TestEDTF(unittest.TestCase):
         self.assertEqual(e.end_date_earliest().isoformat(), '1985-01-01')
         self.assertEqual(e.end_date_latest().isoformat(), '1985-12-31')
 
+    def test_unparseable(self):
+        e = EDTF('terrible')
+        self.assertEqual(e.is_interval, False)
+        self.assertEqual(e.sort_date_earliest(), None)
+        self.assertEqual(e.sort_date_latest(), None)
+        self.assertEqual(e.date_earliest(), None)
+        self.assertEqual(e.date_latest(), None)
+        self.assertEqual(e.start_date_earliest(), None)
+        self.assertEqual(e.start_date_latest(), None)
+        self.assertEqual(e.end_date_earliest(), None)
+        self.assertEqual(e.end_date_latest(), None)
+
 
     def test_natural_language(self):
         for i, o in [

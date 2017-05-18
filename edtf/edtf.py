@@ -120,36 +120,42 @@ class EDTF(object):
 
 
     def sort_date_earliest(self):
-        return self._date_obj.sort_date_earliest()
+        if self._date_obj:
+            return self._date_obj.sort_date_earliest()
 
     def sort_date_latest(self):
-        return self._date_obj.sort_date_latest()
+        if self._date_obj:
+            return self._date_obj.sort_date_latest()
 
     def start_date_earliest(self):
-        if self.is_interval:
-            return self._date_obj.start_date_earliest()
-        else:
-            return self._date_obj.date_earliest()
+        if self._date_obj:
+            if self.is_interval:
+                return self._date_obj.start_date_earliest()
+            else:
+                return self._date_obj.date_earliest()
 
     date_earliest = start_date_earliest
 
     def start_date_latest(self):
-        if self.is_interval:
-            return self._date_obj.start_date_latest()
-        else:
-            return self._date_obj.date_earliest()
+        if self._date_obj:
+            if self.is_interval:
+                return self._date_obj.start_date_latest()
+            else:
+                return self._date_obj.date_earliest()
 
     def end_date_earliest(self):
-        if self.is_interval:
-            return self._date_obj.end_date_earliest()
-        else:
-            return self._date_obj.date_latest()
+        if self._date_obj:
+            if self.is_interval:
+                return self._date_obj.end_date_earliest()
+            else:
+                return self._date_obj.date_latest()
 
     def end_date_latest(self):
-        if self.is_interval:
-            return self._date_obj.end_date_latest()
-        else:
-            return self._date_obj.date_latest()
+        if self._date_obj:
+            if self.is_interval:
+                return self._date_obj.end_date_latest()
+            else:
+                return self._date_obj.date_latest()
 
     date_latest = end_date_latest
 
