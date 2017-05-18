@@ -30,13 +30,6 @@ class EDTFField(models.CharField):
           date_latest_field, sort_date_earliest_field, sort_date_latest_field
         super(EDTFField, self).__init__(verbose_name, name, **kwargs)
 
-    def contribute_to_class(self, cls, name, **kwargs):
-        super(EDTFField, self).contribute_to_class(cls, name, **kwargs)
-        if not cls._meta.abstract:
-            if hasattr(cls, 'edtf_fields'):
-                cls.edtf_fields.append(self)
-            else:
-                cls.edtf_fields = [self]
 
     def deconstruct(self):
         name, path, args, kwargs = super(EDTFField, self).deconstruct()
@@ -53,6 +46,7 @@ class EDTFField(models.CharField):
         return name, path, args, kwargs
 
     def from_db_value(self, value, expression, connection, context):
+        # Converting values to Python objects
         return EDTF(edtf_text=value)
 
     def to_python(self, value):
@@ -65,13 +59,13 @@ class EDTFField(models.CharField):
         return EDTF(edtf_text=value)
 
     def get_prep_value(self, value):
+        # convert python objects to query values
         value = super(EDTFField, self).get_prep_value(value)
         if isinstance(value, EDTF):
             return value.edtf_text
         return value
 
-
-    def pre_save_update(self, instance, force=False, *args, **kwargs):
+    def pre_save(self, instance, add):
         """
         Updates the edtf value from the value of the display_field.
         If there's a valid edtf, then set the date values.
@@ -89,3 +83,5 @@ class EDTFField(models.CharField):
             g = getattr(self, field_attr, None)
             if g:
                 setattr(instance, g, getattr(e, attr)())
+
+        return e.edtf_text
