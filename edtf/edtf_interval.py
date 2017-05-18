@@ -1,7 +1,7 @@
 from datetime import date
 import re
 from dateutil.relativedelta import relativedelta
-from edtf_exceptions import ParseError
+from .exceptions import EDTFParseError
 from edtf_date import EDTFDate, PRECISION_DAY, PRECISION_MONTH, \
     PRECISION_SEASON, PRECISION_YEAR, PRECISION_DECADE, PRECISION_CENTURY, \
     PRECISION_MILLENIUM
@@ -12,29 +12,46 @@ class EDTFInterval(object):
     An interval of two EDTFDates, or 'unknown'/'open'
     """
 
-    def __init__(self, text=None):
+    def __init__(self, edtf_text='', natural_text=''):
+        self.edtf_text = edtf_text
+        self.natural_text = natural_text
+
         # after init, start and end will always be
         # 'unknown', 'open' or an EDTFDate
         self.start = None
         self.end = None
 
-        if not text:
-            text = "open/open"
-        self.parse_text(text)
+        if self.edtf_text:
+            self._parse_edtf_text()
+        else:
+            if self.natural_text:
+                return self._parse_natural_text()
+            else:
+                self._parse_edtf_text() # return an empty date object
 
-    def parse_text(self, text):
-        parts = re.match(r'([^/]+)/([^/]+)', text)
+    def _parse_edtf_text(self):
+        parts = re.match(r'([^/]+)/([^/]+)', self.edtf_text)
         if parts:
             self.start = self.parse_part(parts.group(1))
             self.end = self.parse_part(parts.group(2))
         else:
-            raise ParseError("An interval needs to contain a '/'")
+            raise EDTFParseError("An interval needs to contain a '/'")
 
     @staticmethod
     def parse_part(part):
         if part in ['open', 'unknown']:
             return part
         return EDTFDate(part)
+
+    def __repr__(self):
+        if self.natural_text:
+            if self.edtf_text:
+                return "EDTFInterval(edtf_text='%s', natural_text='%s')" % (self.edtf_text, self.natural_text)
+            else:
+                return "EDTFInterval(natural_text='%s')" % (self.natural_text, )
+        else:
+            return "EDTFInterval('%s')" % self.edtf_text
+
 
     def __unicode__(self):
         return u"%s/%s" % (self.start, self.end)
