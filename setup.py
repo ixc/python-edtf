@@ -20,15 +20,10 @@ if {'bdist_wheel', 'sdist'}.intersection(sys.argv):
 
 setuptools.setup(
     name='edtf',
-<<<<<<< HEAD
     use_scm_version={'version_scheme': 'post-release'},
     url='https://github.com/ixc/python-edtf',
-=======
-    version=version,
->>>>>>> 2ce7b2c3bcc70b9a6442e8d249279d41c4bda249
     author='Greg Turner',
     author_email='greg@interaction.net.au',
-    url='https://github.com/ixc/python-edtf',
     description='Python implementation of Library of Congress EDTF (Extended '
                 'Date Time Format) specification',
     long_description=locals().get('long_description', ''),
