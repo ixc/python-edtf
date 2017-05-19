@@ -4,7 +4,9 @@ from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
 # (* ************************** Level 0 *************************** *)
 from parser_classes import Date, DateAndTime, Interval, UncertainOrApproximate, \
     Unspecified, Level1Interval, LongYear, Season, \
-    PartialUncertainOrApproximate, UA
+    PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
+    Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
+    MaskedPrecision, Level2Interval, ExponentialYear
 
 from edtf_exceptions import EDTFParseException
 
@@ -103,6 +105,8 @@ LongYear.set_parser(longYearSimple)
 # (* *** L1Interval *** *)
 uaDateOrSeason = dateOrSeason + Optional(UASymbol)
 l1Start = uaDateOrSeason ^ "unknown"
+# bit of a kludge here to get the all the relevant tokens into the parse action
+# cleanly otherwise the parameter names are overlapped.
 def f(toks):
     try:
         return {'date': toks[0], 'ua': toks[1]}
@@ -157,18 +161,17 @@ yearWithU = (L("u") + digitOrU + digitOrU + digitOrU) \
     ^ (digitOrU + digitOrU + "u" + digitOrU) \
     ^ (digitOrU + digitOrU + digitOrU + "u")
 
-yearMonthWithU = ((year ^ yearWithU) + "-" + monthWithU) \
-    ^ (yearWithU + "-" + month)
+yearMonthWithU = (Combine(year("") ^ yearWithU)("year") + "-" + monthWithU("month")) \
+    ^ (yearWithU("year") + "-" + month)
 
+monthDayWithU = (Combine(month("") ^ monthWithU)("month") + "-" + Combine(dayWithU)("day")) \
+    ^ (monthWithU("month") + "-" + day)
 
-monthDayWithU = ((month ^ monthWithU) + "-" + dayWithU) \
-    ^ (monthWithU + "-" + day)
-
-yearMonthDayWithU = ((yearWithU ^ year) + "-" + monthDayWithU) \
-    ^ (yearWithU + "-" + monthDay)
+yearMonthDayWithU = (Combine(yearWithU ^ year(""))("year") + "-" + monthDayWithU) \
+    ^ (yearWithU("year") + "-" + monthDay)
 
 partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
-
+PartialUnspecified.set_parser(partialUnspecified)
 
 # (* ** Internal Uncertain or Approximate** *)
 
@@ -209,23 +212,26 @@ seasonQualifier = qualifyingString
 seasonQualified = season + "^" + seasonQualifier
 
 # (* ** Long Year - Scientific Form ** *)
-positiveInteger = positiveDigit + ZeroOrMore(digit)
-longYearScientific = "y" + Optional("-") + positiveInteger + "e" + \
-    positiveInteger + Optional("p" + positiveInteger)
+positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
+longYearScientific = "y" + Combine(Optional("-") + positiveInteger)("base") + "e" + \
+    positiveInteger("exponent") + Optional("p" + positiveInteger("precision"))
+ExponentialYear.set_parser(longYearScientific)
 
-
-# (* ** L2Interval ** *)
-L2Interval = (dateOrSeason + "/" + dateWithInternalUncertainty) \
-    ^ (dateWithInternalUncertainty + "/" + dateOrSeason) \
-    ^ (dateWithInternalUncertainty + "/" + dateWithInternalUncertainty)
+# (* ** level2Interval ** *)
+level2Interval = (dateOrSeason("lower") + "/" + dateWithInternalUncertainty("upper")) \
+                 ^ (dateWithInternalUncertainty("lower") + "/" + dateOrSeason("upper")) \
+                 ^ (dateWithInternalUncertainty("lower") + "/" + dateWithInternalUncertainty("upper"))
+Level2Interval.set_parser(level2Interval)
 
 # (* ** Masked precision ** *)
-maskedPrecision = digit + digit + ((digit + "x") ^ "xx")
+maskedPrecision = Combine(digit + digit + ((digit + "x") ^ "xx"))("year")
+MaskedPrecision.set_parser(maskedPrecision)
 
 # (* ** Inclusive list and choice list** *)
-consecutives = (yearMonthDay + ".." + yearMonthDay) \
-    ^ (yearMonth + ".." + yearMonth) \
-    ^ (year + ".." + year)
+consecutives = (yearMonthDay("lower") + ".." + yearMonthDay("upper")) \
+    ^ (yearMonth("lower") + ".." + yearMonth("upper")) \
+    ^ (year("lower") + ".." + year("upper"))
+Consecutives.set_parser(consecutives)
 
 listElement = date \
     ^ dateWithInternalUncertainty \
@@ -233,8 +239,10 @@ listElement = date \
     ^ unspecified \
     ^ consecutives
 
-earlier = ".." + date
-later = date + ".."
+earlier = ".." + date("upper")
+EarlierConsecutives.set_parser(earlier)
+later = date("lower") + ".."
+LaterConsecutives.set_parser(later)
 
 listContent = (earlier + ZeroOrMore("," + listElement)) \
     ^ (Optional(earlier + ",") + ZeroOrMore(listElement + ",") + later) \
@@ -242,14 +250,17 @@ listContent = (earlier + ZeroOrMore("," + listElement)) \
     ^ consecutives
 
 choiceList = "[" + listContent + "]"
+OneOfASet.set_parser(choiceList)
+
 inclusiveList = "{" + listContent + "}"
+MultipleDates.set_parser(inclusiveList)
 
 level2Expression = partialUncertainOrApproximate \
                    ^ partialUnspecified \
                    ^ choiceList \
                    ^ inclusiveList \
                    ^ maskedPrecision \
-                   ^ L2Interval \
+                   ^ level2Interval \
                    ^ longYearScientific \
                    ^ seasonQualified
 

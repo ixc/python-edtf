@@ -244,10 +244,71 @@ class PartialUncertainOrApproximate(ParserObject):
         return result
 
 
+class PartialUnspecified(Unspecified):
+    pass
 
-# class PartialUnspecified(Unspecified):
-# class OneOfASet(ParserObject):
-# class MultipleDates(ParserObject):
-# class MaskedPrecision(ParserObject):
-# class L2ExtendedInterval(L1ExtendedInterval):
-# class ExponentialYear(LongYear):
+class Consecutives(Interval):
+    # Treating Consecutive ranges as intervals where one bound is optional
+    def __init__(self, lower=None, upper=None):
+        self.lower = lower
+        self.upper = upper
+
+    def __unicode__(self):
+        return u"%s..%s" % (self.lower or '', self.upper or '')
+
+
+class EarlierConsecutives(Consecutives):
+    pass
+
+
+class LaterConsecutives(Consecutives):
+    pass
+
+
+class OneOfASet(ParserObject):
+    @classmethod
+    def parse_action(cls, toks):
+        args = [t for t in toks.asList() if isinstance(t, ParserObject)]
+        return cls(*args)
+
+    def __init__(self, *args):
+        self.objects = args
+
+    def __unicode__(self):
+        return u"[%s]" % (", ".join([unicode(o) for o in self.objects]))
+
+
+class MultipleDates(ParserObject):
+    @classmethod
+    def parse_action(cls, toks):
+        args = [t for t in toks.asList() if isinstance(t, ParserObject)]
+        return cls(*args)
+
+    def __init__(self, *args):
+        self.objects = args
+
+    def __unicode__(self):
+        return u"{%s}" % (", ".join([unicode(o) for o in self.objects]))
+
+
+class MaskedPrecision(Date):
+    pass
+
+
+class Level2Interval(Level1Interval):
+    def __init__(self, lower, upper):
+        self.lower = lower
+        self.upper = upper
+
+class ExponentialYear(LongYear):
+    def __init__(self, base, exponent, precision=None):
+        self.base = base
+        self.exponent = exponent
+        self.precision = precision
+
+    def get_year(self):
+        if self.precision:
+            return '%se%sp%s' % (self.base, self.exponent, self.precision)
+        else:
+            return '%se%s' % (self.base, self.exponent)
+    year = property(get_year)

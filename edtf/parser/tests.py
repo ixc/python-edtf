@@ -1,5 +1,6 @@
 import unittest
 from parser import parse
+from parser_classes import ParserObject
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
@@ -83,13 +84,13 @@ EXAMPLES = (
     '15uu-12-uu',
     '1560-uu-25',  # Year and day of month specified, month unspecified
     # One of a Set
-    '[1667,1668, 1670..1672]',  # One of the years 1667, 1668, 1670, 1671, 1672
+    ('[1667,1668, 1670..1672]', '[1667, 1668, 1670..1672]'),  # One of the years 1667, 1668, 1670, 1671, 1672
     '[..1760-12-03]',  # December 3, 1760 or some earlier date
     '[1760-12..]',  # December 1760 or some later month
     '[1760-01, 1760-02, 1760-12..]', # January or February of 1760 or December 1760 or some later month
     '[1667, 1760-12]',  # Either the year 1667 or the month December of 1760.
     # Multiple Dates
-    '{1667,1668, 1670..1672} ',  # All of the years 1667, 1668, 1670, 1671, 1672
+    ('{1667,1668, 1670..1672}', '{1667, 1668, 1670..1672}'),  # All of the years 1667, 1668, 1670, 1671, 1672
     '{1960, 1961-12}',  # The year 1960 and the month December of 1961.
     # Masked Precision
     '196x',  # A date during the 1960s
@@ -100,7 +101,7 @@ EXAMPLES = (
     # The interval began on an unspecified day in June 2004.
     # Year Requiring More than Four Digits - Exponential Form
     'y17e7',  # the year 170000000
-    'y-17e7 ',  # the year -170000000
+    'y-17e7',  # the year -170000000
     'y17101e4p3', # Some year between 171000000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
 
 )
@@ -108,6 +109,13 @@ EXAMPLES = (
 class TestLevel0(unittest.TestCase):
 
     def test_reversibility(self):
+        """
+        For each of the examples, establish that:
+            - the unicode of the parsed object is acceptably equal to the EDTF string
+            - the parsed object is a subclass of ParserObject
+        :return: 
+        """
+
         for i in EXAMPLES:
             if isinstance(i, tuple):
                 i, o = i
@@ -115,11 +123,8 @@ class TestLevel0(unittest.TestCase):
                 o = i
             print "parsing '%s'" % i
             f = parse(i)
-            try:
-                self.assertEqual(unicode(f), o)
-            except Exception as e:
-                print e
-                import pdb; pdb.set_trace()
+            self.assertIsInstance(f, ParserObject)
+            self.assertEqual(unicode(f), o)
 
 
 
