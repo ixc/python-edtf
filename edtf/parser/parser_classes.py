@@ -1,7 +1,7 @@
 from datetime import date
 
 
-class ParserObject(object):
+class EDTFObject(object):
     """
     Object to attact to a parser to become instantiated when the parser
     completes.
@@ -19,11 +19,8 @@ class ParserObject(object):
         try:
             return cls(**kwargs) # replace the token list with the class
         except Exception as e:
-            if isinstance(e, NotImplementedError):
-                raise(e)
             print "trying to %s.__init__(**%s)" % (cls.__name__, kwargs)
-            print e
-            import pdb; pdb.set_trace()
+            raise(e)
 
     @classmethod
     def parse(cls, s):
@@ -46,7 +43,7 @@ class ParserObject(object):
 # (* ************************** Level 0 *************************** *)
 
 
-class Date(ParserObject):
+class Date(EDTFObject):
 
     def set_year(self, y):
         if y is None:
@@ -90,7 +87,7 @@ class Date(ParserObject):
         )
 
 
-class DateAndTime(ParserObject):
+class DateAndTime(EDTFObject):
     def __init__(self, date, time):
         self.date = date
         self.time = time
@@ -102,7 +99,7 @@ class DateAndTime(ParserObject):
         return self.date.as_iso()+"T"+self.time
 
 
-class Interval(ParserObject):
+class Interval(EDTFObject):
     def __init__(self, lower, upper):
         self.lower = lower
         self.upper = upper
@@ -113,7 +110,7 @@ class Interval(ParserObject):
 
 # (* ************************** Level 1 *************************** *)
 
-class UA(ParserObject):
+class UA(EDTFObject):
     @classmethod
     def parse_action(cls, toks):
         args = toks.asList()
@@ -135,7 +132,7 @@ class UA(ParserObject):
         return d
 
 
-class UncertainOrApproximate(ParserObject):
+class UncertainOrApproximate(EDTFObject):
     def __init__(self, date, ua):
         self.date = date
         self.ua = ua
@@ -157,7 +154,7 @@ class Level1Interval(Interval):
         self.upper = UncertainOrApproximate(**upper)
 
 
-class LongYear(ParserObject):
+class LongYear(EDTFObject):
     def __init__(self, year):
         self.year = year
 
@@ -165,7 +162,7 @@ class LongYear(ParserObject):
         return "y%s" % self.year
 
 
-class Season(ParserObject):
+class Season(EDTFObject):
     def __init__(self, year, season, **kwargs):
         self.year = year
         self.season = season
@@ -175,7 +172,7 @@ class Season(ParserObject):
 
 # (* ************************** Level 2 *************************** *)
 
-class PartialUncertainOrApproximate(ParserObject):
+class PartialUncertainOrApproximate(EDTFObject):
     def __init__(
         self, year=None, month=None, day=None,
         year_ua = False, month_ua = False, day_ua = False,
@@ -265,10 +262,10 @@ class LaterConsecutives(Consecutives):
     pass
 
 
-class OneOfASet(ParserObject):
+class OneOfASet(EDTFObject):
     @classmethod
     def parse_action(cls, toks):
-        args = [t for t in toks.asList() if isinstance(t, ParserObject)]
+        args = [t for t in toks.asList() if isinstance(t, EDTFObject)]
         return cls(*args)
 
     def __init__(self, *args):
@@ -278,10 +275,10 @@ class OneOfASet(ParserObject):
         return u"[%s]" % (", ".join([unicode(o) for o in self.objects]))
 
 
-class MultipleDates(ParserObject):
+class MultipleDates(EDTFObject):
     @classmethod
     def parse_action(cls, toks):
-        args = [t for t in toks.asList() if isinstance(t, ParserObject)]
+        args = [t for t in toks.asList() if isinstance(t, EDTFObject)]
         return cls(*args)
 
     def __init__(self, *args):

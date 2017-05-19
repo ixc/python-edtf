@@ -1,6 +1,6 @@
 import unittest
 from parser import parse
-from parser_classes import ParserObject
+from parser_classes import EDTFObject
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
@@ -112,7 +112,7 @@ class TestLevel0(unittest.TestCase):
         """
         For each of the examples, establish that:
             - the unicode of the parsed object is acceptably equal to the EDTF string
-            - the parsed object is a subclass of ParserObject
+            - the parsed object is a subclass of EDTFObject
         :return: 
         """
 
@@ -123,7 +123,7 @@ class TestLevel0(unittest.TestCase):
                 o = i
             print "parsing '%s'" % i
             f = parse(i)
-            self.assertIsInstance(f, ParserObject)
+            self.assertIsInstance(f, EDTFObject)
             self.assertEqual(unicode(f), o)
 
 
