@@ -269,7 +269,7 @@ edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Exp
 
 def parse(str, parseAll=True):
     try:
-        p = edtfParser.parseString(str, parseAll)
+        p = edtfParser.parseString(str.strip(), parseAll)
         if p:
             return p[0]
     except ParseException as e:

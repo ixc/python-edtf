@@ -1,4 +1,13 @@
+import calendar
+import re
 from datetime import date
+from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
+from edtf import appsettings
+
+
+EARLIEST = 'earliest'
+LATEST = 'latest'
 
 
 class EDTFObject(object):
@@ -39,6 +48,53 @@ class EDTFObject(object):
     def __unicode__(self):
         raise NotImplementedError
 
+    def _strict_date(self, lean):
+        raise NotImplementedError
+
+    def lower_start_strict(self):
+        return self._strict_date(lean=EARLIEST)
+
+    def upper_end_strict(self):
+        return self._strict_date(lean=LATEST)
+
+    def _get_padding(self, multiplier):
+        """
+        Subclasses should override this to pad based on how precise they are.
+        """
+        return relativedelta(0)
+
+    def get_is_approximate(self):
+        return getattr(self, '_is_approximate', False)
+    def set_is_approximate(self, val):
+        self._is_approximate = val
+    is_approximate = property(get_is_approximate, set_is_approximate)
+
+    def get_is_uncertain(self):
+        return getattr(self, '_is_uncertain', False)
+    def set_is_uncertain(self, val):
+        self._is_uncertain = val
+    is_uncertain = property(get_is_uncertain, set_is_uncertain)
+
+    def _adjust_for_precision(self, dt, lean):
+        if self.is_approximate or self.is_uncertain:
+            multiplier = appsettings.PADDING_MULTIPLIER
+            if self.is_approximate and self.is_uncertain:
+                multiplier *= 2.0
+            if lean == EARLIEST:
+                return dt - self._get_padding(multiplier)
+            else:
+                return dt + self._get_padding(multiplier)
+        else:
+            return dt
+
+    def lower_start_fuzzy(self):
+        dt = self.lower_start_strict()
+        return self._adjust_for_precision(dt, lean=EARLIEST)
+
+    def upper_end_fuzzy(self):
+        dt = self.upper_end_strict()
+        return self._adjust_for_precision(dt, lean=LATEST)
+
 
 # (* ************************** Level 0 *************************** *)
 
@@ -67,7 +123,7 @@ class Date(EDTFObject):
                 self.__init__(**kwargs[param])
                 return
 
-        self.year = year
+        self.year = year # Year is required, but sometimes passed in as a 'date' dict.
         self.month = month
         self.day = day
 
@@ -86,6 +142,59 @@ class Date(EDTFObject):
             int(self.day or default.day),
         )
 
+    def _precise_year(self, lean):
+        "Replace any ambiguous characters in the year string with 0s or 9s"
+        if lean == EARLIEST:
+            return int(re.sub(r'[xu]', r'0', self.year))
+        else:
+            return int(re.sub(r'[xu]', r'9', self.year))
+
+    def _precise_month(self, lean):
+        if self.month and self.month != "uu":
+            return int(self.month)
+        else:
+            return 1 if lean == EARLIEST else 12
+
+    @staticmethod
+    def _days_in_month(yr, month):
+        return calendar.monthrange(int(yr), int(month))[1]
+
+    def _precise_day(self, lean):
+        if not self.day or self.day == 'uu':
+            if lean == EARLIEST:
+                return 1
+            else:
+                return self._days_in_month(
+                    self._precise_year(LATEST), self._precise_month(LATEST)
+                )
+        else:
+            return int(self.day)
+
+    def _strict_date(self, lean):
+        parts = {
+            'year': self._precise_year(lean),
+            'month': self._precise_month(lean),
+            'day': self._precise_day(lean),
+        }
+
+        isoish = u"%(year)s-%(month)02d-%(day)02d" % parts
+
+        try:
+            dt = parse(
+                isoish,
+                fuzzy=True,
+                yearfirst=True,
+                dayfirst=False,
+                default=date.max if lean == LATEST else date.min
+            )
+            return dt
+
+        except ValueError:  # year is out of range
+            if isoish < date.min.isoformat():
+                return date.min
+            else:
+                return date.max
+
 
 class DateAndTime(EDTFObject):
     def __init__(self, date, time):
@@ -98,6 +207,9 @@ class DateAndTime(EDTFObject):
     def as_iso(self):
         return self.date.as_iso()+"T"+self.time
 
+    def _strict_date(self, lean):
+        return self.date._strict_date(lean)
+
 
 class Interval(EDTFObject):
     def __init__(self, lower, upper):
@@ -107,8 +219,32 @@ class Interval(EDTFObject):
     def __unicode__(self):
         return u"%s/%s" % (self.lower, self.upper)
 
+    def _strict_date(self, lean):
+        if lean == EARLIEST:
+            try:
+                r = self.lower._strict_date(lean)
+                if r is None:
+                    raise AttributeError
+                return r
+            except AttributeError: # it's a string, or no date. Result depends on the upper date
+                upper = self.upper._strict_date(LATEST)
+                return upper - appsettings.DELTA_IF_UNKNOWN
+        else:
+            try:
+                r = self.upper._strict_date(lean)
+                if r is None:
+                    raise AttributeError
+                return r
+            except AttributeError: # an 'unknown' or 'open' string - depends on the lower date
+                if self.upper and (self.upper == "open" or self.upper.date == "open"):
+                    return date.today() # it's still happening
+                else:
+                    lower = self.lower._strict_date(EARLIEST)
+                    return lower + appsettings.DELTA_IF_UNKNOWN
+
 
 # (* ************************** Level 1 *************************** *)
+
 
 class UA(EDTFObject):
     @classmethod
@@ -143,6 +279,11 @@ class UncertainOrApproximate(EDTFObject):
         else:
             return unicode(self.date)
 
+    def _strict_date(self, lean):
+        if self.date in ("open", "unknown"):
+            return None
+        return self.date._strict_date(lean)
+
 
 class Unspecified(Date):
     pass
@@ -161,18 +302,50 @@ class LongYear(EDTFObject):
     def __unicode__(self):
         return "y%s" % self.year
 
+    def _precise_year(self):
+        return int(self.year)
 
-class Season(EDTFObject):
+    def _strict_date(self, lean):
+        py = self._precise_year()
+        if py >= date.max.year:
+            return date.max
+        if py <= date.min.year:
+            return date.min
+
+        if lean == EARLIEST:
+            return date(py, 1, 1)
+        else:
+            return date(py, 12, 31)
+
+
+class Season(Date):
     def __init__(self, year, season, **kwargs):
         self.year = year
-        self.season = season
+        self.season = season # use season to look up month
+        # day isn't part of the 'season' spec, but it helps the inherited
+        # `Date` methods do their thing.
+        self.day = None
 
     def __unicode__(self):
         return "%s-%s" % (self.year, self.season)
 
+    def _precise_month(self, lean):
+        rng = appsettings.SEASON_MONTHS_RANGE[int(self.season)]
+        if lean == EARLIEST:
+            return rng[0]
+        else:
+            return rng[1]
+
+
 # (* ************************** Level 2 *************************** *)
 
-class PartialUncertainOrApproximate(EDTFObject):
+
+class PartialUncertainOrApproximate(Date):
+
+    def set_year(self, y): # Year can be None.
+        self._year = y
+    year = property(Date.get_year, set_year)
+
     def __init__(
         self, year=None, month=None, day=None,
         year_ua = False, month_ua = False, day_ua = False,
@@ -240,15 +413,39 @@ class PartialUncertainOrApproximate(EDTFObject):
 
         return result
 
+    def _precise_year(self, lean):
+        if self.season:
+            return self.season._precise_year(lean)
+        return super(PartialUncertainOrApproximate, self)._precise_year(lean)
+
+    def _precise_month(self, lean):
+        if self.season:
+            return self.season._precise_month(lean)
+        return super(PartialUncertainOrApproximate, self)._precise_month(lean)
+
+    def _precise_day(self, lean):
+        if self.season:
+            return self.season._precise_day(lean)
+        return super(PartialUncertainOrApproximate, self)._precise_day(lean)
+
 
 class PartialUnspecified(Unspecified):
     pass
 
+
 class Consecutives(Interval):
     # Treating Consecutive ranges as intervals where one bound is optional
     def __init__(self, lower=None, upper=None):
-        self.lower = lower
-        self.upper = upper
+        if lower and not isinstance(lower, EDTFObject):
+            self.lower = Date.parse(lower)
+        else:
+            self.lower = lower
+
+        if upper and not isinstance(upper, EDTFObject):
+            self.upper = Date.parse(upper)
+        else:
+            self.upper = upper
+
 
     def __unicode__(self):
         return u"%s..%s" % (self.lower or '', self.upper or '')
@@ -274,6 +471,12 @@ class OneOfASet(EDTFObject):
     def __unicode__(self):
         return u"[%s]" % (", ".join([unicode(o) for o in self.objects]))
 
+    def _strict_date(self, lean):
+        if lean == LATEST:
+            return max([x._strict_date(lean) for x in self.objects])
+        else:
+            return min([x._strict_date(lean) for x in self.objects])
+
 
 class MultipleDates(EDTFObject):
     @classmethod
@@ -287,6 +490,12 @@ class MultipleDates(EDTFObject):
     def __unicode__(self):
         return u"{%s}" % (", ".join([unicode(o) for o in self.objects]))
 
+    def _strict_date(self, lean):
+        if lean == LATEST:
+            return max([x._strict_date(lean) for x in self.objects])
+        else:
+            return min([x._strict_date(lean) for x in self.objects])
+
 
 class MaskedPrecision(Date):
     pass
@@ -297,11 +506,15 @@ class Level2Interval(Level1Interval):
         self.lower = lower
         self.upper = upper
 
+
 class ExponentialYear(LongYear):
     def __init__(self, base, exponent, precision=None):
         self.base = base
         self.exponent = exponent
         self.precision = precision
+
+    def _precise_year(self):
+        return pow(int(self.base), int(self.exponent))
 
     def get_year(self):
         if self.precision:

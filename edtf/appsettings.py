@@ -1,13 +1,11 @@
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ImproperlyConfigured
+
 try:
     from django.conf import settings
-except ImportError:
-    settings = None
-
-EDTF = getattr(settings, 'EDTF', {})
-
-# Sources for `icekit.plugins.FileSystemLayoutPlugin`.
-
-
+    EDTF = getattr(settings, 'EDTF', {})
+except (ImportError, ImproperlyConfigured):
+    EDTF = {}
 
 SEASON_MONTHS_RANGE = EDTF.get('SEASON_MONTHS_RANGE', {
         # season id: [earliest_month, last_month]
@@ -37,3 +35,4 @@ INVERSE_SEASONS['fall'] = 23
 # changing this will break tests
 PADDING_MULTIPLIER = EDTF.get('PADDING_MULTIPLIER', 1.0)
 
+DELTA_IF_UNKNOWN = EDTF.get("DELTA_IF_UNKNOWN", relativedelta(years=10))
