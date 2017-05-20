@@ -171,11 +171,17 @@ class Date(EDTFObject):
             return int(self.day)
 
     def _strict_date(self, lean):
+
+        py = self._precise_year(lean)
+        if py < 1: # year is not positive
+            return date.min
+
         parts = {
-            'year': self._precise_year(lean),
+            'year': py,
             'month': self._precise_month(lean),
             'day': self._precise_day(lean),
         }
+
 
         isoish = u"%(year)s-%(month)02d-%(day)02d" % parts
 
