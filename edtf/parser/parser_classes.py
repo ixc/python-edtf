@@ -9,6 +9,14 @@ from edtf import appsettings
 EARLIEST = 'earliest'
 LATEST = 'latest'
 
+PRECISION_MILLENIUM = "millenium"
+PRECISION_CENTURY = "century"
+PRECISION_DECADE = "decade"
+PRECISION_YEAR = "year"
+PRECISION_MONTH = "month"
+PRECISION_SEASON = "season"
+PRECISION_DAY = "day"
+
 
 class EDTFObject(object):
     """
@@ -57,7 +65,7 @@ class EDTFObject(object):
     def upper_end_strict(self):
         return self._strict_date(lean=LATEST)
 
-    def _get_padding(self, multiplier):
+    def _get_fuzzy_padding(self, lean):
         """
         Subclasses should override this to pad based on how precise they are.
         """
@@ -75,25 +83,11 @@ class EDTFObject(object):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
-    def _adjust_for_precision(self, dt, lean):
-        if self.is_approximate or self.is_uncertain:
-            multiplier = appsettings.PADDING_MULTIPLIER
-            if self.is_approximate and self.is_uncertain:
-                multiplier *= 2.0
-            if lean == EARLIEST:
-                return dt - self._get_padding(multiplier)
-            else:
-                return dt + self._get_padding(multiplier)
-        else:
-            return dt
-
     def lower_start_fuzzy(self):
-        dt = self.lower_start_strict()
-        return self._adjust_for_precision(dt, lean=EARLIEST)
+        return self.lower_start_strict() - self._get_fuzzy_padding(EARLIEST)
 
     def upper_end_fuzzy(self):
-        dt = self.upper_end_strict()
-        return self._adjust_for_precision(dt, lean=LATEST)
+        return self.upper_end_strict() + self._get_fuzzy_padding(LATEST)
 
 
 # (* ************************** Level 0 *************************** *)
@@ -201,6 +195,13 @@ class Date(EDTFObject):
             else:
                 return date.max
 
+    @property
+    def precision(self):
+        if self.day:
+            return PRECISION_DAY
+        if self.month:
+            return PRECISION_MONTH
+        return PRECISION_YEAR
 
 class DateAndTime(EDTFObject):
     def __init__(self, date, time):
@@ -273,6 +274,14 @@ class UA(EDTFObject):
             d += "~"
         return d
 
+    def _get_multiplier(self):
+        if self.is_uncertain and self.is_approximate:
+            return appsettings.MULTIPLIER_IF_BOTH
+        elif self.is_uncertain:
+            return appsettings.MULTIPLIER_IF_UNCERTAIN
+        elif self.is_approximate:
+            return appsettings.MULTIPLIER_IF_APPROXIMATE
+
 
 class UncertainOrApproximate(EDTFObject):
     def __init__(self, date, ua):
@@ -290,6 +299,18 @@ class UncertainOrApproximate(EDTFObject):
             return None
         return self.date._strict_date(lean)
 
+    def _get_fuzzy_padding(self, lean):
+        if not self.ua:
+            return relativedelta(0)
+        multiplier = self.ua._get_multiplier()
+
+        if self.date.precision == PRECISION_DAY:
+            return multiplier * appsettings.PADDING_DAY_PRECISION
+        elif self.date.precision == PRECISION_MONTH:
+            return multiplier * appsettings.PADDING_MONTH_PRECISION
+        elif self.date.precision == PRECISION_YEAR:
+            return multiplier * appsettings.PADDING_YEAR_PRECISION
+
 
 class Unspecified(Date):
     pass
@@ -299,6 +320,12 @@ class Level1Interval(Interval):
     def __init__(self, lower, upper):
         self.lower = UncertainOrApproximate(**lower)
         self.upper = UncertainOrApproximate(**upper)
+
+    def _get_fuzzy_padding(self, lean):
+        if lean == EARLIEST:
+            return self.lower._get_fuzzy_padding(lean)
+        elif lean == LATEST:
+            return self.upper._get_fuzzy_padding(lean)
 
 
 class LongYear(EDTFObject):
@@ -433,6 +460,38 @@ class PartialUncertainOrApproximate(Date):
         if self.season:
             return self.season._precise_day(lean)
         return super(PartialUncertainOrApproximate, self)._precise_day(lean)
+
+    def _get_fuzzy_padding(self, lean):
+        result = relativedelta(0)
+
+        if self.year_ua:
+            result += appsettings.PADDING_YEAR_PRECISION * self.year_ua._get_multiplier()
+        if self.month_ua:
+            result += appsettings.PADDING_MONTH_PRECISION * self.month_ua._get_multiplier()
+        if self.day_ua:
+            result += appsettings.PADDING_DAY_PRECISION * self.day_ua._get_multiplier()
+
+        if self.year_month_ua:
+            result += appsettings.PADDING_YEAR_PRECISION * self.year_month_ua._get_multiplier()
+            result += appsettings.PADDING_MONTH_PRECISION * self.year_month_ua._get_multiplier()
+        if self.month_day_ua:
+            result += appsettings.PADDING_DAY_PRECISION * self.month_day_ua._get_multiplier()
+            result += appsettings.PADDING_MONTH_PRECISION * self.month_day_ua._get_multiplier()
+
+        if self.season_ua:
+            result += appsettings.PADDING_SEASON_PRECISION * self.season_ua._get_multiplier()
+
+        if self.all_ua:
+            multiplier = self.all_ua._get_multiplier()
+
+            if self.precision == PRECISION_DAY:
+                result += multiplier * appsettings.PADDING_DAY_PRECISION
+            elif self.precision == PRECISION_MONTH:
+                result += multiplier * appsettings.PADDING_MONTH_PRECISION
+            elif self.precision == PRECISION_YEAR:
+                result += multiplier * appsettings.PADDING_YEAR_PRECISION
+
+        return result
 
 
 class PartialUnspecified(Unspecified):
