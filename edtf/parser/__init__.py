@@ -1,1 +1,1 @@
-import parser
+from grammar import parse

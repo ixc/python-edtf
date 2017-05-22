@@ -462,6 +462,11 @@ class PartialUncertainOrApproximate(Date):
         return super(PartialUncertainOrApproximate, self)._precise_day(lean)
 
     def _get_fuzzy_padding(self, lean):
+        """
+        This is not a perfect interpretation as fuzziness is introduced for
+        redundant uncertainly modifiers e.g. (2006~)~ will get two sets of
+        fuzziness.
+        """
         result = relativedelta(0)
 
         if self.year_ua:
@@ -486,8 +491,11 @@ class PartialUncertainOrApproximate(Date):
 
             if self.precision == PRECISION_DAY:
                 result += multiplier * appsettings.PADDING_DAY_PRECISION
+                result += multiplier * appsettings.PADDING_MONTH_PRECISION
+                result += multiplier * appsettings.PADDING_YEAR_PRECISION
             elif self.precision == PRECISION_MONTH:
                 result += multiplier * appsettings.PADDING_MONTH_PRECISION
+                result += multiplier * appsettings.PADDING_YEAR_PRECISION
             elif self.precision == PRECISION_YEAR:
                 result += multiplier * appsettings.PADDING_YEAR_PRECISION
 
