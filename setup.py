@@ -3,18 +3,9 @@ from __future__ import print_function
 import setuptools
 import sys
 
-# Convert README.md to reStructuredText.
-if {'bdist_wheel', 'sdist'}.intersection(sys.argv):
-    try:
-        import pypandoc
-    except ImportError:
-        print('WARNING: You should install `pypandoc` to convert `README.md` '
-              'to reStructuredText to use as long description.',
-              file=sys.stderr)
-    else:
-        print('Converting `README.md` to reStructuredText to use as long '
-              'description.')
-        long_description = pypandoc.convert('README.md', 'rst')
+def readme():
+    with open('README.rst') as f:
+        return f.read()
 
 setuptools.setup(
     name='edtf',
@@ -24,7 +15,7 @@ setuptools.setup(
     author_email='greg@interaction.net.au',
     description='Python implementation of Library of Congress EDTF (Extended '
                 'Date Time Format) specification',
-    long_description=locals().get('long_description', ''),
+    long_description=readme(),
     license='MIT',
     packages=setuptools.find_packages(),
     include_package_data=True,
