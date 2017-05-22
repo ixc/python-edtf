@@ -3,8 +3,6 @@ from __future__ import print_function
 import setuptools
 import sys
 
-version = '0.9.2'
-
 # Convert README.md to reStructuredText.
 if {'bdist_wheel', 'sdist'}.intersection(sys.argv):
     try:
