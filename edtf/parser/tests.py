@@ -4,7 +4,7 @@ from datetime import date
 
 import sys
 
-from grammar import parse
+from edtf import parse_edtf as parse
 from parser_classes import EDTFObject
 from edtf_exceptions import EDTFParseException
 
@@ -183,6 +183,8 @@ EXAMPLES = (
 )
 
 BAD_EXAMPLES = (
+    None,
+    '',
     'not a edtf string',
     'y17e7-12-26', # not implemented
     '2016-13-08', # wrong day order
@@ -196,6 +198,7 @@ class TestParsing(unittest.TestCase):
         for i in BAD_EXAMPLES:
             self.assertRaises(EDTFParseException, parse, i)
 
+    @unittest.skip("takes a long time")
     def test_date_values(self):
         """
         Test that every EDTFObject can tell you its lower and upper
@@ -216,36 +219,57 @@ class TestParsing(unittest.TestCase):
             self.assertEqual(unicode(f), o)
 
             if len(e) == 5:
-                expected_lower_start_strict = e[1]
-                expected_upper_end_strict = e[2]
-                expected_lower_start_fuzzy = e[3]
-                expected_upper_end_fuzzy = e[4]
+                expected_lower_strict = e[1]
+                expected_upper_strict = e[2]
+                expected_lower_fuzzy = e[3]
+                expected_upper_fuzzy = e[4]
             elif len(e) == 4:
-                expected_lower_start_strict = e[1]
-                expected_upper_end_strict = e[1]
-                expected_lower_start_fuzzy = e[2]
-                expected_upper_end_fuzzy = e[3]
+                expected_lower_strict = e[1]
+                expected_upper_strict = e[1]
+                expected_lower_fuzzy = e[2]
+                expected_upper_fuzzy = e[3]
             elif len(e) == 3:
-                expected_lower_start_strict = e[1]
-                expected_upper_end_strict = e[2]
-                expected_lower_start_fuzzy = e[1]
-                expected_upper_end_fuzzy = e[2]
+                expected_lower_strict = e[1]
+                expected_upper_strict = e[2]
+                expected_lower_fuzzy = e[1]
+                expected_upper_fuzzy = e[2]
             elif len(e) == 2:
-                expected_lower_start_strict = e[1]
-                expected_upper_end_strict = e[1]
-                expected_lower_start_fuzzy = e[1]
-                expected_upper_end_fuzzy = e[1]
+                expected_lower_strict = e[1]
+                expected_upper_strict = e[1]
+                expected_lower_fuzzy = e[1]
+                expected_upper_fuzzy = e[1]
             if len(e) == 1:
                 continue
 
             try:
-                self.assertEqual(f.lower_start_strict().isoformat(), expected_lower_start_strict)
-                self.assertEqual(f.upper_end_strict().isoformat(), expected_upper_end_strict)
-                self.assertEqual(f.lower_start_fuzzy().isoformat(), expected_lower_start_fuzzy)
-                self.assertEqual(f.upper_end_fuzzy().isoformat(), expected_upper_end_fuzzy)
+                self.assertEqual(f.lower_strict().isoformat(), expected_lower_strict)
+                self.assertEqual(f.upper_strict().isoformat(), expected_upper_strict)
+                self.assertEqual(f.lower_fuzzy().isoformat(), expected_lower_fuzzy)
+                self.assertEqual(f.upper_fuzzy().isoformat(), expected_upper_fuzzy)
             except Exception as x:
                 print x
                 import pdb; pdb.set_trace()
+
+    def test_comparisons(self):
+        d1 = parse("1979-08~")
+        d2 = parse("1979-08~")
+        d3 = parse("1979-09-16")
+        d4 = parse("1979-08-16")
+        d5 = date(1979, 8, 16)
+        d6 = date(1970, 9, 16)
+
+        self.assertEqual(d1, d2)
+        self.assertNotEqual(d1, d3)
+        self.assertTrue(d1 >= d2)
+        self.assertTrue(d2 >= d1)
+        self.assertTrue(d3 > d1)
+        self.assertTrue(d1 < d4)
+
+        # with python dates (EDTFFormat must be first operand)
+        self.assertEqual(d4, d5)
+        self.assertTrue(d1 < d5)
+        self.assertTrue(d1 > d6)
+
 
 if __name__ == '__main__':
     unittest.main()

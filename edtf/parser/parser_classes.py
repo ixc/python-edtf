@@ -1,6 +1,6 @@
 import calendar
 import re
-from datetime import date
+from datetime import date, datetime
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from edtf import appsettings
@@ -59,10 +59,10 @@ class EDTFObject(object):
     def _strict_date(self, lean):
         raise NotImplementedError
 
-    def lower_start_strict(self):
+    def lower_strict(self):
         return self._strict_date(lean=EARLIEST)
 
-    def upper_end_strict(self):
+    def upper_strict(self):
         return self._strict_date(lean=LATEST)
 
     def _get_fuzzy_padding(self, lean):
@@ -83,15 +83,56 @@ class EDTFObject(object):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
-    def lower_start_fuzzy(self):
-        return self.lower_start_strict() - self._get_fuzzy_padding(EARLIEST)
+    def lower_fuzzy(self):
+        return self.lower_strict() - self._get_fuzzy_padding(EARLIEST)
 
-    def upper_end_fuzzy(self):
-        return self.upper_end_strict() + self._get_fuzzy_padding(LATEST)
+    def upper_fuzzy(self):
+        return self.upper_strict() + self._get_fuzzy_padding(LATEST)
+
+    def __eq__(self, other):
+        if isinstance(other, EDTFObject):
+            return unicode(self) == unicode(other)
+        elif isinstance(other, date):
+            return unicode(self) == other.isoformat()
+        return False
+
+    def __ne__(self, other):
+        if isinstance(other, EDTFObject):
+            return unicode(self) != unicode(other)
+        elif isinstance(other, date):
+            return unicode(self) != other.isoformat()
+        return True
+
+    def __gt__(self, other):
+        if isinstance(other, EDTFObject):
+            return self.lower_strict() > other.lower_strict()
+        elif isinstance(other, date):
+            return self.lower_strict() > other
+        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+
+    def __ge__(self, other):
+        if isinstance(other, EDTFObject):
+            return self.lower_strict() >= other.lower_strict()
+        elif isinstance(other, date):
+            return self.lower_strict() >= other
+        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+
+    def __lt__(self, other):
+        if isinstance(other, EDTFObject):
+            return self.lower_strict() < other.lower_strict()
+        elif isinstance(other, date):
+            return self.lower_strict() < other
+        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+
+    def __le__(self, other):
+        if isinstance(other, EDTFObject):
+            return self.lower_strict() <= other.lower_strict()
+        elif isinstance(other, date):
+            return self.lower_strict() <= other
+        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
 
 # (* ************************** Level 0 *************************** *)
-
 
 class Date(EDTFObject):
 
@@ -129,7 +170,7 @@ class Date(EDTFObject):
                 r += u"-%s" % self.day
         return r
 
-    def as_iso(self, default=date.max):
+    def isoformat(self, default=date.max):
         return u"%s-%02d-%02d" % (
             self.year,
             int(self.month or default.month),
@@ -209,13 +250,23 @@ class DateAndTime(EDTFObject):
         self.time = time
 
     def __unicode__(self):
-        return self.as_iso()
+        return self.isoformat()
 
-    def as_iso(self):
-        return self.date.as_iso()+"T"+self.time
+    def isoformat(self):
+        return self.date.isoformat() + "T" + self.time
 
     def _strict_date(self, lean):
         return self.date._strict_date(lean)
+
+    def __eq__(self, other):
+        if isinstance(other, datetime):
+            return self.isoformat() == other.isoformat()
+        return super(DateAndTime, self).__eq__(other)
+
+    def __ne__(self, other):
+        if isinstance(other, datetime):
+            return self.isoformat() != other.isoformat()
+        return super(DateAndTime, self).__ne__(other)
 
 
 class Interval(EDTFObject):
@@ -295,8 +346,10 @@ class UncertainOrApproximate(EDTFObject):
             return unicode(self.date)
 
     def _strict_date(self, lean):
-        if self.date in ("open", "unknown"):
-            return None
+        if self.date == "open":
+            return date.today()
+        if self.date =="unknown":
+            return None # depends on the other date
         return self.date._strict_date(lean)
 
     def _get_fuzzy_padding(self, lean):
@@ -587,7 +640,7 @@ class ExponentialYear(LongYear):
         self.precision = precision
 
     def _precise_year(self):
-        return pow(int(self.base), int(self.exponent))
+        return int(self.base) * 10 ** int(self.exponent)
 
     def get_year(self):
         if self.precision:

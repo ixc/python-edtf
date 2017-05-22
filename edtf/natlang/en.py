@@ -64,7 +64,7 @@ def text_to_edtf(text):
                 else:
                     int_match = re.match(r"(\d\d\d\d)\/(\d\d\d\d)", list_item)
                     if int_match:
-                        return "[s, %s]" % (int_match.group(1), int_match.group(2))
+                        return "[%s, %s]" % (int_match.group(1), int_match.group(2))
 
                 result = text_to_edtf_date(list_item)
                 if result:
