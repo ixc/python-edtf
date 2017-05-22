@@ -4,10 +4,12 @@ python-edtf
 
 An implementation of EDTF format in Python, together with utility functions
 for parsing natural language date texts, and converting EDTF dates to related
- Python ``date`` objects.
+Python ``date`` objects.
 
 See `http://www.loc.gov/standards/datetime/`__ for the current draft
 specification.
+
+.. contents::
 
 To install::
 
@@ -78,20 +80,20 @@ of date that was parsed. Options are::
 
 
 All such classes implement ``upper/lower_strict/fuzzy()``
-methods.
+methods to derive ``date`` objects.
 
-Interval classes have ``upper`` and ``lower`` properties that
-are also ``EDTFObject``s.
+The ``*Interval`` instances have ``upper`` and ``lower`` properties that
+are themselves ``EDTFObject`` instances.
 
-OneOfASet and MultipleDates classes have an ``objects`` property that is a
-``list`` of all of the EDTF dates parsed in the set or list.
+``OneOfASet`` and ``MultipleDates`` instances have an ``objects`` property that
+is a ``list`` of all of the EDTF dates parsed in the set or list.
 
 EDTF Specification Inclusions
 =============================
 
-The library includes implementation of levels 1,2,3 of the EDTF spec.
+The library includes implementation of levels 0, 1 and 2 of the EDTF spec.
 
-Test coverage includes examples given in the spec table of features.
+Test coverage includes every example given in the spec table of features.
 
 Level 0 ISO 8601 Features
 -------------------------
@@ -172,7 +174,7 @@ Level 2 Extensions
    >>> parse_edtf('2004-06-(01)~/2004-06-(20)~')
    Level2Interval: '2004-06-(01)~/2004-06-(20)~'
 
-* Year requiring more than 4 digits - exponential form
+* Year requiring more than 4 digits - exponential form::
 
    >>> parse_edtf('y-17e7')
    ExponentialYear: 'y-17e7'
@@ -258,6 +260,24 @@ The parser can parse strings such as::
 
 Generating natural text from an EDTF representation is a future goal.
 
+What assumptions does the natural text parser make when interpreting an ambiguous date?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* "1800s" is ambiguously a century or decade. If the given date is either
+uncertain or approximate, the decade interpretation is used. If the date is
+certain and precise, the century interpretation is used.
+
+* If the century isn't specified (``EDTF(natural_text="the '70s")``), we
+imply the century to be "19" if the year is greater than the current year,
+otherwise we imply the century to be the current century.
+
+* US-ordered dates (mm/dd/yyyy) are assumed by default in natural language.
+To change this, set ``DAY_FIRST`` to True in settings.
+
+* If a natural language groups dates with a '/', it's interpreted as "or"
+rather than "and". The resulting EDTF text is a list bracketed by ``[]`` ("one
+of these dates") rather than ``{}`` (all of these dates).
+
 
 Converting to and from Python dates
 ===================================
@@ -338,8 +358,8 @@ Two EDTF dates are considered equal if their unicode() representations are the
 same. An EDTF date is considered greater than another if its ``lower_strict``
 value is later.
 
-Django field
-============
+Django ORM field
+================
 
 The ``edtf.fields.EDTFField`` implements a simple Django field that stores
 an EDTF object in the database.
@@ -349,7 +369,7 @@ the ``natural_text_field`` parameter of your ``EDTFField``.
 
 When your model is saved, the ``natural_text_field`` value will be parsed to set
 the ``date_edtf`` value, and the underlying EDTF object will set the
-``_earliest`` and ``_latest`` field values.
+``_earliest`` and ``_latest`` fields on the model.
 
 ::
 
@@ -381,25 +401,5 @@ the ``date_edtf`` value, and the underlying EDTF object will set the
 
 
 Since the ``EDTFField`` and the ``_earliest`` and ``_latest`` field values are
-set automatically, you may want to make them readonly or not visible in your
+set automatically, you may want to make them readonly, or not visible in your
 model admin.
-
-What assumptions does the natural text parser make when interpreting an
------------------------------------------------------------------------
-ambiguous date?
----------------
-
-* "1800s" is ambiguously a century or decade. If the given date is either
-uncertain or approximate, the decade interpretation is used. If the date is
-certain and precise, the century interpretation is used.
-
-* If the century isn't specified (``EDTF(natural_text="the '70s")``), we
-imply the century to be "19" if the year is greater than the current year,
-otherwise we imply the century to be the current century.
-
-* US-ordered dates (mm/dd/yyyy) are assumed by default in natural language.
-To change this, set ``DAY_FIRST`` to True in settings.
-
-* If a natural language groups dates with a '/', it's interpreted as "or"
-rather than "and". The resulting EDTF text is a list bracketed by ``[]`` ("one
-of these dates") rather than ``{}`` (all of these dates).
