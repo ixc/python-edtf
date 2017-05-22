@@ -9,13 +9,22 @@ Python ``date`` objects.
 See `http://www.loc.gov/standards/datetime/`__ for the current draft
 specification.
 
-.. contents::
+.. contents:: :depth: 2
 
-To install::
+Quickstart
+==========
+
+To install
+----------
+
+::
 
     pip install edtf
 
-To use::
+To use
+------
+
+::
 
    >>> from edtf import parse_edtf
    # Parse an EDTF string to an EDTFObject
@@ -55,7 +64,7 @@ To use::
 
 The object returned by ``parse_edtf()`` is an instance of an
 ``edtf.parser.parser_classes.EDTFObject`` subclass, depending on the type
-of date that was parsed. Options are::
+of date that was parsed. These classes are::
 
    # Level 0
    Date
@@ -79,14 +88,14 @@ of date that was parsed. Options are::
    ExponentialYear
 
 
-All such classes implement ``upper/lower_strict/fuzzy()``
-methods to derive ``date`` objects.
+All of these implement ``upper/lower_strict/fuzzy()``
+methods to derive Python ``date`` objects.
 
 The ``*Interval`` instances have ``upper`` and ``lower`` properties that
 are themselves ``EDTFObject`` instances.
 
 ``OneOfASet`` and ``MultipleDates`` instances have an ``objects`` property that
-is a ``list`` of all of the EDTF dates parsed in the set or list.
+is a list of all of the EDTF dates parsed in the set or list.
 
 EDTF Specification Inclusions
 =============================
@@ -344,6 +353,9 @@ Long years
 Since EDTF covers a much greater timespan than Python ``date`` objects, it is
 easy to exceed the bounds of valid Python ``date``s. In this case, the returned
 dates are clamped to ``date.MIN`` and ``date.MAX``.
+
+Future revisions will include numerical interpretations of dates for better
+sortability.
 
 Seasons
 -------
