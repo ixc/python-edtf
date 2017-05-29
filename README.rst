@@ -6,7 +6,7 @@ An implementation of EDTF format in Python, together with utility functions
 for parsing natural language date texts, and converting EDTF dates to related
 Python ``date`` objects.
 
-See `http://www.loc.gov/standards/datetime/`__ for the current draft
+See `<http://www.loc.gov/standards/datetime/>`_ for the current draft
 specification.
 
 .. contents:: :depth: 2
