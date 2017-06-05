@@ -1,3 +1,8 @@
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 from django.db import models
 
 from edtf import parse_edtf, EDTFObject
@@ -22,7 +27,7 @@ class EDTFField(models.CharField):
         upper_fuzzy_field=None,
         **kwargs
     ):
-        kwargs['max_length'] = 255
+        kwargs['max_length'] = 2000
         self.natural_text_field, self.lower_strict_field, \
         self.upper_strict_field, self.lower_fuzzy_field, \
         self.upper_fuzzy_field = natural_text_field, lower_strict_field, \
@@ -48,6 +53,12 @@ class EDTFField(models.CharField):
 
     def from_db_value(self, value, expression, connection, context):
         # Converting values to Python objects
+        if not value:
+            return None
+        try:
+            return pickle.loads(str(value))
+        except:
+            pass
         return parse_edtf(value, fail_silently=True)
 
     def to_python(self, value):
@@ -59,11 +70,16 @@ class EDTFField(models.CharField):
 
         return parse_edtf(value, fail_silently=True)
 
+    def get_db_prep_save(self, value, connection):
+        if value:
+            return pickle.dumps(value)
+        return super(EDTFField, self).get_db_prep_save(value, connection)
+
     def get_prep_value(self, value):
         # convert python objects to query values
         value = super(EDTFField, self).get_prep_value(value)
         if isinstance(value, EDTFObject):
-            return unicode(value)
+            return pickle.dumps(value)
         return value
 
     def pre_save(self, instance, add):
@@ -74,19 +90,29 @@ class EDTFField(models.CharField):
         if not self.natural_text_field or self.attname not in instance.__dict__:
             return
 
+        edtf = getattr(instance, self.attname)
+
+        # Update EDTF field based on latest natural text value, if any
         natural_text = getattr(instance, self.natural_text_field)
         if natural_text:
-            n = text_to_edtf(natural_text)
-            setattr(instance, self.attname, n)
+            edtf = text_to_edtf(natural_text)
 
-        e = parse_edtf(getattr(instance, self.attname), fail_silently=True)
-        if e:
+        # TODO If `natural_text_field` becomes cleared the derived EDTF field
+        # value should also be cleared, rather than left at original value?
 
+        # TODO Handle case where EDTF field is set to a string directly, not
+        # via `natural_text_field` (this is a slightly unexpected use-case, but
+        # is a very efficient way to set EDTF values in situations like for API
+        # imports so we probably want to continue to support it?)
+        if edtf and not isinstance(edtf, EDTFObject):
+            edtf = parse_edtf(edtf, fail_silently=True)
+
+        setattr(instance, self.attname, edtf)
+        if edtf:
             # set related date fields on the instance
             for attr in DATE_ATTRS:
                 field_attr = "%s_field" % attr
                 g = getattr(self, field_attr, None)
                 if g:
-                    setattr(instance, g, getattr(e, attr)())
-
-            return unicode(e)
+                    setattr(instance, g, getattr(edtf, attr)())
+        return edtf
