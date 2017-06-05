@@ -27,7 +27,7 @@ class EDTFField(models.CharField):
         upper_fuzzy_field=None,
         **kwargs
     ):
-        kwargs['max_length'] = 1000
+        kwargs['max_length'] = 2000
         self.natural_text_field, self.lower_strict_field, \
         self.upper_strict_field, self.lower_fuzzy_field, \
         self.upper_fuzzy_field = natural_text_field, lower_strict_field, \
