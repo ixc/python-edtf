@@ -23,6 +23,12 @@ setuptools.setup(
         'python-dateutil',
         'pyparsing',
     ],
+    extras_require={
+        'test': [
+            'django',
+            'nose',
+        ],
+    },
     setup_requires=[
         'setuptools_scm',
     ],

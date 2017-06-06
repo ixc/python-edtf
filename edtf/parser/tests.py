@@ -189,16 +189,15 @@ BAD_EXAMPLES = (
     'y17e7-12-26', # not implemented
     '2016-13-08', # wrong day order
     '2016-02-39', # out of range
+    '-0000-01-01',  # negative zero year
 )
 
 class TestParsing(unittest.TestCase):
-
 
     def test_non_parsing(self):
         for i in BAD_EXAMPLES:
             self.assertRaises(EDTFParseException, parse, i)
 
-    @unittest.skip("takes a long time")
     def test_date_values(self):
         """
         Test that every EDTFObject can tell you its lower and upper
