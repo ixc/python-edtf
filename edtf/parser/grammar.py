@@ -1,31 +1,27 @@
 from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
-    ZeroOrMore, Regex, Or, Combine
+    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums
 
 # (* ************************** Level 0 *************************** *)
-from parser_classes import Date, DateAndTime, Interval, UncertainOrApproximate, \
-    Unspecified, Level1Interval, LongYear, Season, \
+from parser_classes import Date, DateAndTime, Interval, Unspecified, \
+    UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
     MaskedPrecision, Level2Interval, ExponentialYear
 
 from edtf_exceptions import EDTFParseException
 
-oneThru12 = L("01") ^ "02" ^ "03" ^ "04" ^ "05" ^ "06" ^ "07" ^ "08" ^ \
-    "09" ^ "10" ^ "11" ^ "12"
-oneThru13 = oneThru12 ^ "13"
-oneThru23 = oneThru13 ^ "14" ^ "15" ^ "16" ^ "17" ^ "18" ^ "19" ^ "20" ^ \
-    "21" ^ "22" ^ "23"
-zeroThru23 = L("00") ^ oneThru23
-oneThru29 = oneThru23 ^ "24" ^ "25" ^ "26" ^ "27" ^ "28" ^ "29"
-oneThru30 = oneThru29 ^ "30"
-oneThru31 = oneThru30 ^ "31"
-oneThru59 = oneThru31 ^ "32" ^ "33" ^ "34" ^ "35" ^ "36" ^ "37" ^ "38" ^ \
-    "39" ^ "40" ^ "41" ^ "42" ^ "43" ^ "44" ^ "45" ^ "46" ^ "47" ^ "48" ^ \
-    "49" ^ "50" ^ "51" ^ "52" ^ "53" ^ "54" ^ "55" ^ "56" ^ "57" ^ "58" ^ "59"
-zeroThru59 = L("00") ^ oneThru59
+oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
+oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])
+oneThru23 = oneOf(['%.2d' % i for i in range(1, 24)])
+zeroThru23 = oneOf(['%.2d' % i for i in range(0, 23)])
+oneThru29 = oneOf(['%.2d' % i for i in range(1, 30)])
+oneThru30 = oneOf(['%.2d' % i for i in range(1, 31)])
+oneThru31 = oneOf(['%.2d' % i for i in range(1, 32)])
+oneThru59 = oneOf(['%.2d' % i for i in range(1, 60)])
+zeroThru59 = oneOf(['%.2d' % i for i in range(0, 60)])
 
-positiveDigit = L("1") ^ "2" ^ "3" ^ "4" ^ "5" ^ "6" ^ "7" ^ "8" ^ "9"
-digit = positiveDigit ^ "0"
+positiveDigit = Word(nums, exact=1, excludeChars='0')
+digit = Word(nums, exact=1)
 
 second = zeroThru59
 minute = zeroThru59
@@ -33,24 +29,19 @@ hour = zeroThru23
 day = oneThru31("day")
 
 month = oneThru12("month")
-monthDay = \
-    (
-        (L("01") ^ "03" ^ "05" ^ "07" ^ "08" ^ "10" ^ "12")("month") + "-"
-        + oneThru31("day")
-    ) \
-    ^ ((L("04") ^ "06" ^ "09" ^ "11")("month") + "-" + oneThru30("day")) \
-    ^ (L("02")("month") + "-" + oneThru29("day"))
+monthDay = (
+    (oneOf("01 03 05 07 08 10 12")("month") + "-" + oneThru31("day")) ^
+    (oneOf("04 06 09 11")("month") + "-" + oneThru30("day")) ^
+    (L("02")("month") + "-" + oneThru29("day"))
+)
 
-positiveYear = (
-    (positiveDigit + digit + digit + digit)
-    ^ (digit + positiveDigit + digit + digit)
-    ^ (digit + digit + positiveDigit + digit)
-    ^ (digit + digit + digit + positiveDigit)
-) #4 digits, at least one of which is positive
+# 4 digits, 0 to 9
+positiveYear = Word(nums, exact=4)
 
-negativeYear = ("-" + positiveYear)
+# Negative version of positive year, but "-0000" is illegal
+negativeYear = NotAny(L("-0000")) + ("-" + positiveYear)
 
-year = Combine(positiveYear ^ negativeYear ^ L("0000"))("year")
+year = Combine(positiveYear ^ negativeYear)("year")
 
 yearMonth = year + "-" + month
 yearMonthDay = year + "-" + monthDay  # o hai iso date
@@ -59,14 +50,13 @@ date = Combine(year ^ yearMonth ^ yearMonthDay)("date")
 Date.set_parser(date)
 
 zoneOffsetHour = oneThru13
-zoneOffset = L("Z") ^ \
-    (
-        (L("+") ^ "-") + (
-            (zoneOffsetHour + Optional(":" + minute)) ^
-            "14:00" ^
-            ("00:" + oneThru59)
-        )
+zoneOffset = L("Z") ^ (
+    Regex("[+-]") + (
+        zoneOffsetHour + Optional(":" + minute) ^
+        L("14:00") ^
+        ("00:" + oneThru59)
     )
+)
 
 baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
@@ -84,10 +74,10 @@ level0Expression = date ^ dateAndTime ^ l0Interval
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = Combine(L("?") ^ L("~") ^ L("?~"))
+UASymbol = Combine(oneOf("? ~ ?~"))
 UA.set_parser(UASymbol)
 
-seasonNumber = L("21") ^ "22" ^ "23" ^ "24"
+seasonNumber = oneOf("21 22 23 24")
 
 # (* *** Season (unqualified) *** *)
 season = year + "-" + seasonNumber("season")
@@ -120,10 +110,12 @@ level1Interval = l1Start("lower") + "/" + l1End("upper")
 Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
-yearWithOneOrTwoUnspecifedDigits = Combine(digit + digit + (digit ^ 'u') + 'u')("year")
-monthUnspecified = year + "-" + Combine("uu")("month")
-dayUnspecified = yearMonth + "-" + Combine("uu")("day")
-dayAndMonthUnspecified = year + "-" + Combine("uu")("month") + "-" + Combine("uu")("day")
+yearWithOneOrTwoUnspecifedDigits = Combine(
+    digit + digit + (digit ^ 'u') + 'u'
+)("year")
+monthUnspecified = year + "-" + L("uu")("month")
+dayUnspecified = yearMonth + "-" + L("uu")("day")
+dayAndMonthUnspecified = year + "-" + L("uu")("month") + "-" + L("uu")("day")
 
 unspecified = yearWithOneOrTwoUnspecifedDigits \
     ^ monthUnspecified \
@@ -146,29 +138,43 @@ level1Expression = uncertainOrApproxDate \
 
 # (* ** Internal Unspecified** *)
 
-positiveDigitOrU = positiveDigit ^ "u"
-digitOrU = positiveDigitOrU ^ "0"
-oneThru3 = L("1") ^ "2" ^ "3"
+digitOrU = Word(nums + 'u', exact=1)
 
-dayWithU = oneThru31 \
-    ^ ("u" + digitOrU) \
-    ^ (oneThru3 + "u")
+# 2-digit day with at least one 'u' present
+dayWithU = Combine(
+    ("u" + digitOrU) ^
+    (digitOrU + 'u')
+)("day")
 
-monthWithU = oneThru12 ^ "0u" ^ "1u" ^ ("u" + digitOrU)
+# 2-digit month with at least one 'u' present
+monthWithU = Combine(
+    oneOf("0u 1u") ^
+    ("u" + digitOrU)
+)("month")
 
-yearWithU = (L("u") + digitOrU + digitOrU + digitOrU) \
-    ^ (digitOrU + "u" + digitOrU + digitOrU) \
-    ^ (digitOrU + digitOrU + "u" + digitOrU) \
-    ^ (digitOrU + digitOrU + digitOrU + "u")
+# 4-digit year with at least one 'u' present
+yearWithU = Combine(
+    ('u' + digitOrU + digitOrU + digitOrU) ^
+    (digitOrU + 'u' + digitOrU + digitOrU) ^
+    (digitOrU + digitOrU + 'u' + digitOrU) ^
+    (digitOrU + digitOrU + digitOrU + 'u')
+)("year")
 
-yearMonthWithU = (Combine(year("") ^ yearWithU)("year") + "-" + monthWithU("month")) \
-    ^ (yearWithU("year") + "-" + month)
+yearMonthWithU = (
+    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU) ^
+    (yearWithU + "-" + month)
+)
 
-monthDayWithU = (Combine(month("") ^ monthWithU)("month") + "-" + Combine(dayWithU)("day")) \
-    ^ (monthWithU("month") + "-" + day)
+monthDayWithU = (
+    (Combine(month("") ^ monthWithU)("month") + "-" + dayWithU) ^
+    (monthWithU + "-" + day)
+)
 
-yearMonthDayWithU = (Combine(yearWithU ^ year(""))("year") + "-" + monthDayWithU) \
-    ^ (yearWithU("year") + "-" + monthDay)
+yearMonthDayWithU = (
+    (yearWithU + "-" + Combine(month("") ^ monthWithU)("month") + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
+    (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
+    (year + "-" + month + "-" + dayWithU)
+)
 
 partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
 PartialUnspecified.set_parser(partialUnspecified)
