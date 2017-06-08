@@ -6,6 +6,13 @@ In development
 
 *Nothing yet*
 
+2.5 (2017-06-08)
+----------------
+
+*  Order-of-magnitude performance improvement in parsing.
+*  EDTFFields are now serialised EDTF objects, rather than unparsed EDTF text
+   strings.
+
 2.0 (2017-05-22)
 ----------------
 
@@ -22,13 +29,13 @@ and it can generate python date values to store in other fields.
 Features
 ~~~~~~~~
 
-* Complete EDTF spec parser implemented using ``pyparsing``.
-* Expanded documentation.
-* Django field that stores and displays EDTF, deriving it from a specified
-  display field, and storing derived python dates in specified ``DateField``s.
-* Settings are broken out into ``appsettings.py``. These settings can be
-  overridden in a Django settings file.
-* Instituted changelog
+*  Complete EDTF spec parser implemented using ``pyparsing``.
+*  Expanded documentation.
+*  Django field that stores and displays EDTF, deriving it from a specified
+   display field, and storing derived python dates in specified ``DateField``s.
+*  Settings are broken out into ``appsettings.py``. These settings can be
+   overridden in a Django settings file.
+*  Instituted changelog
 
 Backwards-incompatible changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
