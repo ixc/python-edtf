@@ -1,10 +1,13 @@
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured
 
 try:
-    from django.conf import settings
-    EDTF = getattr(settings, 'EDTF', {})
-except (ImportError, ImproperlyConfigured):
+    from django.core.exceptions import ImproperlyConfigured
+    try:
+        from django.conf import settings
+        EDTF = getattr(settings, 'EDTF', {})
+    except ImproperlyConfigured:
+        EDTF = {}
+except ImportError:
     EDTF = {}
 
 SEASON_MONTHS_RANGE = EDTF.get('SEASON_MONTHS_RANGE', {
