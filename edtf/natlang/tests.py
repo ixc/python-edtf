@@ -3,6 +3,9 @@ from en import text_to_edtf
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
+    ('active late 17th-19th centuries', '16xx/18xx'), # ignoring 'late' for now
+    ('active 17-19th Centuries', '16xx/18xx'), # ignoring 'late' for now
+
     ('', None),
     ('this isn\'t a date', None),
     ('90', '1990'),  # implied century
@@ -117,6 +120,21 @@ EXAMPLES = (
     ('about 19c', '18xx~'),
     ('19c?', '18xx?'),
     ('c.19c?', '18xx?~'),
+
+    # BC/AD
+    ('1 AD', '0001'),
+    ('17 CE', '0017'),
+    ('127 CE', '0127'),
+    ('1270 CE', '1270'),
+    ('c1 AD', '0001~'),
+    ('c17 CE', '0017~'),
+    ('c127 CE', '0127~'),
+    ('c1270 CE', '1270~'),
+    ('c64 BCE', '-0064~'),
+    ('2nd century bc', '-01xx'),  # -200 to -101
+    ('2nd century bce', '-01xx'),
+    ('2nd century ad', '01xx'),
+    ('2nd century ce', '01xx'),
 
     # c-c-c-combo
     # just showing off now...

@@ -13,7 +13,8 @@ DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
 SHORT_YEAR_RE = r'(-?)([\du])([\dxu])([\dxu])([\dxu])'
 LONG_YEAR_RE = r'y(-?)([1-9]\d\d\d\d+)'
-CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)'
+CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?'
+CE_RE = r'(\d{1,4}) (ad|ce|bc|bce)'
 
 def text_to_edtf(text):
     """
@@ -42,16 +43,21 @@ def text_to_edtf(text):
                     # match looks from the beginning of the string, search
                     # looks anywhere.
 
-                    if re.match(r'\d\D\b',
-                                d2):  # 1-digit year partial e.g. 1868-9
-                        if re.search(r'\b\d\d\d\d$',
-                                    d1):  # TODO: evaluate it and see if it's a year
+                    if re.match(r'\d\D\b', d2):  # 1-digit year partial e.g. 1868-9
+                        if re.search(r'\b\d\d\d\d$', d1):  # TODO: evaluate it and see if it's a year
                             d2 = d1[-4:-1] + d2
-                    elif re.match(r'\d\d\b',
-                                  d2):  # 2-digit year partial e.g. 1809-10
+                    elif re.match(r'\d\d\b', d2):  # 2-digit year partial e.g. 1809-10
                         if re.search(r'\b\d\d\d\d$', d1):
                             d2 = d1[-4:-2] + d2
+                    else:
+                        century_range_match = re.search(r'\b(\d\d)(th|st|nd|rd|)-(\d\d)(th|st|nd|rd) [cC]', "%s-%s" % (d1,d2))
+                        if century_range_match:
+                            g = century_range_match.groups()
+                            d1 = "%sC" % g[0]
+                            d2 = "%sC" % g[2]
 
+
+                    # import pdb; pdb.set_trace()
                     r1 = text_to_edtf_date(d1)
                     r2 = text_to_edtf_date(d2)
 
@@ -131,11 +137,35 @@ def text_to_edtf_date(text):
 
     # detect century forms
     is_century = re.findall(CENTURY_RE, t)
+
+    # detect CE/BCE year form
+    is_ce = re.findall(CE_RE, t)
     if is_century:
         result = "%02dxx" % (int(is_century[0][0]) - 1,)
         is_approximate = is_approximate or \
                          re.findall(r'\b(ca?\.?) ?' + CENTURY_RE, t)
         is_uncertain = is_uncertain or re.findall(CENTURY_RE + r'\?', t)
+
+        try:
+            is_bc = is_century[0][-1] in ("bc", "bce")
+            if is_bc:
+                result = "-%s" % result
+        except IndexError:
+            pass
+
+    elif is_ce:
+        result = "%04d" % (int(is_ce[0][0]))
+        is_approximate = is_approximate or \
+                         re.findall(r'\b(ca?\.?) ?' + CE_RE, t)
+        is_uncertain = is_uncertain or re.findall(CE_RE + r'\?', t)
+
+        try:
+            is_bc = is_ce[0][-1] in ("bc", "bce")
+            if is_bc:
+                result = "-%s" % result
+        except IndexError:
+            pass
+
     else:
         # try dateutil.parse
 
@@ -227,5 +257,9 @@ def text_to_edtf_date(text):
 
     if is_approximate:
         result += "~"
+
+    # weed out bad parses
+    if result.startswith("uu-uu"):
+        return None
 
     return result
