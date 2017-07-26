@@ -134,6 +134,8 @@ EXAMPLES = (
     ('1858/1860', '[1858, 1860]'),
     ('1860s-1870s', '186x/187x'),
     ('1861, printed 1869', '1861'),
+    ('1910-30', '1910/1930'),
+    ('active 1910-30', '1910/1930'),
     ('1861-67', '1861/1867'),
     ('1861-67 (later print)', '1861/1867'),
     ('1863 or 1864', '1863'),
@@ -156,6 +158,8 @@ EXAMPLES = (
     # though those forms aren't explicitly supported in the spec.
     ('1932, printed 1976 by Gunther Sander', '1932'), # should be {1932, 1976}
     ('1938, printed 1940s-1950s', '1938'), # should be something like {1938, 194x-195x}
+
+
 
     # for these to work we need to recast is_uncertain and is_approximate
     # such that they work on different parts. Probably worth rolling our own

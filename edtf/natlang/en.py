@@ -39,14 +39,17 @@ def text_to_edtf(text):
                     d1 = toks[0].strip()
                     d2 = toks[1].strip()
 
-                    if re.match(r'^\d\D\b',
+                    # match looks from the beginning of the string, search
+                    # looks anywhere.
+
+                    if re.match(r'\d\D\b',
                                 d2):  # 1-digit year partial e.g. 1868-9
-                        if re.match(r'\b\d\d\d\d$',
+                        if re.search(r'\b\d\d\d\d$',
                                     d1):  # TODO: evaluate it and see if it's a year
                             d2 = d1[-4:-1] + d2
-                    elif re.match(r'^\d\d\b',
+                    elif re.match(r'\d\d\b',
                                   d2):  # 2-digit year partial e.g. 1809-10
-                        if re.match(r'\b\d\d\d\d$', d1):
+                        if re.search(r'\b\d\d\d\d$', d1):
                             d2 = d1[-4:-2] + d2
 
                     r1 = text_to_edtf_date(d1)
@@ -62,7 +65,7 @@ def text_to_edtf(text):
                 # This whole section could be more friendly.
 
                 else:
-                    int_match = re.match(r"(\d\d\d\d)\/(\d\d\d\d)", list_item)
+                    int_match = re.search(r"(\d\d\d\d)\/(\d\d\d\d)", list_item)
                     if int_match:
                         return "[%s, %s]" % (int_match.group(1), int_match.group(2))
 
