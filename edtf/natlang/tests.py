@@ -3,6 +3,9 @@ from en import text_to_edtf
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
+    ('active late 17th-19th centuries', '16xx/18xx'), # ignoring 'late' for now
+    ('active 17-19th Centuries', '16xx/18xx'), # ignoring 'late' for now
+
     ('', None),
     ('this isn\'t a date', None),
     ('90', '1990'),  # implied century
@@ -118,6 +121,21 @@ EXAMPLES = (
     ('19c?', '18xx?'),
     ('c.19c?', '18xx?~'),
 
+    # BC/AD
+    ('1 AD', '0001'),
+    ('17 CE', '0017'),
+    ('127 CE', '0127'),
+    ('1270 CE', '1270'),
+    ('c1 AD', '0001~'),
+    ('c17 CE', '0017~'),
+    ('c127 CE', '0127~'),
+    ('c1270 CE', '1270~'),
+    ('c64 BCE', '-0064~'),
+    ('2nd century bc', '-01xx'),  # -200 to -101
+    ('2nd century bce', '-01xx'),
+    ('2nd century ad', '01xx'),
+    ('2nd century ce', '01xx'),
+
     # c-c-c-combo
     # just showing off now...
     ('a day in about Spring 1849?', '1849-21-uu?~'),
@@ -134,6 +152,8 @@ EXAMPLES = (
     ('1858/1860', '[1858, 1860]'),
     ('1860s-1870s', '186x/187x'),
     ('1861, printed 1869', '1861'),
+    ('1910-30', '1910/1930'),
+    ('active 1910-30', '1910/1930'),
     ('1861-67', '1861/1867'),
     ('1861-67 (later print)', '1861/1867'),
     ('1863 or 1864', '1863'),
@@ -156,6 +176,8 @@ EXAMPLES = (
     # though those forms aren't explicitly supported in the spec.
     ('1932, printed 1976 by Gunther Sander', '1932'), # should be {1932, 1976}
     ('1938, printed 1940s-1950s', '1938'), # should be something like {1938, 194x-195x}
+
+
 
     # for these to work we need to recast is_uncertain and is_approximate
     # such that they work on different parts. Probably worth rolling our own

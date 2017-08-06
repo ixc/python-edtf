@@ -76,6 +76,7 @@ EXAMPLES = (
     ('1999-01-uu', '1999-01-01', '1999-01-31'),
     # some day in 1999
     ('1999-uu-uu', '1999-01-01', '1999-12-31'),
+
     # L1 Extended Interval
     # beginning unknown, end 2006
     ('unknown/2006', '1996-12-31', '2006-12-31'),

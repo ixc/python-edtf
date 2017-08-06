@@ -186,7 +186,10 @@ class Date(EDTFObject):
 
     def _precise_month(self, lean):
         if self.month and self.month != "uu":
-            return int(self.month)
+            try:
+                return int(self.month)
+            except ValueError as e:
+                raise ValueError("Couldn't convert %s to int (in %s)" % (self.month, self))
         else:
             return 1 if lean == EARLIEST else 12
 

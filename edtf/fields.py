@@ -96,6 +96,8 @@ class EDTFField(models.CharField):
         natural_text = getattr(instance, self.natural_text_field)
         if natural_text:
             edtf = text_to_edtf(natural_text)
+        else:
+            edtf = None
 
         # TODO If `natural_text_field` becomes cleared the derived EDTF field
         # value should also be cleared, rather than left at original value?
@@ -108,11 +110,13 @@ class EDTFField(models.CharField):
             edtf = parse_edtf(edtf, fail_silently=True)
 
         setattr(instance, self.attname, edtf)
-        if edtf:
-            # set related date fields on the instance
-            for attr in DATE_ATTRS:
-                field_attr = "%s_field" % attr
-                g = getattr(self, field_attr, None)
-                if g:
+        # set or clear related date fields on the instance
+        for attr in DATE_ATTRS:
+            field_attr = "%s_field" % attr
+            g = getattr(self, field_attr, None)
+            if g:
+                if edtf:
                     setattr(instance, g, getattr(edtf, attr)())
+                else:
+                    setattr(instance, g, None)
         return edtf

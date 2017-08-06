@@ -388,7 +388,7 @@ the ``date_edtf`` value, and the underlying EDTF object will set the
    from django.db import models
    from edtf.fields import EDTFField
 
-   class MyModel(models.model):
+   class MyModel(models.Model):
         date_display = models.CharField(
            "Date of creation (display)",
            blank=True,
