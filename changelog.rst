@@ -6,6 +6,14 @@ In development
 
 *Nothing yet*
 
+2.6 (2017-08-07)
+----------------
+
+* EDTF fields are now cleared when their source fields go.
+* Improved clarity of parser errors.
+* Improved parser accuracy and resilience (#20, #22).
+
+
 2.5 (2017-06-08)
 ----------------
 
