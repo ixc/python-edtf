@@ -6,6 +6,12 @@ In development
 
 *Nothing yet*
 
+2.7 (2018-01-09)
+----------------
+
+* Fix lower/upper fuzzy values for outlier date values
+
+
 2.6 (2017-08-07)
 ----------------
 
