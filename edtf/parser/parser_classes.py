@@ -84,10 +84,18 @@ class EDTFObject(object):
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
     def lower_fuzzy(self):
-        return self.lower_strict() - self._get_fuzzy_padding(EARLIEST)
+        strict_val = self.lower_strict()
+        # Do not exceed or adjust boundary datetimes
+        if strict_val in (date.min, date.max):
+            return strict_val
+        return strict_val - self._get_fuzzy_padding(EARLIEST)
 
     def upper_fuzzy(self):
-        return self.upper_strict() + self._get_fuzzy_padding(LATEST)
+        strict_val = self.upper_strict()
+        # Do not exceed or adjust boundary datetimes
+        if strict_val in (date.min, date.max):
+            return strict_val
+        return strict_val + self._get_fuzzy_padding(LATEST)
 
     def __eq__(self, other):
         if isinstance(other, EDTFObject):
