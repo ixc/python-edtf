@@ -247,8 +247,10 @@ class TestParsing(unittest.TestCase):
                 self.assertEqual(f.lower_fuzzy().isoformat(), expected_lower_fuzzy)
                 self.assertEqual(f.upper_fuzzy().isoformat(), expected_upper_fuzzy)
             except Exception as x:
-                print x
-                import pdb; pdb.set_trace()
+                # Write to stdout for manual debugging, I guess
+                sys.stdout.write(unicode(x))
+                # Re-raise exception so unit tests work for non-manual usage
+                raise
 
     def test_comparisons(self):
         d1 = parse("1979-08~")
