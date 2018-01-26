@@ -6,7 +6,7 @@ except:
 from django.db import models
 
 from edtf import parse_edtf, EDTFObject
-from natlang import text_to_edtf
+from edtf.natlang import text_to_edtf
 
 DATE_ATTRS = (
     'lower_strict',
