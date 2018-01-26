@@ -202,7 +202,7 @@ class TestLevel0(unittest.TestCase):
         """
         for i, o in EXAMPLES:
             e = text_to_edtf(i)
-            print "%s => %s" % (i, e)
+            print("%s => %s" % (i, e))
             self.assertEqual(e, o)
 
 

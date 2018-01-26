@@ -35,8 +35,8 @@ class EDTFObject(object):
         try:
             return cls(**kwargs) # replace the token list with the class
         except Exception as e:
-            print "trying to %s.__init__(**%s)" % (cls.__name__, kwargs)
-            raise(e)
+            print("trying to %s.__init__(**%s)" % (cls.__name__, kwargs))
+            raise e
 
     @classmethod
     def parse(cls, s):
