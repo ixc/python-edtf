@@ -3,12 +3,13 @@ from datetime import datetime
 from dateutil.parser import parse
 import re
 from edtf import appsettings
+from six.moves import xrange
 
 
 # two dates where every digit of an ISO date representation is different,
 # and one is in the past and one is in the future.
 # This is used in the dateutil parse to detect which elements weren't parsed.
-DEFAULT_DATE_1 = datetime(1234, 01, 01, 0, 0)
+DEFAULT_DATE_1 = datetime(1234, 1, 1, 0, 0)
 DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
 SHORT_YEAR_RE = r'(-?)([\du])([\dxu])([\dxu])([\dxu])'

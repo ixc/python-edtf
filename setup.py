@@ -22,6 +22,7 @@ setuptools.setup(
     install_requires=[
         'python-dateutil',
         'pyparsing',
+        'six'
     ],
     extras_require={
         'test': [
