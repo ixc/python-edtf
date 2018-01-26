@@ -4,9 +4,9 @@ from datetime import date
 
 import sys
 
-from edtf import parse_edtf as parse
-from parser_classes import EDTFObject
-from edtf_exceptions import EDTFParseException
+from edtf.parser.grammar import parse_edtf as parse
+from edtf.parser.parser_classes import EDTFObject
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
 # the first item in each tuple is the input EDTF string, and expected parse result.

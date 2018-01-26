@@ -2,13 +2,13 @@ from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
     ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums
 
 # (* ************************** Level 0 *************************** *)
-from parser_classes import Date, DateAndTime, Interval, Unspecified, \
+from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
     MaskedPrecision, Level2Interval, ExponentialYear
 
-from edtf_exceptions import EDTFParseException
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
 oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])

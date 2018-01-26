@@ -1,2 +1,2 @@
-from grammar import parse_edtf
-from parser_classes import *
+from edtf.parser.grammar import parse_edtf
+from edtf.parser.parser_classes import *

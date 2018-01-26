@@ -1,5 +1,5 @@
 import unittest
-from en import text_to_edtf
+from edtf.natlang.en import text_to_edtf
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (

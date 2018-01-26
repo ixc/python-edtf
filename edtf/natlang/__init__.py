@@ -1,1 +1,1 @@
-from en import text_to_edtf
+from .en import text_to_edtf
