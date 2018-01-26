@@ -222,7 +222,7 @@ class TestParsing(unittest.TestCase):
             f = parse(i)
             sys.stdout.write(" => %s()\n" % type(f).__name__)
             self.assertIsInstance(f, EDTFObject)
-            self.assertEqual(unicode(f), o)
+            self.assertEqual(str(f), o)
 
             if len(e) == 5:
                 expected_lower_strict = e[1]
@@ -254,7 +254,7 @@ class TestParsing(unittest.TestCase):
                 self.assertEqual(f.upper_fuzzy().isoformat(), expected_upper_fuzzy)
             except Exception as x:
                 # Write to stdout for manual debugging, I guess
-                sys.stdout.write(unicode(x))
+                sys.stdout.write(str(x))
                 # Re-raise exception so unit tests work for non-manual usage
                 raise
 
