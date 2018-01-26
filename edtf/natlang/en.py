@@ -16,6 +16,7 @@ LONG_YEAR_RE = r'y(-?)([1-9]\d\d\d\d+)'
 CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?'
 CE_RE = r'(\d{1,4}) (ad|ce|bc|bce)'
 
+
 def text_to_edtf(text):
     """
     Generate EDTF string equivalent of a given natural language date string.
@@ -55,7 +56,6 @@ def text_to_edtf(text):
                             g = century_range_match.groups()
                             d1 = "%sC" % g[0]
                             d2 = "%sC" % g[2]
-
 
                     # import pdb; pdb.set_trace()
                     r1 = text_to_edtf_date(d1)

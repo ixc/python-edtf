@@ -5,7 +5,6 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from edtf import appsettings
 
-
 EARLIEST = 'earliest'
 LATEST = 'latest'
 
@@ -73,12 +72,14 @@ class EDTFObject(object):
 
     def get_is_approximate(self):
         return getattr(self, '_is_approximate', False)
+
     def set_is_approximate(self, val):
         self._is_approximate = val
     is_approximate = property(get_is_approximate, set_is_approximate)
 
     def get_is_uncertain(self):
         return getattr(self, '_is_uncertain', False)
+
     def set_is_uncertain(self, val):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
@@ -148,6 +149,7 @@ class Date(EDTFObject):
         if y is None:
             raise AttributeError("Year must not be None")
         self._year = y
+
     def get_year(self):
         return self._year
     year = property(get_year, set_year)
@@ -156,6 +158,7 @@ class Date(EDTFObject):
         self._month = m
         if m == None:
             self.day = None
+
     def get_month(self):
         return self._month
     month = property(get_month, set_month)
@@ -217,7 +220,6 @@ class Date(EDTFObject):
             return int(self.day)
 
     def _strict_date(self, lean):
-
         py = self._precise_year(lean)
         if py < 1: # year is not positive
             return date.min
@@ -227,7 +229,6 @@ class Date(EDTFObject):
             'month': self._precise_month(lean),
             'day': self._precise_day(lean),
         }
-
 
         isoish = u"%(year)s-%(month)02d-%(day)02d" % parts
 
@@ -254,6 +255,7 @@ class Date(EDTFObject):
         if self.month:
             return PRECISION_MONTH
         return PRECISION_YEAR
+
 
 class DateAndTime(EDTFObject):
     def __init__(self, date, time):
@@ -582,7 +584,6 @@ class Consecutives(Interval):
             self.upper = Date.parse(upper)
         else:
             self.upper = upper
-
 
     def __unicode__(self):
         return u"%s..%s" % (self.lower or '', self.upper or '')

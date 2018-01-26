@@ -199,8 +199,8 @@ BAD_EXAMPLES = (
     '-0000-01-01',  # negative zero year
 )
 
-class TestParsing(unittest.TestCase):
 
+class TestParsing(unittest.TestCase):
     def test_non_parsing(self):
         for i in BAD_EXAMPLES:
             self.assertRaises(EDTFParseException, parse, i)

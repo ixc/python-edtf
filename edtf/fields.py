@@ -15,6 +15,7 @@ DATE_ATTRS = (
     'upper_fuzzy',
 )
 
+
 class EDTFField(models.CharField):
 
     def __init__(
@@ -35,7 +36,6 @@ class EDTFField(models.CharField):
         super(EDTFField, self).__init__(verbose_name, name, **kwargs)
 
     description = "An field for storing complex/fuzzy date specifications in EDTF format."
-
 
     def deconstruct(self):
         name, path, args, kwargs = super(EDTFField, self).deconstruct()
