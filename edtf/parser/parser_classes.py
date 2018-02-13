@@ -5,7 +5,6 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from edtf import appsettings
 
-
 EARLIEST = 'earliest'
 LATEST = 'latest'
 
@@ -36,15 +35,15 @@ class EDTFObject(object):
         try:
             return cls(**kwargs) # replace the token list with the class
         except Exception as e:
-            print "trying to %s.__init__(**%s)" % (cls.__name__, kwargs)
-            raise(e)
+            print("trying to %s.__init__(**%s)" % (cls.__name__, kwargs))
+            raise e
 
     @classmethod
     def parse(cls, s):
         return cls.parser.parseString(s)[0]
 
     def __repr__(self):
-        return "%s: '%s'" % (type(self).__name__, unicode(self))
+        return "%s: '%s'" % (type(self).__name__, str(self))
 
     def __init__(self, *args, **kwargs):
         str = "%s.__init__(*%s, **%s)" % (
@@ -53,7 +52,7 @@ class EDTFObject(object):
         )
         raise NotImplementedError("%s is not implemented." % str)
 
-    def __unicode__(self):
+    def __str__(self):
         raise NotImplementedError
 
     def _strict_date(self, lean):
@@ -73,12 +72,14 @@ class EDTFObject(object):
 
     def get_is_approximate(self):
         return getattr(self, '_is_approximate', False)
+
     def set_is_approximate(self, val):
         self._is_approximate = val
     is_approximate = property(get_is_approximate, set_is_approximate)
 
     def get_is_uncertain(self):
         return getattr(self, '_is_uncertain', False)
+
     def set_is_uncertain(self, val):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
@@ -99,16 +100,16 @@ class EDTFObject(object):
 
     def __eq__(self, other):
         if isinstance(other, EDTFObject):
-            return unicode(self) == unicode(other)
+            return str(self) == str(other)
         elif isinstance(other, date):
-            return unicode(self) == other.isoformat()
+            return str(self) == other.isoformat()
         return False
 
     def __ne__(self, other):
         if isinstance(other, EDTFObject):
-            return unicode(self) != unicode(other)
+            return str(self) != str(other)
         elif isinstance(other, date):
-            return unicode(self) != other.isoformat()
+            return str(self) != other.isoformat()
         return True
 
     def __gt__(self, other):
@@ -148,6 +149,7 @@ class Date(EDTFObject):
         if y is None:
             raise AttributeError("Year must not be None")
         self._year = y
+
     def get_year(self):
         return self._year
     year = property(get_year, set_year)
@@ -156,6 +158,7 @@ class Date(EDTFObject):
         self._month = m
         if m == None:
             self.day = None
+
     def get_month(self):
         return self._month
     month = property(get_month, set_month)
@@ -170,23 +173,23 @@ class Date(EDTFObject):
         self.month = month
         self.day = day
 
-    def __unicode__(self):
+    def __str__(self):
         r = self.year
         if self.month:
-            r += u"-%s" % self.month
+            r += "-%s" % self.month
             if self.day:
-                r += u"-%s" % self.day
+                r += "-%s" % self.day
         return r
 
     def isoformat(self, default=date.max):
-        return u"%s-%02d-%02d" % (
+        return "%s-%02d-%02d" % (
             self.year,
             int(self.month or default.month),
             int(self.day or default.day),
         )
 
     def _precise_year(self, lean):
-        "Replace any ambiguous characters in the year string with 0s or 9s"
+        # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
             return int(re.sub(r'[xu]', r'0', self.year))
         else:
@@ -217,7 +220,6 @@ class Date(EDTFObject):
             return int(self.day)
 
     def _strict_date(self, lean):
-
         py = self._precise_year(lean)
         if py < 1: # year is not positive
             return date.min
@@ -228,8 +230,7 @@ class Date(EDTFObject):
             'day': self._precise_day(lean),
         }
 
-
-        isoish = u"%(year)s-%(month)02d-%(day)02d" % parts
+        isoish = "%(year)s-%(month)02d-%(day)02d" % parts
 
         try:
             dt = parse(
@@ -255,12 +256,13 @@ class Date(EDTFObject):
             return PRECISION_MONTH
         return PRECISION_YEAR
 
+
 class DateAndTime(EDTFObject):
     def __init__(self, date, time):
         self.date = date
         self.time = time
 
-    def __unicode__(self):
+    def __str__(self):
         return self.isoformat()
 
     def isoformat(self):
@@ -285,8 +287,8 @@ class Interval(EDTFObject):
         self.lower = lower
         self.upper = upper
 
-    def __unicode__(self):
-        return u"%s/%s" % (self.lower, self.upper)
+    def __str__(self):
+        return "%s/%s" % (self.lower, self.upper)
 
     def _strict_date(self, lean):
         if lean == EARLIEST:
@@ -328,7 +330,7 @@ class UA(EDTFObject):
         self.is_uncertain = "?" in ua
         self.is_approximate = "~" in ua
 
-    def __unicode__(self):
+    def __str__(self):
         d = ""
         if self.is_uncertain:
             d += "?"
@@ -350,11 +352,11 @@ class UncertainOrApproximate(EDTFObject):
         self.date = date
         self.ua = ua
 
-    def __unicode__(self):
+    def __str__(self):
         if self.ua:
-            return u"%s%s" % (self.date, self.ua)
+            return "%s%s" % (self.date, self.ua)
         else:
-            return unicode(self.date)
+            return str(self.date)
 
     def _strict_date(self, lean):
         if self.date == "open":
@@ -396,7 +398,7 @@ class LongYear(EDTFObject):
     def __init__(self, year):
         self.year = year
 
-    def __unicode__(self):
+    def __str__(self):
         return "y%s" % self.year
 
     def _precise_year(self):
@@ -423,7 +425,7 @@ class Season(Date):
         # `Date` methods do their thing.
         self.day = None
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s-%s" % (self.year, self.season)
 
     def _precise_month(self, lean):
@@ -445,7 +447,7 @@ class PartialUncertainOrApproximate(Date):
 
     def __init__(
         self, year=None, month=None, day=None,
-        year_ua = False, month_ua = False, day_ua = False,
+        year_ua=False, month_ua = False, day_ua = False,
         year_month_ua = False, month_day_ua = False,
         ssn=None, season_ua=False, all_ua=False
     ):
@@ -465,7 +467,7 @@ class PartialUncertainOrApproximate(Date):
 
         self.all_ua = all_ua
 
-    def __unicode__(self):
+    def __str__(self):
 
         if self.season_ua:
             return "%s%s" % (self.season, self.season_ua)
@@ -473,18 +475,18 @@ class PartialUncertainOrApproximate(Date):
         if self.year_ua:
             y = "%s%s" % (self.year, self.year_ua)
         else:
-            y = unicode(self.year)
+            y = str(self.year)
 
         if self.month_ua:
             m = "(%s)%s" % (self.month, self.month_ua)
         else:
-            m = unicode(self.month)
+            m = str(self.month)
 
         if self.day:
             if self.day_ua:
                 d = "(%s)%s" % (self.day, self.day_ua)
             else:
-                d = unicode(self.day)
+                d = str(self.day)
         else:
             d = None
 
@@ -583,9 +585,8 @@ class Consecutives(Interval):
         else:
             self.upper = upper
 
-
-    def __unicode__(self):
-        return u"%s..%s" % (self.lower or '', self.upper or '')
+    def __str__(self):
+        return "%s..%s" % (self.lower or '', self.upper or '')
 
 
 class EarlierConsecutives(Consecutives):
@@ -605,8 +606,8 @@ class OneOfASet(EDTFObject):
     def __init__(self, *args):
         self.objects = args
 
-    def __unicode__(self):
-        return u"[%s]" % (", ".join([unicode(o) for o in self.objects]))
+    def __str__(self):
+        return "[%s]" % (", ".join([str(o) for o in self.objects]))
 
     def _strict_date(self, lean):
         if lean == LATEST:
@@ -624,8 +625,8 @@ class MultipleDates(EDTFObject):
     def __init__(self, *args):
         self.objects = args
 
-    def __unicode__(self):
-        return u"{%s}" % (", ".join([unicode(o) for o in self.objects]))
+    def __str__(self):
+        return "{%s}" % (", ".join([str(o) for o in self.objects]))
 
     def _strict_date(self, lean):
         if lean == LATEST:

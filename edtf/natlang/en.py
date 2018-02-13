@@ -3,18 +3,20 @@ from datetime import datetime
 from dateutil.parser import parse
 import re
 from edtf import appsettings
+from six.moves import xrange
 
 
 # two dates where every digit of an ISO date representation is different,
 # and one is in the past and one is in the future.
 # This is used in the dateutil parse to detect which elements weren't parsed.
-DEFAULT_DATE_1 = datetime(1234, 01, 01, 0, 0)
+DEFAULT_DATE_1 = datetime(1234, 1, 1, 0, 0)
 DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
 SHORT_YEAR_RE = r'(-?)([\du])([\dxu])([\dxu])([\dxu])'
 LONG_YEAR_RE = r'y(-?)([1-9]\d\d\d\d+)'
 CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?'
 CE_RE = r'(\d{1,4}) (ad|ce|bc|bce)'
+
 
 def text_to_edtf(text):
     """
@@ -55,7 +57,6 @@ def text_to_edtf(text):
                             g = century_range_match.groups()
                             d1 = "%sC" % g[0]
                             d2 = "%sC" % g[2]
-
 
                     # import pdb; pdb.set_trace()
                     r1 = text_to_edtf_date(d1)

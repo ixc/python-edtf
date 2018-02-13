@@ -4,9 +4,9 @@ from datetime import date
 
 import sys
 
-from edtf import parse_edtf as parse
-from parser_classes import EDTFObject
-from edtf_exceptions import EDTFParseException
+from edtf.parser.grammar import parse_edtf as parse
+from edtf.parser.parser_classes import EDTFObject
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
 # the first item in each tuple is the input EDTF string, and expected parse result.
@@ -199,8 +199,8 @@ BAD_EXAMPLES = (
     '-0000-01-01',  # negative zero year
 )
 
-class TestParsing(unittest.TestCase):
 
+class TestParsing(unittest.TestCase):
     def test_non_parsing(self):
         for i in BAD_EXAMPLES:
             self.assertRaises(EDTFParseException, parse, i)
@@ -222,7 +222,7 @@ class TestParsing(unittest.TestCase):
             f = parse(i)
             sys.stdout.write(" => %s()\n" % type(f).__name__)
             self.assertIsInstance(f, EDTFObject)
-            self.assertEqual(unicode(f), o)
+            self.assertEqual(str(f), o)
 
             if len(e) == 5:
                 expected_lower_strict = e[1]
@@ -254,7 +254,7 @@ class TestParsing(unittest.TestCase):
                 self.assertEqual(f.upper_fuzzy().isoformat(), expected_upper_fuzzy)
             except Exception as x:
                 # Write to stdout for manual debugging, I guess
-                sys.stdout.write(unicode(x))
+                sys.stdout.write(str(x))
                 # Re-raise exception so unit tests work for non-manual usage
                 raise
 

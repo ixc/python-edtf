@@ -1,5 +1,5 @@
 import unittest
-from en import text_to_edtf
+from edtf.natlang.en import text_to_edtf
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
@@ -191,8 +191,8 @@ EXAMPLES = (
     # ('about July? in about 1849', '1849~-07?~'),
 )
 
-class TestLevel0(unittest.TestCase):
 
+class TestLevel0(unittest.TestCase):
     def test_natlang(self):
         """
         For each of the examples, establish that:
@@ -202,9 +202,8 @@ class TestLevel0(unittest.TestCase):
         """
         for i, o in EXAMPLES:
             e = text_to_edtf(i)
-            print "%s => %s" % (i, e)
+            print("%s => %s" % (i, e))
             self.assertEqual(e, o)
-
 
 
 if __name__ == '__main__':

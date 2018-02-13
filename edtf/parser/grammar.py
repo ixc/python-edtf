@@ -2,13 +2,13 @@ from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
     ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums
 
 # (* ************************** Level 0 *************************** *)
-from parser_classes import Date, DateAndTime, Interval, Unspecified, \
+from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
     MaskedPrecision, Level2Interval, ExponentialYear
 
-from edtf_exceptions import EDTFParseException
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
 oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])
@@ -95,6 +95,8 @@ LongYear.set_parser(longYearSimple)
 # (* *** L1Interval *** *)
 uaDateOrSeason = dateOrSeason + Optional(UASymbol)
 l1Start = uaDateOrSeason ^ "unknown"
+
+
 # bit of a kludge here to get the all the relevant tokens into the parse action
 # cleanly otherwise the parameter names are overlapped.
 def f(toks):
@@ -102,6 +104,8 @@ def f(toks):
         return {'date': toks[0], 'ua': toks[1]}
     except IndexError:
         return {'date': toks[0], 'ua': None}
+
+
 l1Start.addParseAction(f)
 l1End = uaDateOrSeason ^ "unknown" ^ "open"
 l1End.addParseAction(f)
@@ -272,6 +276,7 @@ level2Expression = partialUncertainOrApproximate \
 
 # putting it all together
 edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
+
 
 def parse_edtf(str, parseAll=True, fail_silently=False):
     try:

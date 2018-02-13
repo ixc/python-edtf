@@ -6,7 +6,7 @@ except:
 from django.db import models
 
 from edtf import parse_edtf, EDTFObject
-from natlang import text_to_edtf
+from edtf.natlang import text_to_edtf
 
 DATE_ATTRS = (
     'lower_strict',
@@ -14,6 +14,7 @@ DATE_ATTRS = (
     'lower_fuzzy',
     'upper_fuzzy',
 )
+
 
 class EDTFField(models.CharField):
 
@@ -35,7 +36,6 @@ class EDTFField(models.CharField):
         super(EDTFField, self).__init__(verbose_name, name, **kwargs)
 
     description = "An field for storing complex/fuzzy date specifications in EDTF format."
-
 
     def deconstruct(self):
         name, path, args, kwargs = super(EDTFField, self).deconstruct()
