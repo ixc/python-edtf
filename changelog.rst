@@ -1,10 +1,13 @@
 Changelog
 =========
 
-In development
---------------
+3.0 (2018-02-13)
+----------------
 
-*Nothing yet*
+* Python 3 compatibility.
+  PR: https://github.com/ixc/python-edtf/pull/25
+  Author: https://github.com/ahankinson
+
 
 2.7 (2018-01-09)
 ----------------
