@@ -1,6 +1,21 @@
 Changelog
 =========
 
+In development
+--------------
+
+* Remove 1 AD - 9999 AD restriction on date ranges imposed by Python's
+  ``datetime`` module (#26).
+
+  **WARNING**: This involves a breaking API change where the following methods
+  return a ``time.struct_time`` object instead of ``datetime.date`` or
+  ``datetime.datetime`` objects::
+
+      lower_strict()
+      upper_strict()
+      lower_fuzzy()
+      upper_fuzzy()
+
 3.0 (2018-02-13)
 ----------------
 
