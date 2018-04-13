@@ -44,9 +44,12 @@ def days_in_month(year, month):
     }[month]
 
 
-def apply_relativedelta(op, time_struct, delta):
+def apply_delta(op, time_struct, delta):
     """
-    Apply `relativedelta` to `struct_time` data structure.
+    Apply a `relativedelta` to a `struct_time` data structure.
+
+    `op` is an operator function, probably always `add` or `sub`tract to
+    correspond to `a_date + a_delta` and `a_date - a_delta`.
 
     This function is required because we cannot use standard `datetime` module
     objects for conversion when the date/time is, or will become, outside the
@@ -149,11 +152,11 @@ class EDTFObject(object):
 
     def lower_fuzzy(self):
         strict_val = self.lower_strict()
-        return apply_relativedelta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
+        return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
 
     def upper_fuzzy(self):
         strict_val = self.upper_strict()
-        return apply_relativedelta(add, strict_val, self._get_fuzzy_padding(LATEST))
+        return apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
 
     def __eq__(self, other):
         if isinstance(other, EDTFObject):
@@ -351,7 +354,7 @@ class Interval(EDTFObject):
                 return r
             except AttributeError: # it's a string, or no date. Result depends on the upper date
                 upper = self.upper._strict_date(LATEST)
-                return apply_relativedelta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
+                return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
         else:
             try:
                 r = self.upper._strict_date(lean)
@@ -363,7 +366,7 @@ class Interval(EDTFObject):
                     return dt_to_struct_time(date.today())  # it's still happening
                 else:
                     lower = self.lower._strict_date(EARLIEST)
-                    return apply_relativedelta(add, lower, appsettings.DELTA_IF_UNKNOWN)
+                    return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
 
 
 # (* ************************** Level 1 *************************** *)
