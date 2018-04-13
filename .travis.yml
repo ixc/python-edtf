@@ -1,0 +1,12 @@
+language: python
+sudo: false
+cache: pip
+python:
+- '3.6'
+- '2.7'
+before_install:
+- pip install nose coverage 'django<2'
+script:
+- nosetests --verbose --with-coverage --cover-package=edtf
+after_success:
+- coverage report
