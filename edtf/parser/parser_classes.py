@@ -3,11 +3,12 @@ import re
 from time import struct_time
 from datetime import date, datetime
 from operator import add, sub
-from exceptions import OverflowError
 
 from dateutil.relativedelta import relativedelta
 
 from edtf import appsettings
+from ..utils import dt_to_struct_time, trim_struct_time, \
+    struct_time_to_datetime, TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
 
 EARLIEST = 'earliest'
 LATEST = 'latest'
@@ -19,10 +20,6 @@ PRECISION_YEAR = "year"
 PRECISION_MONTH = "month"
 PRECISION_SEASON = "season"
 PRECISION_DAY = "day"
-
-
-TIME_EMPTY_TIME = [0, 0, 0]  # tm_hour, tm_min, tm_sec
-TIME_EMPTY_EXTRAS = [0, 0, -1]  # tm_wday, tm_yday, tm_isdst
 
 
 def days_in_month(year, month):
@@ -81,43 +78,6 @@ def apply_relativedelta(op, time_struct, delta):
     final_year = dt_result.year - millenium_diff
     return struct_time(
         (final_year,) + dt_result.timetuple()[1:6] + tuple(TIME_EMPTY_EXTRAS))
-
-
-def dt_to_struct_time(dt):
-    """
-    Convert a `datetime.date` or `datetime.datetime` to a `struct_time`
-    representation *with zero values* for data fields that we cannot always
-    rely on for ancient or far-future dates: tm_wday, tm_yday, tm_isdst
-
-    NOTE: If it wasn't for the requirement that the extra fields are unset
-    we could use the `timetuple()` method instead of this function.
-    """
-    if isinstance(dt, date):
-        return struct_time(
-            [dt.year, dt.month, dt.day] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
-        )
-    elif isinstance(dt, datetime):
-        return struct_time(
-            [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second] +
-            TIME_EMPTY_EXTRAS
-        )
-    else:
-        raise NotImplementedError(
-            "Cannot convert %s to `struct_time`" % type(dt))
-
-
-def trim_struct_time(st, strip_time=False):
-    """
-    Return a `struct_time` based on the one provided but with the extra fields
-    `tm_wday`, `tm_yday`, and `tm_isdst` reset to default values.
-
-    If `strip_time` is set to true the time value are also set to zero:
-    `tm_hour`, `tm_min`, and `tm_sec`.
-    """
-    if strip_time:
-        return struct_time(st[:3] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
-    else:
-        return struct_time(st[:6] + TIME_EMPTY_EXTRAS)
 
 
 class EDTFObject(object):
