@@ -5,7 +5,7 @@ python:
 - '3.6'
 - '2.7'
 before_install:
-- pip install nose 'django<2'
+- pip install nose coverage 'django<2'
 script:
 - coverage run --source=edtf python2 -m nose
 - coverage run --source=edtf python3 -m nose
