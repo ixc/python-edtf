@@ -106,6 +106,20 @@ def dt_to_struct_time(dt):
             "Cannot convert %s to `struct_time`" % type(dt))
 
 
+def trim_struct_time(st, strip_time=False):
+    """
+    Return a `struct_time` based on the one provided but with the extra fields
+    `tm_wday`, `tm_yday`, and `tm_isdst` reset to default values.
+
+    If `strip_time` is set to true the time value are also set to zero:
+    `tm_hour`, `tm_min`, and `tm_sec`.
+    """
+    if strip_time:
+        return struct_time(st[:3] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+    else:
+        return struct_time(st[:6] + TIME_EMPTY_EXTRAS)
+
+
 class EDTFObject(object):
     """
     Object to attact to a parser to become instantiated when the parser
@@ -187,7 +201,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return str(self) == other.isoformat()
         elif isinstance(other, struct_time):
-            return self._strict_date() == other
+            return self._strict_date() == trim_struct_time(other)
         return False
 
     def __ne__(self, other):
@@ -196,7 +210,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return str(self) != other.isoformat()
         elif isinstance(other, struct_time):
-            return self._strict_date() != other
+            return self._strict_date() != trim_struct_time(other)
         return True
 
     def __gt__(self, other):
@@ -205,7 +219,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return self.lower_strict() > dt_to_struct_time(other)
         elif isinstance(other, struct_time):
-            return self.lower_strict() > other
+            return self.lower_strict() > trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __ge__(self, other):
@@ -214,7 +228,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return self.lower_strict() >= dt_to_struct_time(other)
         elif isinstance(other, struct_time):
-            return self.lower_strict() >= other
+            return self.lower_strict() >= trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __lt__(self, other):
@@ -223,7 +237,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return self.lower_strict() < dt_to_struct_time(other)
         elif isinstance(other, struct_time):
-            return self.lower_strict() < other
+            return self.lower_strict() < trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __le__(self, other):
@@ -232,7 +246,7 @@ class EDTFObject(object):
         elif isinstance(other, date):
             return self.lower_strict() <= dt_to_struct_time(other)
         elif isinstance(other, struct_time):
-            return self.lower_strict() <= other
+            return self.lower_strict() <= trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
 
@@ -349,14 +363,14 @@ class DateAndTime(EDTFObject):
         if isinstance(other, datetime):
             return self.isoformat() == other.isoformat()
         elif isinstance(other, struct_time):
-            return self._strict_date() == other
+            return self._strict_date() == trim_struct_time(other)
         return super(DateAndTime, self).__eq__(other)
 
     def __ne__(self, other):
         if isinstance(other, datetime):
             return self.isoformat() != other.isoformat()
         elif isinstance(other, struct_time):
-            return self._strict_date() != other
+            return self._strict_date() != trim_struct_time(other)
         return super(DateAndTime, self).__ne__(other)
 
 
