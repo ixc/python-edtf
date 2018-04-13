@@ -7,6 +7,7 @@ from django.db import models
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
+form edtf.utils import struct_time_to_date
 
 DATE_ATTRS = (
     'lower_strict',
@@ -116,7 +117,15 @@ class EDTFField(models.CharField):
             g = getattr(self, field_attr, None)
             if g:
                 if edtf:
-                    setattr(instance, g, getattr(edtf, attr)())
+                    target_field = getattr(instance, g)
+                    value = getattr(edtf, attr)()
+                    if isinstance(target_field, models.DateField):
+                        value = struct_time_to_date(value)
+                    else:
+                        raise NotImplementedError(
+                            u"EDTFField does not support %s as a derived data"
+                            u" field, only DateField" % type(target_field))
+                    setattr(instance, g, value)
                 else:
                     setattr(instance, g, None)
         return edtf
