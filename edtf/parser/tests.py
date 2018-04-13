@@ -185,8 +185,9 @@ EXAMPLES = (
     ('y17e7', date.max.isoformat(), date.max.isoformat()),
     # the year -170000000
     ('y-17e7', date.min.isoformat(), date.min.isoformat()),
-    # Some year between 171000000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
-    ('y17101e4p3', date.max.isoformat(), date.max.isoformat()),
+    # Some year between 171010000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
+    # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
+    # ('y17101e4p3', '171010000-01-01', '171999999-12-31'),
 )
 
 BAD_EXAMPLES = (
