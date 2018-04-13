@@ -28,6 +28,7 @@ setuptools.setup(
         'test': [
             'django',
             'nose',
+            'tox',
         ],
     },
     setup_requires=[
