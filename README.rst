@@ -37,11 +37,11 @@ To use
 
    # Derive Python date objects
    # lower and upper bounds that strictly adhere to the given range
-   >>> e.lower_strict(), e.upper_strict()
-   (datetime.date(1979, 8, 1), datetime.date(1979, 8, 31))
+   >>> e.lower_strict()[:3], e.upper_strict()[:3]
+   ((1979, 8, 1), (1979, 8, 31))
    # lower and upper bounds that are padded if there's indicated uncertainty
-   >>> e.lower_fuzzy(), e.upper_fuzzy()
-   (datetime.date(1979, 7, 1), datetime.date(1979, 9, 30))
+   >>> e.lower_fuzzy()[:3], e.upper_fuzzy()[:3]
+   ((1979, 7, 1), (1979, 9, 30))
 
    # Date intervals
    >>> interval = parse_edtf("1979-08~/open")
@@ -50,9 +50,9 @@ To use
    # Intervals have lower and upper EDTF objects.
    >>> interval.lower, interval.upper
    (UncertainOrApproximate: '1979-08~', UncertainOrApproximate: 'open')
-   >>> interval.lower.upper_strict()
-   datetime.date(1979, 8, 31)
-   >>> interval.upper.lower_strict() #'open' is interpreted to mean 'still happening'.
+   >>> interval.lower.upper_strict()[:3]
+   (1979, 8, 31)
+   >>> interval.upper.lower_strict() # 'open' is interpreted to mean 'still happening'.
    [Today's date]
 
    # Date collections
@@ -296,6 +296,31 @@ few different Python dates, depending on the circumstance. Generally, Python
 dates are used for sorting and filtering, and are not displayed directly to
 users.
 
+
+``struct_time`` date representation
+-----------------------------------
+
+Because Python's ``datetime`` module does not support dates out side the range
+1 AD to 9999 AD we return dates as `time.struct_time` objects by default
+instead of the ``datetime.date`` or ``datetime.datetime`` objects you might
+expect.
+
+The ``struct_time`` representation is more difficult to work with, but can be
+sorted as-is which is the primary use-case, and can be converted relatively
+easily to ``date`` or ``datetime`` objects (provided the year is within 1 to
+9999 AD) or to date objects in more flexible libraries like
+`astropy.time <http://docs.astropy.org/en/stable/time/index.html>`_
+for years outside these bounds.
+
+If you are sure you are working with dates within the range supported by
+Python's ``datetime`` module, you can get these more convenient objects using
+the ``edtf.struct_time_to_date`` and ``edtf.struct_time_to_datetime``
+functions.
+
+NOTE: This library previously did return ``date`` and ``datetime`` objects
+from methods by default before we switched to ``struct_time``. See ticket
+`<https://github.com/ixc/python-edtf/issues/26>`_.
+
 ``lower_strict`` and ``upper_strict``
 -------------------------------------
 
@@ -308,9 +333,21 @@ natural sort order. In a descending sort (most recent first), sort by
 ``upper_strict``::
 
    >>> e = parse_edtf('1912-04~')
-   >>> e.lower_strict()
+
+   >>> e.lower_strict()  # Returns struct_time
+   >>> time.struct_time(tm_year=1912, tm_mon=4, tm_mday=1, tm_hour=0, tm_min=0, tm_sec=0, tm_wday=0, tm_yday=0, tm_isdst=-1)
+
+   >>> e.lower_strict()[:3]  # Show only interesting parts of struct_time
+   (1912, 4, 01)
+
+   >>> from edtf import struct_time_to_date
+   >>> struct_time_to_date(e.lower_strict())  # Convert to date
    datetime.date(1912, 4, 01)
-   >>> e.upper_strict()
+
+   >>> e.upper_strict()[:3]
+   (1912, 4, 30)
+
+   >>> struct_time_to_date(e.upper_strict())
    datetime.date(1912, 4, 30)
 
 ``lower_fuzzy`` and ``upper_fuzzy``
@@ -330,32 +367,22 @@ is, if a date is approximate at the month scale, it is padded by a month. If
 it is approximate at the year scale, it is padded by a year::
 
    >>> e = parse_edtf('1912-04~')
-   >>> e.lower_fuzzy()  # padding is 100% of a month
-   datetime.date(1912, 3, 1)
-   >>> e.upper_fuzzy()
-   datetime.date(1912, 5, 30)
+   >>> e.lower_fuzzy()[:3]  # padding is 100% of a month
+   (1912, 3, 1)
+   >>> e.upper_fuzzy()[:3]
+   (1912, 5, 30)
 
    >>> e = parse_edtf('1912~')
-   >>> e.lower_fuzzy()  # padding is 100% of a year
-   datetime.date(1911, 1, 1)
-   >>> e.upper_fuzzy()
-   datetime.date(1913, 12, 31)
+   >>> e.lower_fuzzy()[:3]  # padding is 100% of a year
+   (1911, 1, 1)
+   >>> e.upper_fuzzy()[:3]
+   (1913, 12, 31)
 
 One can interpret uncertain or approximate dates as 'plus or minus a
 [level of precision]'.
 
 If a date is both uncertain __and__ approximate, the padding is applied twice,
 i.e. it gets 100% * 2 padding, or 'plus or minus two [levels of precision]'.
-
-Long years
-----------
-
-Since EDTF covers a much greater timespan than Python ``date`` objects, it is
-easy to exceed the bounds of valid Python ``date``s. In this case, the returned
-dates are clamped to ``date.MIN`` and ``date.MAX``.
-
-Future revisions will include numerical interpretations of dates for better
-sortability.
 
 Seasons
 -------
