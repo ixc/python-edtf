@@ -7,7 +7,7 @@ from django.db import models
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
-form edtf.utils import struct_time_to_date
+from edtf.utils import struct_time_to_date
 
 DATE_ATTRS = (
     'lower_strict',
