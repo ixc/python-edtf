@@ -4,6 +4,7 @@ except:
     import pickle
 
 from django.db import models
+from django.core.exceptions import FieldDoesNotExist
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
@@ -117,7 +118,10 @@ class EDTFField(models.CharField):
             g = getattr(self, field_attr, None)
             if g:
                 if edtf:
-                    target_field = getattr(instance, g)
+                    try:
+                        target_field = instance._meta.get_field(g)
+                    except FieldDoesNotExist:
+                        continue
                     value = getattr(edtf, attr)()
                     if isinstance(target_field, models.DateField):
                         value = struct_time_to_date(value)
