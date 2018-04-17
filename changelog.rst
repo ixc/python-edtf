@@ -16,6 +16,10 @@ In development
       lower_fuzzy()
       upper_fuzzy()
 
+* Add `jdutil` library code by Matt Davis at
+  `https://gist.github.com/jiffyclub/1294443`_ to convert dates to numerical
+  float representations.
+
 3.0 (2018-02-13)
 ----------------
 
