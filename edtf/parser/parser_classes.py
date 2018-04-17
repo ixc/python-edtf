@@ -191,7 +191,13 @@ class Date(EDTFObject):
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
-            return int(re.sub(r'[xu]', r'0', self.year))
+            year = int(re.sub(r'[xu]', r'0', self.year))
+            # Don't return 0 as year because this isn't acceptable elsewhere in
+            # this code and will get coerced to 1 anyway
+            if year == 0:
+                return 1
+            else:
+                return year
         else:
             return int(re.sub(r'[xu]', r'9', self.year))
 
@@ -230,7 +236,7 @@ class Date(EDTFObject):
             'day': self._precise_day(lean),
         }
 
-        isoish = "%(year)s-%(month)02d-%(day)02d" % parts
+        isoish = "%(year)04d-%(month)02d-%(day)02d" % parts
 
         try:
             dt = parse(
