@@ -17,6 +17,12 @@ LONG_YEAR_RE = r'y(-?)([1-9]\d\d\d\d+)'
 CENTURY_RE = r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?'
 CE_RE = r'(\d{1,4}) (ad|ce|bc|bce)'
 
+# Set of RE rules that will cause us to abort text processing, since we know
+# the results will be wrong.
+REJECT_RULES = (
+    r'.*dynasty.*',  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
+)
+
 
 def text_to_edtf(text):
     """
@@ -58,7 +64,6 @@ def text_to_edtf(text):
                             d1 = "%sC" % g[0]
                             d2 = "%sC" % g[2]
 
-                    # import pdb; pdb.set_trace()
                     r1 = text_to_edtf_date(d1)
                     r2 = text_to_edtf_date(d2)
 
@@ -110,6 +115,10 @@ def text_to_edtf_date(text):
 
     t = text.lower()
     result = ''
+
+    for reject_re in REJECT_RULES:
+        if re.match(reject_re, t):
+            return
 
     # matches on '1800s'. Needs to happen before is_decade.
     could_be_century = re.findall(r'(\d{2}00)s', t)
