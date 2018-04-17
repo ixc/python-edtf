@@ -9,6 +9,7 @@ from django.core.exceptions import FieldDoesNotExist
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
 from edtf.utils import struct_time_to_date
+from edtf.jdutil import date_to_jd, hmsm_to_days
 
 DATE_ATTRS = (
     'lower_strict',
@@ -122,13 +123,20 @@ class EDTFField(models.CharField):
                         target_field = instance._meta.get_field(g)
                     except FieldDoesNotExist:
                         continue
-                    value = getattr(edtf, attr)()
-                    if isinstance(target_field, models.DateField):
+                    value = getattr(edtf, attr)()  # struct_time
+                    if isinstance(target_field, models.FloatField):
+                        year, month, day = value[:3]
+                        # Convert time of day to fraction of day
+                        hours, minutes, seconds = value[3:6]
+                        day += hmsm_to_days(hours, minutes, seconds)
+                        value = date_to_jd(year, month, day)
+                    elif isinstance(target_field, models.DateField):
                         value = struct_time_to_date(value)
                     else:
                         raise NotImplementedError(
                             u"EDTFField does not support %s as a derived data"
-                            u" field, only DateField" % type(target_field))
+                            u" field, only FloatField or DateField"
+                            % type(target_field))
                     setattr(instance, g, value)
                 else:
                     setattr(instance, g, None)

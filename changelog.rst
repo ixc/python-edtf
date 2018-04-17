@@ -20,6 +20,10 @@ In development
   `https://gist.github.com/jiffyclub/1294443`_ to convert dates to numerical
   float representations.
 
+* Update `EDTFField` to store derived upper/lower strict/fuzzy date values as
+  numerical values to Django's `DoubleField` fields, when available, to permit
+  storage of arbitrary
+
 3.0 (2018-02-13)
 ----------------
 

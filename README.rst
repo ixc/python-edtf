@@ -408,7 +408,8 @@ the ``natural_text_field`` parameter of your ``EDTFField``.
 
 When your model is saved, the ``natural_text_field`` value will be parsed to set
 the ``date_edtf`` value, and the underlying EDTF object will set the
-``_earliest`` and ``_latest`` fields on the model.
+``_earliest`` and ``_latest`` fields on the model to a float value representing
+the Julian Date.
 
 ::
 
@@ -432,11 +433,11 @@ the ``date_edtf`` value, and the underlying EDTF object will set the
             null=True,
         )
         # use for filtering
-        date_earliest = models.DateField(blank=True, null=True)
-        date_latest = models.DateField(blank=True, null=True)
+        date_earliest = models.DoubleField(blank=True, null=True)
+        date_latest = models.DoubleField(blank=True, null=True)
         # use for sorting
-        date_sort_ascending = models.DateField(blank=True, null=True)
-        date_sort_descending = models.DateField(blank=True, null=True)
+        date_sort_ascending = models.DoubleField(blank=True, null=True)
+        date_sort_descending = models.DoubleField(blank=True, null=True)
 
 
 Since the ``EDTFField`` and the ``_earliest`` and ``_latest`` field values are
