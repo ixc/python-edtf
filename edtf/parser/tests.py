@@ -150,6 +150,8 @@ EXAMPLES = (
     # Year and day of month specified, month unspecified
     ('1560-uu-25', '1560-01-25', '1560-12-25'),
     ('15uu-12-uu', '1500-12-01', '1599-12-31'),
+    # Day specified, year and month unspecified
+    ('uuuu-uu-23', '0000-01-23', '9999-12-23'),
     # One of a Set
     # One of the years 1667, 1668, 1670, 1671, 1672
     (('[1667,1668, 1670..1672]', '[1667, 1668, 1670..1672]'),  '1667-01-01', '1672-12-31'),
