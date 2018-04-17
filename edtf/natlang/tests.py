@@ -6,8 +6,13 @@ EXAMPLES = (
     ('active late 17th-19th centuries', '16xx/18xx'), # ignoring 'late' for now
     ('active 17-19th Centuries', '16xx/18xx'), # ignoring 'late' for now
 
+    # Unrecognised values
     ('', None),
     ('this isn\'t a date', None),
+
+    # Explicity rejected values that would otherwise be badly converted
+    ('23rd Dynasty', None),
+
     ('90', '1990'),  # implied century
     ('1860', '1860'),
     ('the year 1800', '1800'),
