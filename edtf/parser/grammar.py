@@ -170,12 +170,12 @@ yearMonthWithU = (
 )
 
 monthDayWithU = (
-    (Combine(month("") ^ monthWithU)("month") + "-" + dayWithU) ^
+    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU) ^
     (monthWithU + "-" + day)
 )
 
 yearMonthDayWithU = (
-    (yearWithU + "-" + Combine(month("") ^ monthWithU)("month") + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
+    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
     (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
     (year + "-" + month + "-" + dayWithU)
 )
