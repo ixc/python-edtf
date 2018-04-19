@@ -8,7 +8,7 @@ from django.core.exceptions import FieldDoesNotExist
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
-from edtf.utils import struct_time_to_date
+from edtf.convert import struct_time_to_date
 from edtf.jdutil import date_to_jd, hmsm_to_days
 
 DATE_ATTRS = (

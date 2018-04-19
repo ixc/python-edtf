@@ -7,8 +7,8 @@ from operator import add, sub
 from dateutil.relativedelta import relativedelta
 
 from edtf import appsettings
-from ..utils import dt_to_struct_time, trim_struct_time, \
-    struct_time_to_datetime, TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
+from edtf.convert import dt_to_struct_time, trim_struct_time, \
+    TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
 
 EARLIEST = 'earliest'
 LATEST = 'latest'
