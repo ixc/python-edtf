@@ -15,14 +15,14 @@ def dt_to_struct_time(dt):
     NOTE: If it wasn't for the requirement that the extra fields are unset
     we could use the `timetuple()` method instead of this function.
     """
-    if isinstance(dt, date):
-        return struct_time(
-            [dt.year, dt.month, dt.day] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
-        )
-    elif isinstance(dt, datetime):
+    if isinstance(dt, datetime):
         return struct_time(
             [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second] +
             TIME_EMPTY_EXTRAS
+        )
+    elif isinstance(dt, date):
+        return struct_time(
+            [dt.year, dt.month, dt.day] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
         )
     else:
         raise NotImplementedError(
@@ -56,6 +56,6 @@ def trim_struct_time(st, strip_time=False):
     `tm_hour`, `tm_min`, and `tm_sec`.
     """
     if strip_time:
-        return struct_time(st[:3] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+        return struct_time(list(st[:3]) + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
     else:
-        return struct_time(st[:6] + TIME_EMPTY_EXTRAS)
+        return struct_time(list(st[:6]) + TIME_EMPTY_EXTRAS)
