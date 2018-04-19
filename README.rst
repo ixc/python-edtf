@@ -411,6 +411,13 @@ the ``date_edtf`` value, and the underlying EDTF object will set the
 ``_earliest`` and ``_latest`` fields on the model to a float value representing
 the Julian Date.
 
+
+**WARNING**: The conversion to and from Julian Date numerical values can be
+inaccurate, especially for ancient dates back to thousands of years BC. Ideally
+Julian Date values should be used for range and ordering operations only where
+complete accuracy is not required. They should **not** be used for definitive
+storage or for display after roundtrip conversions.
+
 ::
 
    from django.db import models

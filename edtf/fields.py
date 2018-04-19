@@ -8,8 +8,7 @@ from django.core.exceptions import FieldDoesNotExist
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
-from edtf.convert import struct_time_to_date
-from edtf.jdutil import date_to_jd, hmsm_to_days
+from edtf.convert import struct_time_to_date, struct_time_to_jd
 
 DATE_ATTRS = (
     'lower_strict',
@@ -125,11 +124,7 @@ class EDTFField(models.CharField):
                         continue
                     value = getattr(edtf, attr)()  # struct_time
                     if isinstance(target_field, models.FloatField):
-                        year, month, day = value[:3]
-                        # Convert time of day to fraction of day
-                        hours, minutes, seconds = value[3:6]
-                        day += hmsm_to_days(hours, minutes, seconds)
-                        value = date_to_jd(year, month, day)
+                        value = struct_time_to_jd(value)
                     elif isinstance(target_field, models.DateField):
                         value = struct_time_to_date(value)
                     else:
