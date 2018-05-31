@@ -418,7 +418,7 @@ Julian Date values should be used for range and ordering operations only where
 complete accuracy is not required. They should **not** be used for definitive
 storage or for display after roundtrip conversions.
 
-::
+Example usage::
 
    from django.db import models
    from edtf.fields import EDTFField
@@ -440,11 +440,11 @@ storage or for display after roundtrip conversions.
             null=True,
         )
         # use for filtering
-        date_earliest = models.DoubleField(blank=True, null=True)
-        date_latest = models.DoubleField(blank=True, null=True)
+        date_earliest = models.FloatField(blank=True, null=True)
+        date_latest = models.FloatField(blank=True, null=True)
         # use for sorting
-        date_sort_ascending = models.DoubleField(blank=True, null=True)
-        date_sort_descending = models.DoubleField(blank=True, null=True)
+        date_sort_ascending = models.FloatField(blank=True, null=True)
+        date_sort_descending = models.FloatField(blank=True, null=True)
 
 
 Since the ``EDTFField`` and the ``_earliest`` and ``_latest`` field values are

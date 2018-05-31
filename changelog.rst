@@ -21,8 +21,13 @@ In development
   float representations.
 
 * Update `EDTFField` to store derived upper/lower strict/fuzzy date values as
-  numerical values to Django's `DoubleField` fields, when available, to permit
-  storage of arbitrary
+  numerical values to Django's `FloatField` fields, when available, to permit
+  storage of arbitrary date/time values.
+
+  The older approach where `DateField` fields are used instead is still
+  supported but not recommended, since this usage will break for date/time
+  values outside the range 1 AD to 9999 AD.
+
 
 3.0 (2018-02-13)
 ----------------
