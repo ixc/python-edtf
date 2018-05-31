@@ -4,6 +4,10 @@ Changelog
 In development
 --------------
 
+
+4.0 (2018-05-31)
+----------------
+
 * Remove 1 AD - 9999 AD restriction on date ranges imposed by Python's
   ``datetime`` module (#26).
 
