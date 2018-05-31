@@ -1,6 +1,38 @@
 Changelog
 =========
 
+In development
+--------------
+
+
+4.0 (2018-05-31)
+----------------
+
+* Remove 1 AD - 9999 AD restriction on date ranges imposed by Python's
+  ``datetime`` module (#26).
+
+  **WARNING**: This involves a breaking API change where the following methods
+  return a ``time.struct_time`` object instead of ``datetime.date`` or
+  ``datetime.datetime`` objects::
+
+      lower_strict()
+      upper_strict()
+      lower_fuzzy()
+      upper_fuzzy()
+
+* Add `jdutil` library code by Matt Davis at
+  `https://gist.github.com/jiffyclub/1294443`_ to convert dates to numerical
+  float representations.
+
+* Update `EDTFField` to store derived upper/lower strict/fuzzy date values as
+  numerical values to Django's `FloatField` fields, when available, to permit
+  storage of arbitrary date/time values.
+
+  The older approach where `DateField` fields are used instead is still
+  supported but not recommended, since this usage will break for date/time
+  values outside the range 1 AD to 9999 AD.
+
+
 3.0 (2018-02-13)
 ----------------
 

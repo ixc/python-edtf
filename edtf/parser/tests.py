@@ -1,11 +1,11 @@
 import unittest
-
-from datetime import date
-
 import sys
+from datetime import date
+from time import struct_time
 
 from edtf.parser.grammar import parse_edtf as parse
-from edtf.parser.parser_classes import EDTFObject
+from edtf.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
+    TIME_EMPTY_EXTRAS
 from edtf.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
@@ -23,9 +23,6 @@ from edtf.parser.edtf_exceptions import EDTFParseException
 #  - If there are four other values, then the first value is the lower strict,
 #    the second value is the upper strict; the third value is the lower fuzzy date
 #    and the final value is the upper fuzzy date.
-
-
-
 EXAMPLES = (
     # ******************************* LEVEL 0 *********************************
     # year, month, day
@@ -35,9 +32,9 @@ EXAMPLES = (
     # year
     ('2008', '2008-01-01', '2008-12-31'),
     # a negative year
-    ('-0999', date.min.isoformat(), date.min.isoformat()),
+    ('-0999', '-0999-01-01', '-0999-12-31'),
     # year zero
-    ('0000', date.min.isoformat(), date.min.isoformat()),
+    ('0000', '0000-01-01', '0000-12-31'),
     # DateTimes
     ('2001-02-03T09:30:01', '2001-02-03'),
     ('2004-01-01T10:10:10Z', '2004-01-01'),
@@ -77,11 +74,10 @@ EXAMPLES = (
     # some day in 1999
     ('1999-uu-uu', '1999-01-01', '1999-12-31'),
 
-    # Uncertain/Approximate lower boundary dates (BCE) -- forced to `date.min`
-    # becase we cannot represent BCE dates in Python at all :(
-    ('-0275~', date.min.isoformat(), date.min.isoformat()),
-    ('-0001~', date.min.isoformat(), date.min.isoformat()),
-    ('0000~', date.min.isoformat(), date.min.isoformat()),
+    # Uncertain/Approximate lower boundary dates (BCE)
+    ('-0275~', '-0275-01-01', '-0275-12-31', '-0276-01-01', '-0274-12-31'),
+    ('-0001~', '-0001-01-01', '-0001-12-31', '-0002-01-01', '0000-12-31'),
+    ('0000~', '0000-01-01', '0000-12-31', '-0001-01-01', '0001-12-31'),
 
     # L1 Extended Interval
     # beginning unknown, end 2006
@@ -102,9 +98,9 @@ EXAMPLES = (
     ('1984-06-02?/unknown', '1984-06-02', '1994-06-02', '1984-06-01', '1994-06-02'),
     # Year exceeding 4 digits
     # the year 170000002
-    ('y170000002', date.max.isoformat(), date.max.isoformat()),
+    ('y170000002', '170000002-01-01', '170000002-12-31'),
     # the year -170000002
-    ('y-170000002', date.min.isoformat(), date.min.isoformat()),
+    ('y-170000002', '-170000002-01-01', '-170000002-12-31'),
     # Seasons
     # Spring, 2001
     ('2001-21', '2001-03-01', '2001-05-31'),
@@ -155,7 +151,7 @@ EXAMPLES = (
     ('1560-uu-25', '1560-01-25', '1560-12-25'),
     ('15uu-12-uu', '1500-12-01', '1599-12-31'),
     # Day specified, year and month unspecified
-    ('uuuu-uu-23', '0001-01-23', '9999-12-23'),
+    ('uuuu-uu-23', '0000-01-23', '9999-12-23'),
     # One of a Set
     # One of the years 1667, 1668, 1670, 1671, 1672
     (('[1667,1668, 1670..1672]', '[1667, 1668, 1670..1672]'),  '1667-01-01', '1672-12-31'),
@@ -184,11 +180,12 @@ EXAMPLES = (
     ('2004-06-uu/2004-07-03', '2004-06-01', '2004-07-03'),
     # Year Requiring More than Four Digits - Exponential Form
     # the year 170000000
-    ('y17e7', date.max.isoformat(), date.max.isoformat()),
+    ('y17e7', '170000000-01-01', '170000000-12-31'),
     # the year -170000000
-    ('y-17e7', date.min.isoformat(), date.min.isoformat()),
-    # Some year between 171000000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
-    ('y17101e4p3', date.max.isoformat(), date.max.isoformat()),
+    ('y-17e7',  '-170000000-01-01', '-170000000-12-31'),
+    # Some year between 171010000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
+    # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
+    # ('y17101e4p3', '171010000-01-01', '171999999-12-31'),
 )
 
 BAD_EXAMPLES = (
@@ -249,11 +246,30 @@ class TestParsing(unittest.TestCase):
             if len(e) == 1:
                 continue
 
+            def iso_to_struct_time(iso_date):
+                """ Convert YYYY-mm-dd date strings to time structs """
+                if iso_date[0] == '-':
+                    is_negative = True
+                    iso_date = iso_date[1:]
+                else:
+                    is_negative = False
+                y, mo, d = [int(i) for i in iso_date.split('-')]
+                if is_negative:
+                    y *= -1
+                return struct_time(
+                    [y, mo, d] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+
+            # Convert string date representations into `struct_time`s
+            expected_lower_strict = iso_to_struct_time(expected_lower_strict)
+            expected_upper_strict = iso_to_struct_time(expected_upper_strict)
+            expected_lower_fuzzy = iso_to_struct_time(expected_lower_fuzzy)
+            expected_upper_fuzzy = iso_to_struct_time(expected_upper_fuzzy)
+
             try:
-                self.assertEqual(f.lower_strict().isoformat(), expected_lower_strict)
-                self.assertEqual(f.upper_strict().isoformat(), expected_upper_strict)
-                self.assertEqual(f.lower_fuzzy().isoformat(), expected_lower_fuzzy)
-                self.assertEqual(f.upper_fuzzy().isoformat(), expected_upper_fuzzy)
+                self.assertEqual(f.lower_strict(), expected_lower_strict)
+                self.assertEqual(f.upper_strict(), expected_upper_strict)
+                self.assertEqual(f.lower_fuzzy(), expected_lower_fuzzy)
+                self.assertEqual(f.upper_fuzzy(), expected_upper_fuzzy)
             except Exception as x:
                 # Write to stdout for manual debugging, I guess
                 sys.stdout.write(str(x))

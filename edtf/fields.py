@@ -4,9 +4,11 @@ except:
     import pickle
 
 from django.db import models
+from django.core.exceptions import FieldDoesNotExist
 
 from edtf import parse_edtf, EDTFObject
 from edtf.natlang import text_to_edtf
+from edtf.convert import struct_time_to_date, struct_time_to_jd
 
 DATE_ATTRS = (
     'lower_strict',
@@ -116,7 +118,21 @@ class EDTFField(models.CharField):
             g = getattr(self, field_attr, None)
             if g:
                 if edtf:
-                    setattr(instance, g, getattr(edtf, attr)())
+                    try:
+                        target_field = instance._meta.get_field(g)
+                    except FieldDoesNotExist:
+                        continue
+                    value = getattr(edtf, attr)()  # struct_time
+                    if isinstance(target_field, models.FloatField):
+                        value = struct_time_to_jd(value)
+                    elif isinstance(target_field, models.DateField):
+                        value = struct_time_to_date(value)
+                    else:
+                        raise NotImplementedError(
+                            u"EDTFField does not support %s as a derived data"
+                            u" field, only FloatField or DateField"
+                            % type(target_field))
+                    setattr(instance, g, value)
                 else:
                     setattr(instance, g, None)
         return edtf

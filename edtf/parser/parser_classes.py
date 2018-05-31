@@ -1,9 +1,14 @@
 import calendar
 import re
+from time import struct_time
 from datetime import date, datetime
-from dateutil.parser import parse
+from operator import add, sub
+
 from dateutil.relativedelta import relativedelta
+
 from edtf import appsettings
+from edtf.convert import dt_to_struct_time, trim_struct_time, \
+    TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
 
 EARLIEST = 'earliest'
 LATEST = 'latest'
@@ -15,6 +20,67 @@ PRECISION_YEAR = "year"
 PRECISION_MONTH = "month"
 PRECISION_SEASON = "season"
 PRECISION_DAY = "day"
+
+
+def days_in_month(year, month):
+    """
+    Return the number of days in the given year and month, where month is
+    1=January to 12=December, and respecting leap years as identified by
+    `calendar.isleap()`
+    """
+    return {
+        1: 31,
+        2: 29 if calendar.isleap(year) else 28,
+        3: 31,
+        4: 30,
+        5: 31,
+        6: 30,
+        7: 31,
+        8: 31,
+        9: 30,
+        10: 31,
+        11: 30,
+        12: 31,
+    }[month]
+
+
+def apply_delta(op, time_struct, delta):
+    """
+    Apply a `relativedelta` to a `struct_time` data structure.
+
+    `op` is an operator function, probably always `add` or `sub`tract to
+    correspond to `a_date + a_delta` and `a_date - a_delta`.
+
+    This function is required because we cannot use standard `datetime` module
+    objects for conversion when the date/time is, or will become, outside the
+    boundary years 1 AD to 9999 AD.
+    """
+    if not delta:
+        return time_struct  # No work to do
+
+    try:
+        dt_result = op(datetime(*time_struct[:6]), delta)
+        return dt_to_struct_time(dt_result)
+    except (OverflowError, ValueError):
+        # Year is not within supported 1 to 9999 AD range
+        pass
+
+    # Here we fake the year to one in the acceptable range to avoid having to
+    # write our own date rolling logic
+
+    # Adjust the year to be close to the 2000 millenium in 1,000 year
+    # increments to try and retain accurate relative leap years
+    actual_year = time_struct.tm_year
+    millenium = int(float(actual_year) / 1000)
+    millenium_diff = (2 - millenium) * 1000
+    adjusted_year = actual_year + millenium_diff
+    # Apply delta to the date/time with adjusted year
+    dt = datetime(*(adjusted_year,) + time_struct[1:6])
+    dt_result = op(dt, delta)
+    # Convert result year back to its original millenium
+    final_year = dt_result.year - millenium_diff
+    return struct_time(
+        (final_year,) + dt_result.timetuple()[1:6] + tuple(TIME_EMPTY_EXTRAS))
 
 
 class EDTFObject(object):
@@ -86,23 +152,19 @@ class EDTFObject(object):
 
     def lower_fuzzy(self):
         strict_val = self.lower_strict()
-        # Do not exceed or adjust boundary datetimes
-        if strict_val in (date.min, date.max):
-            return strict_val
-        return strict_val - self._get_fuzzy_padding(EARLIEST)
+        return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
 
     def upper_fuzzy(self):
         strict_val = self.upper_strict()
-        # Do not exceed or adjust boundary datetimes
-        if strict_val in (date.min, date.max):
-            return strict_val
-        return strict_val + self._get_fuzzy_padding(LATEST)
+        return apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
 
     def __eq__(self, other):
         if isinstance(other, EDTFObject):
             return str(self) == str(other)
         elif isinstance(other, date):
             return str(self) == other.isoformat()
+        elif isinstance(other, struct_time):
+            return self._strict_date() == trim_struct_time(other)
         return False
 
     def __ne__(self, other):
@@ -110,34 +172,44 @@ class EDTFObject(object):
             return str(self) != str(other)
         elif isinstance(other, date):
             return str(self) != other.isoformat()
+        elif isinstance(other, struct_time):
+            return self._strict_date() != trim_struct_time(other)
         return True
 
     def __gt__(self, other):
         if isinstance(other, EDTFObject):
             return self.lower_strict() > other.lower_strict()
         elif isinstance(other, date):
-            return self.lower_strict() > other
+            return self.lower_strict() > dt_to_struct_time(other)
+        elif isinstance(other, struct_time):
+            return self.lower_strict() > trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __ge__(self, other):
         if isinstance(other, EDTFObject):
             return self.lower_strict() >= other.lower_strict()
         elif isinstance(other, date):
-            return self.lower_strict() >= other
+            return self.lower_strict() >= dt_to_struct_time(other)
+        elif isinstance(other, struct_time):
+            return self.lower_strict() >= trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __lt__(self, other):
         if isinstance(other, EDTFObject):
             return self.lower_strict() < other.lower_strict()
         elif isinstance(other, date):
-            return self.lower_strict() < other
+            return self.lower_strict() < dt_to_struct_time(other)
+        elif isinstance(other, struct_time):
+            return self.lower_strict() < trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
     def __le__(self, other):
         if isinstance(other, EDTFObject):
             return self.lower_strict() <= other.lower_strict()
         elif isinstance(other, date):
-            return self.lower_strict() <= other
+            return self.lower_strict() <= dt_to_struct_time(other)
+        elif isinstance(other, struct_time):
+            return self.lower_strict() <= trim_struct_time(other)
         raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
 
 
@@ -191,13 +263,7 @@ class Date(EDTFObject):
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
-            year = int(re.sub(r'[xu]', r'0', self.year))
-            # Don't return 0 as year because this isn't acceptable elsewhere in
-            # this code and will get coerced to 1 anyway
-            if year == 0:
-                return 1
-            else:
-                return year
+            return int(re.sub(r'[xu]', r'0', self.year))
         else:
             return int(re.sub(r'[xu]', r'9', self.year))
 
@@ -210,49 +276,28 @@ class Date(EDTFObject):
         else:
             return 1 if lean == EARLIEST else 12
 
-    @staticmethod
-    def _days_in_month(yr, month):
-        return calendar.monthrange(int(yr), int(month))[1]
-
     def _precise_day(self, lean):
         if not self.day or self.day == 'uu':
             if lean == EARLIEST:
                 return 1
             else:
-                return self._days_in_month(
+                return days_in_month(
                     self._precise_year(LATEST), self._precise_month(LATEST)
                 )
         else:
             return int(self.day)
 
     def _strict_date(self, lean):
-        py = self._precise_year(lean)
-        if py < 1: # year is not positive
-            return date.min
-
-        parts = {
-            'year': py,
-            'month': self._precise_month(lean),
-            'day': self._precise_day(lean),
-        }
-
-        isoish = "%(year)04d-%(month)02d-%(day)02d" % parts
-
-        try:
-            dt = parse(
-                isoish,
-                fuzzy=True,
-                yearfirst=True,
-                dayfirst=False,
-                default=date.max if lean == LATEST else date.min
-            )
-            return dt
-
-        except ValueError:  # year is out of range
-            if isoish < date.min.isoformat():
-                return date.min
-            else:
-                return date.max
+        """
+        Return a `time.struct_time` representation of the date.
+        """
+        return struct_time(
+            (
+                self._precise_year(lean),
+                self._precise_month(lean),
+                self._precise_day(lean),
+            ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
+        )
 
     @property
     def precision(self):
@@ -280,11 +325,15 @@ class DateAndTime(EDTFObject):
     def __eq__(self, other):
         if isinstance(other, datetime):
             return self.isoformat() == other.isoformat()
+        elif isinstance(other, struct_time):
+            return self._strict_date() == trim_struct_time(other)
         return super(DateAndTime, self).__eq__(other)
 
     def __ne__(self, other):
         if isinstance(other, datetime):
             return self.isoformat() != other.isoformat()
+        elif isinstance(other, struct_time):
+            return self._strict_date() != trim_struct_time(other)
         return super(DateAndTime, self).__ne__(other)
 
 
@@ -305,7 +354,7 @@ class Interval(EDTFObject):
                 return r
             except AttributeError: # it's a string, or no date. Result depends on the upper date
                 upper = self.upper._strict_date(LATEST)
-                return upper - appsettings.DELTA_IF_UNKNOWN
+                return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
         else:
             try:
                 r = self.upper._strict_date(lean)
@@ -314,10 +363,10 @@ class Interval(EDTFObject):
                 return r
             except AttributeError: # an 'unknown' or 'open' string - depends on the lower date
                 if self.upper and (self.upper == "open" or self.upper.date == "open"):
-                    return date.today() # it's still happening
+                    return dt_to_struct_time(date.today())  # it's still happening
                 else:
                     lower = self.lower._strict_date(EARLIEST)
-                    return lower + appsettings.DELTA_IF_UNKNOWN
+                    return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
 
 
 # (* ************************** Level 1 *************************** *)
@@ -366,7 +415,7 @@ class UncertainOrApproximate(EDTFObject):
 
     def _strict_date(self, lean):
         if self.date == "open":
-            return date.today()
+            return dt_to_struct_time(date.today())
         if self.date =="unknown":
             return None # depends on the other date
         return self.date._strict_date(lean)
@@ -412,15 +461,12 @@ class LongYear(EDTFObject):
 
     def _strict_date(self, lean):
         py = self._precise_year()
-        if py >= date.max.year:
-            return date.max
-        if py <= date.min.year:
-            return date.min
-
         if lean == EARLIEST:
-            return date(py, 1, 1)
+            return struct_time(
+                [py, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
         else:
-            return date(py, 12, 31)
+            return struct_time(
+                [py, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
 
 class Season(Date):
