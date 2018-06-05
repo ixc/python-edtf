@@ -4,7 +4,7 @@ import setuptools
 import sys
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 setuptools.setup(
@@ -16,6 +16,7 @@ setuptools.setup(
     description='Python implementation of Library of Congress EDTF (Extended '
                 'Date Time Format) specification',
     long_description=readme(),
+    long_description_content_type="text/markdown",
     license='MIT',
     packages=setuptools.find_packages(),
     include_package_data=True,
@@ -46,5 +47,6 @@ setuptools.setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
     ],
 )
