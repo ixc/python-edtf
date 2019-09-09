@@ -693,8 +693,18 @@ class MaskedPrecision(Date):
 
 class Level2Interval(Level1Interval):
     def __init__(self, lower, upper):
-        self.lower = lower
-        self.upper = upper
+        # Check whether incoming lower/upper values are single-item lists, and
+        # if so take just the first item. This works around what I *think* is a
+        # bug in the grammer that provides us with single-item lists of
+        # `PartialUncertainOrApproximate` items for lower/upper values.
+        if isinstance(lower, (tuple, list)) and len(lower) == 1:
+            self.lower = lower[0]
+        else:
+            self.lower = lower
+        if isinstance(lower, (tuple, list)) and len(upper) == 1:
+            self.upper = upper[0]
+        else:
+            self.upper = upper
 
 
 class ExponentialYear(LongYear):
