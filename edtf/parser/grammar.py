@@ -1,5 +1,9 @@
 from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
-    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums
+    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums, ParserElement
+
+# From the pyparsing performance improvement tips:
+# https://github.com/pyparsing/pyparsing/wiki/Performance-Tips
+ParserElement.enablePackrat()
 
 # (* ************************** Level 0 *************************** *)
 from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
