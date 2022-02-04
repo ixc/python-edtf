@@ -108,10 +108,10 @@ Test coverage includes every example given in the spec table of features.
 
 * Unspecified dates:
 
-      >>> parse_edtf('1979-08-uu') # An unknown day in August 1979
-      Unspecified: '1979-08-uu'
-      >>> parse_edtf('1979-uu') # Some month in 1979
-      Unspecified: '1979-uu'
+      >>> parse_edtf('1979-08-XX') # An unknown day in August 1979
+      Unspecified: '1979-08-XX'
+      >>> parse_edtf('1979-XX') # Some month in 1979
+      Unspecified: '1979-XX'
 
 * Extended intervals:
 
@@ -138,8 +138,8 @@ Test coverage includes every example given in the spec table of features.
 
 * Partial unspecified:
 
-      >>> parse_edtf('1979-uu-28') # The 28th day of an uncertain month in 1979
-      PartialUnspecified: '1979-uu-28'
+      >>> parse_edtf('1979-XX-28') # The 28th day of an uncertain month in 1979
+      PartialUnspecified: '1979-XX-28'
 
 * One of a set:
 
@@ -204,8 +204,8 @@ The parser can parse strings such as:
     'c1800s?' => '180x?~' # with uncertainty indicators, use the decade
 
     # unspecified parts
-    'January 12' => 'uuuu-01-12'
-    'January' => 'uuuu-01'
+    'January 12' => 'XXXX-01-12'
+    'January' => 'XXXX-01'
     '7/2008' => '2008-07'
 
     #seasons
@@ -221,9 +221,9 @@ The parser can parse strings such as:
     # unspecified
     'year in the 1860s' => '186u' #186x has decade precision, 186u has year precision.
     ('year in the 1800s', '18xu')
-    'month in 1872' => '1872-uu'
-    'day in January 1872' => '1872-01-uu'
-    'day in 1872' => '1872-uu-uu'
+    'month in 1872' => '1872-XX'
+    'day in January 1872' => '1872-01-XX'
+    'day in 1872' => '1872-XX-XX'
 
     #centuries
     '1st century' => '00xx'
@@ -231,7 +231,7 @@ The parser can parse strings such as:
     '19th century?' => '18xx?'
 
     # just showing off now...
-    'a day in about Spring 1849?' => '1849-21-uu?~'
+    'a day in about Spring 1849?' => '1849-21-XX?~'
 
     # simple ranges, which aren't as accurate as they could be. The parser is
     limited to only picking the first year range it finds.

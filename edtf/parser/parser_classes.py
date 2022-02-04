@@ -263,12 +263,12 @@ class Date(EDTFObject):
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
-            return int(re.sub(r'[xu]', r'0', self.year))
+            return int(re.sub(r'X', r'0', self.year))
         else:
-            return int(re.sub(r'[xu]', r'9', self.year))
+            return int(re.sub(r'X', r'9', self.year))
 
     def _precise_month(self, lean):
-        if self.month and self.month != "uu":
+        if self.month and self.month != "XX":
             try:
                 return int(self.month)
             except ValueError as e:
@@ -277,7 +277,7 @@ class Date(EDTFObject):
             return 1 if lean == EARLIEST else 12
 
     def _precise_day(self, lean):
-        if not self.day or self.day == 'uu':
+        if not self.day or self.day == "XX":
             if lean == EARLIEST:
                 return 1
             else:
