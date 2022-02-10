@@ -150,6 +150,13 @@ class EDTFObject(object):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
+    def get_is_uncertain_and_approximate(self):
+        return getattr(self, '_uncertain_and_approximate', False)
+
+    def set_is_uncertain_and_approximate(self, val):
+        self._uncertain_and_approximate = val
+    is_uncertain_and_approximate = property(get_is_uncertain_and_approximate, set_is_uncertain_and_approximate)
+
     def lower_fuzzy(self):
         strict_val = self.lower_strict()
         return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
@@ -384,6 +391,7 @@ class UA(EDTFObject):
 
         self.is_uncertain = "?" in ua
         self.is_approximate = "~" in ua
+        self.is_uncertain_and_approximate = "%" in ua
 
     def __str__(self):
         d = ""
@@ -391,10 +399,12 @@ class UA(EDTFObject):
             d += "?"
         if self.is_approximate:
             d += "~"
+        if self.is_uncertain_and_approximate:
+            d += "%"
         return d
 
     def _get_multiplier(self):
-        if self.is_uncertain and self.is_approximate:
+        if self.is_uncertain_and_approximate:
             return appsettings.MULTIPLIER_IF_BOTH
         elif self.is_uncertain:
             return appsettings.MULTIPLIER_IF_UNCERTAIN

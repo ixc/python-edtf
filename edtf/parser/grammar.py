@@ -74,7 +74,7 @@ level0Expression = date ^ dateAndTime ^ l0Interval
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = Combine(oneOf("? ~ ?~"))
+UASymbol = Combine(oneOf("? ~ %"))
 UA.set_parser(UASymbol)
 
 seasonNumber = oneOf("21 22 23 24")
