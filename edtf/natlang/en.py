@@ -133,7 +133,7 @@ def text_to_edtf_date(text):
     is_approximate = is_approximate or re.findall(r'\bcirca\b', t)
     # the word 'approx'/'around'/'about' anywhere
     is_approximate = is_approximate or \
-                     re.findall(r'\b(approx|around|about)', t)
+                     re.findall(r'\b(approx|around|about|abt)', t)
     # a ~ before a year-ish number
     is_approximate = is_approximate or re.findall(r'\b~\d{4}', t)
     # a ~ at the beginning
