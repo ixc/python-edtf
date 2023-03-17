@@ -150,6 +150,13 @@ class EDTFObject(object):
         self._is_uncertain = val
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
+    def get_is_uncertain_and_approximate(self):
+        return getattr(self, '_uncertain_and_approximate', False)
+
+    def set_is_uncertain_and_approximate(self, val):
+        self._uncertain_and_approximate = val
+    is_uncertain_and_approximate = property(get_is_uncertain_and_approximate, set_is_uncertain_and_approximate)
+
     def lower_fuzzy(self):
         strict_val = self.lower_strict()
         return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
@@ -263,12 +270,12 @@ class Date(EDTFObject):
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
-            return int(re.sub(r'[xu]', r'0', self.year))
+            return int(re.sub(r'X', r'0', self.year))
         else:
-            return int(re.sub(r'[xu]', r'9', self.year))
+            return int(re.sub(r'X', r'9', self.year))
 
     def _precise_month(self, lean):
-        if self.month and self.month != "uu":
+        if self.month and self.month != "XX":
             try:
                 return int(self.month)
             except ValueError as e:
@@ -277,7 +284,7 @@ class Date(EDTFObject):
             return 1 if lean == EARLIEST else 12
 
     def _precise_day(self, lean):
-        if not self.day or self.day == 'uu':
+        if not self.day or self.day == "XX":
             if lean == EARLIEST:
                 return 1
             else:
@@ -384,6 +391,7 @@ class UA(EDTFObject):
 
         self.is_uncertain = "?" in ua
         self.is_approximate = "~" in ua
+        self.is_uncertain_and_approximate = "%" in ua
 
     def __str__(self):
         d = ""
@@ -391,10 +399,12 @@ class UA(EDTFObject):
             d += "?"
         if self.is_approximate:
             d += "~"
+        if self.is_uncertain_and_approximate:
+            d += "%"
         return d
 
     def _get_multiplier(self):
-        if self.is_uncertain and self.is_approximate:
+        if self.is_uncertain_and_approximate:
             return appsettings.MULTIPLIER_IF_BOTH
         elif self.is_uncertain:
             return appsettings.MULTIPLIER_IF_UNCERTAIN

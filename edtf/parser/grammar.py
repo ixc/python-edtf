@@ -74,7 +74,7 @@ level0Expression = date ^ dateAndTime ^ l0Interval
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = Combine(oneOf("? ~ ?~"))
+UASymbol = Combine(oneOf("? ~ %"))
 UA.set_parser(UASymbol)
 
 seasonNumber = oneOf("21 22 23 24")
@@ -115,11 +115,11 @@ Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
 yearWithOneOrTwoUnspecifedDigits = Combine(
-    digit + digit + (digit ^ 'u') + 'u'
+    digit + digit + (digit ^ 'X') + 'X'
 )("year")
-monthUnspecified = year + "-" + L("uu")("month")
-dayUnspecified = yearMonth + "-" + L("uu")("day")
-dayAndMonthUnspecified = year + "-" + L("uu")("month") + "-" + L("uu")("day")
+monthUnspecified = year + "-" + L("XX")("month")
+dayUnspecified = yearMonth + "-" + L("XX")("day")
+dayAndMonthUnspecified = year + "-" + L("XX")("month") + "-" + L("XX")("day")
 
 unspecified = yearWithOneOrTwoUnspecifedDigits \
     ^ monthUnspecified \
@@ -142,26 +142,26 @@ level1Expression = uncertainOrApproxDate \
 
 # (* ** Internal Unspecified** *)
 
-digitOrU = Word(nums + 'u', exact=1)
+digitOrU = Word(nums + 'X', exact=1)
 
-# 2-digit day with at least one 'u' present
+# 2-digit day with at least one 'X' present
 dayWithU = Combine(
     ("u" + digitOrU) ^
-    (digitOrU + 'u')
+    (digitOrU + 'X')
 )("day")
 
-# 2-digit month with at least one 'u' present
+# 2-digit month with at least one 'X' present
 monthWithU = Combine(
     oneOf("0u 1u") ^
     ("u" + digitOrU)
 )("month")
 
-# 4-digit year with at least one 'u' present
+# 4-digit year with at least one 'X' present
 yearWithU = Combine(
-    ('u' + digitOrU + digitOrU + digitOrU) ^
-    (digitOrU + 'u' + digitOrU + digitOrU) ^
-    (digitOrU + digitOrU + 'u' + digitOrU) ^
-    (digitOrU + digitOrU + digitOrU + 'u')
+    ('X' + digitOrU + digitOrU + digitOrU) ^
+    (digitOrU + 'X' + digitOrU + digitOrU) ^
+    (digitOrU + digitOrU + 'X' + digitOrU) ^
+    (digitOrU + digitOrU + digitOrU + 'X')
 )("year")
 
 yearMonthWithU = (
