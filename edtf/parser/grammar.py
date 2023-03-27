@@ -146,38 +146,38 @@ digitOrU = Word(nums + 'X', exact=1)
 
 # 2-digit day with at least one 'X' present
 dayWithU = Combine(
-    ("u" + digitOrU) ^
-    (digitOrU + 'X')
+    ("X" + digitOrU)
+    ^ (digitOrU + 'X')
 )("day")
 
 # 2-digit month with at least one 'X' present
 monthWithU = Combine(
-    oneOf("0u 1u") ^
-    ("u" + digitOrU)
+    oneOf("0X 1X")
+    ^ ("X" + digitOrU)
 )("month")
 
 # 4-digit year with at least one 'X' present
 yearWithU = Combine(
-    ('X' + digitOrU + digitOrU + digitOrU) ^
-    (digitOrU + 'X' + digitOrU + digitOrU) ^
-    (digitOrU + digitOrU + 'X' + digitOrU) ^
-    (digitOrU + digitOrU + digitOrU + 'X')
+    ('X' + digitOrU + digitOrU + digitOrU)
+    ^ (digitOrU + 'X' + digitOrU + digitOrU)
+    ^ (digitOrU + digitOrU + 'X' + digitOrU)
+    ^ (digitOrU + digitOrU + digitOrU + 'X')
 )("year")
 
 yearMonthWithU = (
-    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU) ^
-    (yearWithU + "-" + month)
+    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU)
+    ^ (yearWithU + "-" + month)
 )
 
 monthDayWithU = (
-    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU) ^
-    (monthWithU + "-" + day)
+    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU)
+    ^ (monthWithU + "-" + day)
 )
 
 yearMonthDayWithU = (
-    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
-    (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day")) ^
-    (year + "-" + month + "-" + dayWithU)
+    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day"))
+    ^ (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day"))
+    ^ (year + "-" + month + "-" + dayWithU)
 )
 
 partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
