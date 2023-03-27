@@ -233,9 +233,9 @@ level2Interval = (dateOrSeason("lower") + "/" + dateWithInternalUncertainty("upp
     ^ (dateWithInternalUncertainty("lower") + "/" + dateWithInternalUncertainty("upper"))
 Level2Interval.set_parser(level2Interval)
 
-# (* ** Masked precision ** *)
-maskedPrecision = Combine(digit + digit + ((digit + "x") ^ "xx"))("year")
-MaskedPrecision.set_parser(maskedPrecision)
+# (* ** Masked precision ** *) eliminated in latest specs
+# maskedPrecision = Combine(digit + digit + ((digit + "x") ^ "xx"))("year")
+# MaskedPrecision.set_parser(maskedPrecision)
 
 # (* ** Inclusive list and choice list** *)
 consecutives = (yearMonthDay("lower") + ".." + yearMonthDay("upper")) \
@@ -269,7 +269,6 @@ level2Expression = partialUncertainOrApproximate \
     ^ partialUnspecified \
     ^ choiceList \
     ^ inclusiveList \
-    ^ maskedPrecision \
     ^ level2Interval \
     ^ longYearScientific \
     ^ seasonQualified

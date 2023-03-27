@@ -168,11 +168,11 @@ EXAMPLES = (
     (('{1667,1668, 1670..1672}', '{1667, 1668, 1670..1672}'), '1667-01-01', '1672-12-31'),
     # The year 1960 and the month December of 1961.
     ('{1960, 1961-12}', '1960-01-01', '1961-12-31'),
-    # Masked Precision
+    # Masked Precision --> eliminated
     # A date during the 1960s
-    ('196x', '1960-01-01', '1969-12-31'),
+    #('196x', '1960-01-01', '1969-12-31'),
     # A date during the 1900s
-    ('19xx', '1900-01-01', '1999-12-31'),
+    #('19xx', '1900-01-01', '1999-12-31'),
     # L2 Extended Interval
     # An interval in June 2004 beginning approximately the first and ending approximately the 20th.
     ('2004-06-(01)~/2004-06-(20)~', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
