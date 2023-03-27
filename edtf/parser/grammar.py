@@ -30,9 +30,9 @@ day = oneThru31("day")
 
 month = oneThru12("month")
 monthDay = (
-    (oneOf("01 03 05 07 08 10 12")("month") + "-" + oneThru31("day")) ^
-    (oneOf("04 06 09 11")("month") + "-" + oneThru30("day")) ^
-    (L("02")("month") + "-" + oneThru29("day"))
+    (oneOf("01 03 05 07 08 10 12")("month") + "-" + oneThru31("day"))
+    ^ (oneOf("04 06 09 11")("month") + "-" + oneThru30("day"))
+    ^ (L("02")("month") + "-" + oneThru29("day"))
 )
 
 # 4 digits, 0 to 9
@@ -50,13 +50,13 @@ date = Combine(year ^ yearMonth ^ yearMonthDay)("date")
 Date.set_parser(date)
 
 zoneOffsetHour = oneThru13
-zoneOffset = L("Z") ^ (
-    Regex("[+-]") + (
-        zoneOffsetHour + Optional(":" + minute) ^
-        L("14:00") ^
-        ("00:" + oneThru59)
-    )
-)
+zoneOffset = L("Z") \
+    ^ (Regex("[+-]")
+        + (zoneOffsetHour + Optional(":" + minute)
+            ^ L("14:00")
+            ^ ("00:" + oneThru59)
+           )
+       )
 
 baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
@@ -196,12 +196,12 @@ IUABase = \
     (year_with_brackets + UASymbol("year_ua") + "-" + month + Optional("-(" + day + ")" + UASymbol("day_ua"))) \
     ^ (year_with_brackets + Optional(UASymbol)("year_ua") + "-" + monthDay + Optional(UASymbol)("month_day_ua")) \
     ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua") +
-        Optional("-(" + day + ")" + UASymbol("day_ua"))
+        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
+        + Optional("-(" + day + ")" + UASymbol("day_ua"))
     ) \
     ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua") +
-        Optional("-" + day)
+        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
+        + Optional("-" + day)
     ) \
     ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua")) \
     ^ (yearMonth + UASymbol("year_month_ua") + "-" + day) \
@@ -213,7 +213,7 @@ partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_u
 PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
 dateWithInternalUncertainty = partialUncertainOrApproximate \
-                              ^ partialUnspecified
+    ^ partialUnspecified
 
 qualifyingString = Regex(r'\S')  # any nonwhitespace char
 
@@ -229,8 +229,8 @@ ExponentialYear.set_parser(longYearScientific)
 
 # (* ** level2Interval ** *)
 level2Interval = (dateOrSeason("lower") + "/" + dateWithInternalUncertainty("upper")) \
-                 ^ (dateWithInternalUncertainty("lower") + "/" + dateOrSeason("upper")) \
-                 ^ (dateWithInternalUncertainty("lower") + "/" + dateWithInternalUncertainty("upper"))
+    ^ (dateWithInternalUncertainty("lower") + "/" + dateOrSeason("upper")) \
+    ^ (dateWithInternalUncertainty("lower") + "/" + dateWithInternalUncertainty("upper"))
 Level2Interval.set_parser(level2Interval)
 
 # (* ** Masked precision ** *)
@@ -266,13 +266,13 @@ inclusiveList = "{" + listContent + "}"
 MultipleDates.set_parser(inclusiveList)
 
 level2Expression = partialUncertainOrApproximate \
-                   ^ partialUnspecified \
-                   ^ choiceList \
-                   ^ inclusiveList \
-                   ^ maskedPrecision \
-                   ^ level2Interval \
-                   ^ longYearScientific \
-                   ^ seasonQualified
+    ^ partialUnspecified \
+    ^ choiceList \
+    ^ inclusiveList \
+    ^ maskedPrecision \
+    ^ level2Interval \
+    ^ longYearScientific \
+    ^ seasonQualified
 
 # putting it all together
 edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
