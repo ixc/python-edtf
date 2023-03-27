@@ -90,7 +90,7 @@ EXAMPLES = (
     ('1984~/2004-06', '1984-01-01', '2004-06-30', '1983-01-01', '2004-06-30'),
     # interval beginning 1984 and ending approximately June 2004
     ('1984/2004-06~', '1984-01-01', '2004-06-30', '1984-01-01', '2004-07-30'),
-    ('1984?/2004?~', '1984-01-01', '2004-12-31', '1983-01-01', '2006-12-31'),
+    ('1984?/2004%', '1984-01-01', '2004-12-31', '1983-01-01', '2006-12-31'),
     ('1984~/2004~', '1984-01-01', '2004-12-31', '1983-01-01', '2005-12-31'),
     # interval whose beginning is uncertain but thought to be 1984, and whose end is uncertain and approximate but thought to be 2004
     ('1984-06?/2004-08?', '1984-06-01', '2004-08-31', '1984-05-01', '2004-09-30'),
@@ -123,7 +123,7 @@ EXAMPLES = (
     # day is approximate; year, month known
     ('2004-06-(11)~', '2004-06-11', '2004-06-10', '2004-06-12'),
     # Year known, month within year is approximate and uncertain
-    ('2004-(06)?~', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
+    ('2004-(06)%', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
     # Year known, month and day uncertain
     ('2004-(06-11)?', '2004-06-11', '2004-05-10', '2004-07-12'),
     # Year uncertain, month known, day approximate
@@ -131,7 +131,7 @@ EXAMPLES = (
     # Year uncertain and month is both uncertain and approximate
     ('(2004-(06)~)?', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
     # This has the same meaning as the previous example.
-    ('2004?-(06)?~', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
+    ('2004?-(06)%', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
     # Year uncertain, month and day approximate.
     (('(2004)?-06-04~', '2004?-06-04~'), '2004-06-04', '2003-05-03', '2005-07-05'),
     # Year known, month and day approximate. Note that this has the same meaning as the following.
