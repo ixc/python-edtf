@@ -87,7 +87,7 @@ dateOrSeason = date("") ^ season
 
 # (* *** Long Year - Simple Form *** *)
 
-longYearSimple = "y" + Combine(
+longYearSimple = "Y" + Combine(
     Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit)
 )("year")
 LongYear.set_parser(longYearSimple)
@@ -223,8 +223,8 @@ seasonQualified = season + "^" + seasonQualifier
 
 # (* ** Long Year - Scientific Form ** *)
 positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
-longYearScientific = "y" + Combine(Optional("-") + positiveInteger)("base") + "e" + \
-    positiveInteger("exponent") + Optional("p" + positiveInteger("precision"))
+longYearScientific = "Y" + Combine(Optional("-") + positiveInteger)("base") + "E" + \
+    positiveInteger("exponent") + Optional("S" + positiveInteger("precision"))
 ExponentialYear.set_parser(longYearScientific)
 
 # (* ** level2Interval ** *)

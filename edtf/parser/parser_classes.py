@@ -464,7 +464,7 @@ class LongYear(EDTFObject):
         self.year = year
 
     def __str__(self):
-        return "y%s" % self.year
+        return "Y%s" % self.year
 
     def _precise_year(self):
         return int(self.year)
@@ -728,7 +728,7 @@ class ExponentialYear(LongYear):
 
     def get_year(self):
         if self.precision:
-            return '%se%sp%s' % (self.base, self.exponent, self.precision)
+            return '%sE%sS%s' % (self.base, self.exponent, self.precision)
         else:
-            return '%se%s' % (self.base, self.exponent)
+            return '%sE%s' % (self.base, self.exponent)
     year = property(get_year)

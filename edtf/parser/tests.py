@@ -98,9 +98,9 @@ EXAMPLES = (
     ('1984-06-02?/unknown', '1984-06-02', '1994-06-02', '1984-06-01', '1994-06-02'),
     # Year exceeding 4 digits
     # the year 170000002
-    ('y170000002', '170000002-01-01', '170000002-12-31'),
+    ('Y170000002', '170000002-01-01', '170000002-12-31'),
     # the year -170000002
-    ('y-170000002', '-170000002-01-01', '-170000002-12-31'),
+    ('Y-170000002', '-170000002-01-01', '-170000002-12-31'),
     # Seasons
     # Spring, 2001
     ('2001-21', '2001-03-01', '2001-05-31'),
@@ -180,19 +180,19 @@ EXAMPLES = (
     ('2004-06-XX/2004-07-03', '2004-06-01', '2004-07-03'),
     # Year Requiring More than Four Digits - Exponential Form
     # the year 170000000
-    ('y17e7', '170000000-01-01', '170000000-12-31'),
+    ('Y17E7', '170000000-01-01', '170000000-12-31'),
     # the year -170000000
-    ('y-17e7',  '-170000000-01-01', '-170000000-12-31'),
-    # Some year between 171010000 and 171999999, estimated to be 171010000 ('p3' indicates a precision of 3 significant digits.)
+    ('Y-17E7',  '-170000000-01-01', '-170000000-12-31'),
+    # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
     # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
-    # ('y17101e4p3', '171010000-01-01', '171999999-12-31'),
+    # ('Y17101E4S3', '171010000-01-01', '171999999-12-31'),
 )
 
 BAD_EXAMPLES = (
     None,
     '',
     'not a edtf string',
-    'y17e7-12-26', # not implemented
+    'Y17E7-12-26', # not implemented
     '2016-13-08', # wrong day order
     '2016-02-39', # out of range
     '-0000-01-01',  # negative zero year
@@ -206,7 +206,7 @@ class TestParsing(unittest.TestCase):
 
     def test_date_values(self):
         """
-        Test that every EDTFObject can tell you its lower and upper
+        Test that everY EDTFObject can tell you its lower and upper
         fuzzy and strict dates, and that they're what we think they should be.
         """
 
