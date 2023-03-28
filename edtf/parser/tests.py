@@ -39,6 +39,7 @@ EXAMPLES = (
     ('2001-02-03T09:30:01', '2001-02-03'),
     ('2004-01-01T10:10:10Z', '2004-01-01'),
     ('2004-01-01T10:10:10+05:00', '2004-01-01'),
+    ('1985-04-12T23:20:30', '1985-04-12'),
     # An interval beginning sometime in 1964 and ending sometime in 2008. Year precision.
     ('1964/2008', '1964-01-01', '2008-12-31'),
     # An interval beginning sometime in June 2004 and ending sometime in August of 2006. Month precision.

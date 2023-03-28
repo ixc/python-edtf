@@ -13,7 +13,7 @@ from edtf.parser.edtf_exceptions import EDTFParseException
 oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
 oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])
 oneThru23 = oneOf(['%.2d' % i for i in range(1, 24)])
-zeroThru23 = oneOf(['%.2d' % i for i in range(0, 23)])
+zeroThru23 = oneOf(['%.2d' % i for i in range(0, 24)])
 oneThru29 = oneOf(['%.2d' % i for i in range(1, 30)])
 oneThru30 = oneOf(['%.2d' % i for i in range(1, 31)])
 oneThru31 = oneOf(['%.2d' % i for i in range(1, 32)])
