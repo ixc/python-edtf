@@ -23,6 +23,44 @@ SEASON_MONTHS_RANGE = EDTF.get('SEASON_MONTHS_RANGE', {
     }
 )
 
+SEASON_L2_MONTHS_RANGE = EDTF.get('SEASON_L2_MONTHS_RANGE', {
+        # season id: [earliest_month, last_month]
+        21: [3, 5],
+        22: [6, 8],
+        23: [9, 11],
+        # winter in the northern hemisphere wraps the end of the year, so
+        # Winter 2010 could wrap into 2011.
+        # For simplicity, we assume it falls at the end of the year, esp since the
+        # spec says that sort order goes spring > summer > autumn > winter
+        24: [12, 12],
+        # spring in the northern hemisphere
+        25: [3, 5],
+        # summer in the northern hemisphere
+        26: [6, 8],
+        # fall/autumn in the northern hemisphere
+        27: [9, 11],
+        # winter in the northern hemisphere wraps the end of the year
+        28: [12, 12],
+        # spring in the southern hemisphere
+        29: [9, 11],
+        # summer in the southern hemisphere
+        30: [12, 12],
+        # fall/autumn in the southern hemisphere
+        31: [3, 5],
+        # winter in the southern hemisphere
+        32: [6, 8],
+        33: [1, 3],
+        34: [4, 6],
+        35: [7, 9],
+        36: [10, 12],
+        37: [1, 4],
+        38: [5, 8],
+        39: [9, 12],
+        40: [1, 6],
+        41: [7, 12]
+    }
+)
+
 DAY_FIRST = EDTF.get('DAY_FIRST', False)  # Americans!
 
 SEASONS = EDTF.get('SEASONS', {

@@ -191,6 +191,11 @@ EXAMPLES = (
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
     # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
     # ('Y17101E4S3', '171010000-01-01', '171999999-12-31'),
+    # L2 Seasons
+    # Spring southern, 2001
+    ('2001-29', '2001-09-01', '2001-11-30'),
+    # second quarter of 2001
+    ('2001-34', '2001-04-01', '2001-06-30'),
 )
 
 BAD_EXAMPLES = (

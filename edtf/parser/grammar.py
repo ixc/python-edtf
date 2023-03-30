@@ -6,7 +6,7 @@ from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified,
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear
+    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 
@@ -268,12 +268,19 @@ OneOfASet.set_parser(choiceList)
 inclusiveList = "{" + listContent + "}"
 MultipleDates.set_parser(inclusiveList)
 
+
+# (* *** L2 Season *** *)
+seasonL2Number = oneOf("21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41")
+l2season = year + "-" + seasonL2Number("season")
+Level2Season.set_parser(l2season)
+
 level2Expression = partialUncertainOrApproximate \
     ^ partialUnspecified \
     ^ choiceList \
     ^ inclusiveList \
     ^ level2Interval \
     ^ longYearScientific \
+    ^ l2season \
     ^ seasonQualified
 
 # putting it all together

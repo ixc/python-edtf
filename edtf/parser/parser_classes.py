@@ -524,7 +524,7 @@ class Season(Date):
         return "%s-%s" % (self.year, self.season)
 
     def _precise_month(self, lean):
-        rng = appsettings.SEASON_MONTHS_RANGE[int(self.season)]
+        rng = appsettings.SEASON_L2_MONTHS_RANGE[int(self.season)]
         if lean == EARLIEST:
             return rng[0]
         else:
@@ -751,6 +751,9 @@ class Level2Interval(Level1Interval):
         else:
             self.upper = upper
 
+
+class Level2Season(Season):
+    pass
 
 class ExponentialYear(LongYear):
     def __init__(self, base, exponent, precision=None):
