@@ -354,27 +354,16 @@ class Interval(EDTFObject):
 
     def _strict_date(self, lean):
         if lean == EARLIEST:
-            try:
-                r = self.lower._strict_date(lean)
-                if r is None:
-                    raise AttributeError
-                return r
-            except AttributeError: # it's a string, or no date. Result depends on the upper date
-                upper = self.upper._strict_date(LATEST)
-                return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
+            r = self.lower._strict_date(lean)
         else:
-            try:
-                r = self.upper._strict_date(lean)
-                if r is None:
-                    raise AttributeError
-                return r
-            except AttributeError: # an 'unknown' or 'open' string - depends on the lower date
-                if self.upper and (self.upper == "open" or self.upper.date == "open"):
-                    return dt_to_struct_time(date.today())  # it's still happening
-                else:
-                    lower = self.lower._strict_date(EARLIEST)
-                    return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
+            r = self.upper._strict_date(lean)
+        return r
 
+    @property
+    def precision(self):
+        if self.lower.precision == self.upper.precision:
+            return self.lower.precision
+        return None
 
 # (* ************************** Level 1 *************************** *)
 
@@ -386,7 +375,7 @@ class UA(EDTFObject):
         return cls(*args)
 
     def __init__(self, *args):
-        assert len(args)==1
+        assert len(args) == 1
         ua = args[0]
 
         self.is_uncertain = "?" in ua
@@ -424,10 +413,6 @@ class UncertainOrApproximate(EDTFObject):
             return str(self.date)
 
     def _strict_date(self, lean):
-        if self.date == "open":
-            return dt_to_struct_time(date.today())
-        if self.date =="unknown":
-            return None # depends on the other date
         return self.date._strict_date(lean)
 
     def _get_fuzzy_padding(self, lean):
@@ -443,14 +428,62 @@ class UncertainOrApproximate(EDTFObject):
             return multiplier * appsettings.PADDING_YEAR_PRECISION
 
 
+class UnspecifiedIntervalSection(EDTFObject):
+
+    def __init__(self, sectionOpen=False, other_section_element=None):
+        if sectionOpen:
+            self.is_open = True
+            self.is_unknown = False
+        else:
+            self.is_open = False
+            self.is_unknown = True
+        self.other = other_section_element
+
+    def __str__(self):
+        if self.is_unknown:
+            return ""
+        else:
+            return ".."
+
+    def _strict_date(self, lean):
+        if lean == EARLIEST:
+            if self.is_unknown:
+                upper = self.other._strict_date(LATEST)
+                return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
+            else:
+                return LongYear(appsettings.BEGINNING_OF_TIME)._strict_date(lean)
+        else:
+            if self.is_unknown:
+                lower = self.other._strict_date(EARLIEST)
+                return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
+            else:
+                return LongYear(appsettings.END_OF_TIME)._strict_date(lean)
+
+    @property
+    def precision(self):
+        return self.other.date.precision or PRECISION_YEAR
+
+
 class Unspecified(Date):
     pass
 
 
 class Level1Interval(Interval):
-    def __init__(self, lower, upper):
-        self.lower = UncertainOrApproximate(**lower)
-        self.upper = UncertainOrApproximate(**upper)
+    def __init__(self, lower=None, upper=None):
+        if lower:
+            if lower['date'] == '..':
+                self.lower = UnspecifiedIntervalSection(True, UncertainOrApproximate(**upper))
+            else:
+                self.lower = UncertainOrApproximate(**lower)
+        else:
+            self.lower = UnspecifiedIntervalSection(False, UncertainOrApproximate(**upper))
+        if upper:
+            if upper['date'] == '..':
+                self.upper = UnspecifiedIntervalSection(True, UncertainOrApproximate(**lower))
+            else:
+                self.upper = UncertainOrApproximate(**upper)
+        else:
+            self.upper = UnspecifiedIntervalSection(False, UncertainOrApproximate(**lower))
 
     def _get_fuzzy_padding(self, lean):
         if lean == EARLIEST:
@@ -651,12 +684,14 @@ class Consecutives(Interval):
         return "%s..%s" % (self.lower or '', self.upper or '')
 
 
-class EarlierConsecutives(Consecutives):
-    pass
+class EarlierConsecutives(Level1Interval):
+    def __str__(self):
+        return "%s%s" % (self.lower, self.upper)
 
 
-class LaterConsecutives(Consecutives):
-    pass
+class LaterConsecutives(Level1Interval):
+    def __str__(self):
+        return "%s%s" % (self.lower, self.upper)
 
 
 class OneOfASet(EDTFObject):

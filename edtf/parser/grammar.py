@@ -94,7 +94,6 @@ LongYear.set_parser(longYearSimple)
 
 # (* *** L1Interval *** *)
 uaDateOrSeason = dateOrSeason + Optional(UASymbol)
-l1Start = uaDateOrSeason ^ "unknown"
 
 
 # bit of a kludge here to get the all the relevant tokens into the parse action
@@ -106,11 +105,13 @@ def f(toks):
         return {'date': toks[0], 'ua': None}
 
 
+l1Start = '..' ^ uaDateOrSeason
 l1Start.addParseAction(f)
-l1End = uaDateOrSeason ^ "unknown" ^ "open"
+l1End = uaDateOrSeason ^ '..'
 l1End.addParseAction(f)
 
-level1Interval = l1Start("lower") + "/" + l1End("upper")
+level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") \
+    ^ l1Start("lower") + "/" + Optional(l1End("upper"))
 Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
@@ -249,10 +250,12 @@ listElement = date \
     ^ unspecified \
     ^ consecutives
 
-earlier = ".." + date("upper")
+earlier = L("..").addParseAction(f)("lower") + date("upper").addParseAction(f)
+later = date("lower").addParseAction(f) + L("..").addParseAction(f)("upper")
+
 EarlierConsecutives.set_parser(earlier)
-later = date("lower") + ".."
 LaterConsecutives.set_parser(later)
+
 
 listContent = (earlier + ZeroOrMore("," + listElement)) \
     ^ (Optional(earlier + ",") + ZeroOrMore(listElement + ",") + later) \
