@@ -143,45 +143,45 @@ level1Expression = uncertainOrApproxDate \
 
 # (* ** Internal Unspecified** *)
 
-digitOrU = Word(nums + 'X', exact=1)
+digitOrX = Word(nums + 'X', exact=1)
 
 # 2-digit day with at least one 'X' present
-dayWithU = Combine(
-    ("X" + digitOrU)
-    ^ (digitOrU + 'X')
+dayWithX = Combine(
+    ("X" + digitOrX)
+    ^ (digitOrX + 'X')
 )("day")
 
 # 2-digit month with at least one 'X' present
-monthWithU = Combine(
+monthWithX = Combine(
     oneOf("0X 1X")
-    ^ ("X" + digitOrU)
+    ^ ("X" + digitOrX)
 )("month")
 
 # 4-digit year with at least one 'X' present
-yearWithU = Combine(
-    ('X' + digitOrU + digitOrU + digitOrU)
-    ^ (digitOrU + 'X' + digitOrU + digitOrU)
-    ^ (digitOrU + digitOrU + 'X' + digitOrU)
-    ^ (digitOrU + digitOrU + digitOrU + 'X')
+yearWithX = Combine(
+    ('X' + digitOrX + digitOrX + digitOrX)
+    ^ (digitOrX + 'X' + digitOrX + digitOrX)
+    ^ (digitOrX + digitOrX + 'X' + digitOrX)
+    ^ (digitOrX + digitOrX + digitOrX + 'X')
 )("year")
 
-yearMonthWithU = (
-    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU)
-    ^ (yearWithU + "-" + month)
+yearMonthWithX = (
+    (Combine(year("") ^ yearWithX(""))("year") + "-" + monthWithX)
+    ^ (yearWithX + "-" + month)
 )
 
-monthDayWithU = (
-    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU)
-    ^ (monthWithU + "-" + day)
+monthDayWithX = (
+    (Combine(month("") ^ monthWithX(""))("month") + "-" + dayWithX)
+    ^ (monthWithX + "-" + day)
 )
 
-yearMonthDayWithU = (
-    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day"))
-    ^ (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day"))
-    ^ (year + "-" + month + "-" + dayWithU)
+yearMonthDayWithX = (
+    (yearWithX + "-" + Combine(month("") ^ monthWithX(""))("month") + "-" + Combine(day("") ^ dayWithX(""))("day"))
+    ^ (year + "-" + monthWithX + "-" + Combine(day("") ^ dayWithX(""))("day"))
+    ^ (year + "-" + month + "-" + dayWithX)
 )
 
-partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
+partialUnspecified = yearWithX ^ yearMonthWithX ^ yearMonthDayWithX
 PartialUnspecified.set_parser(partialUnspecified)
 
 # (* ** Internal Uncertain or Approximate** *)
