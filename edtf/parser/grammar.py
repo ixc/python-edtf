@@ -1,12 +1,12 @@
-from pyparsing import Literal as L, ParseException, Optional, OneOrMore, \
-    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums
+from pyparsing import Literal as L, ParseException, Opt, Optional, OneOrMore, \
+    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums, Group
 
 # (* ************************** Level 0 *************************** *)
 from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season
+    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season, PartialUncertainOrApproximateNEW
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 
@@ -210,11 +210,32 @@ IUABase = \
     ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua")) \
     ^ (season("ssn") + UASymbol("season_ua"))
 
+
+# group qualification
+# qualifier right of a component(date, month, day) applies to all components to the left
+group_qual = yearMonth + UASymbol("year_month_ua") + "-" + day \
+    ^ year + UASymbol("year_ua") + "-" + month + Opt("-" + day) 
+
+# component qualification
+# qualifier immediate left of a component (date, month, day) applies to that component only
+qual_year = year ^ UASymbol("year_ua_b") + year ^ year + UASymbol("year_ua") 
+qual_month = month ^ UASymbol("month_ua") + month
+qual_day = day ^ UASymbol("day_ua") + day
+
+indi_qual = UASymbol("year_ua_b") + year + Opt("-" + qual_month + Opt("-" + qual_day)) \
+    ^ qual_year + "-" + UASymbol("month_ua") + month + Opt("-" + qual_day) \
+    ^ qual_year + "-" + qual_month + "-" + UASymbol("day_ua") + day
+
+
 partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_ua"))
 PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
+partialUncertainOrApproximate_new = group_qual ^ indi_qual
+PartialUncertainOrApproximateNEW.set_parser(partialUncertainOrApproximate_new)
+
 dateWithInternalUncertainty = partialUncertainOrApproximate \
-    ^ partialUnspecified
+    ^ partialUnspecified \
+    ^ partialUncertainOrApproximate_new
 
 qualifyingString = Regex(r'\S')  # any nonwhitespace char
 
@@ -275,6 +296,7 @@ l2season = year + "-" + seasonL2Number("season")
 Level2Season.set_parser(l2season)
 
 level2Expression = partialUncertainOrApproximate \
+    ^ partialUncertainOrApproximate_new \
     ^ partialUnspecified \
     ^ choiceList \
     ^ inclusiveList \
