@@ -202,7 +202,7 @@ BAD_EXAMPLES = (
     None,
     '',
     'not a edtf string',
-    'Y17E7-12-26', # not implemented
+    'Y17E7-12-26', # Y indicates that the date is year only 
     '2016-13-08', # wrong day order
     '2016-02-39', # out of range
     '-0000-01-01',  # negative zero year
