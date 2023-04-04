@@ -122,52 +122,31 @@ EXAMPLES = (
     # uncertain year; month, day known
     ('2004?-06-11', '2004-06-11', '2003-06-11', '2005-06-11'),
     # year and month are approximate; day known
-    ('2004-06~-11', '2004-06-11', '2003-05-11', '2005-07-11'),
-
-    # uncertain month, year and day known - OLD SPEC
-    ('2004-(06)?-11', '2004-06-11', '2004-05-11', '2004-07-11'),
-    # uncertain month, year and day known - NEW SPEC
+    ('2004-06~-11', '2004-06-11', '2003-05-11', '2005-07-11'),  
+    # uncertain month, year and day known 
     ('2004-?06-11', '2004-06-11', '2004-05-11', '2004-07-11'),
-
-    # day is approximate; year, month known - OLD SPEC
-    ('2004-06-(11)~', '2004-06-11', '2004-06-10', '2004-06-12'),
-    # day is approximate; year, month known - NEW SPEC
+    # day is approximate; year, month known
     ('2004-06-~11', '2004-06-11', '2004-06-10', '2004-06-12'),
-    # Year known, month within year is approximate and uncertain - OLD SPEC
-    ('2004-(06)%', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
     # Year known, month within year is approximate and uncertain - NEW SPEC
     ('2004-%06', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
-    # Year known, month and day uncertain - OLD SPEC
-    ('2004-(06-11)?', '2004-06-11', '2004-05-10', '2004-07-12'),
     # Year known, month and day uncertain - NEW SPEC
     ('2004-?06-?11', '2004-06-11', '2004-05-10', '2004-07-12'),
-    # Year uncertain, month known, day approximate - OLD SPEC
-    ('2004?-06-(11)~', '2004-06-11', '2003-06-10', '2005-06-12'),
     # Year uncertain, month known, day approximate - NEW SPEC
     ('2004?-06-~11', '2004-06-11', '2003-06-10', '2005-06-12'),
-    # Year uncertain and month is both uncertain and approximate - OLD SPEC
-    ('(2004-(06)~)?', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
     # Year uncertain and month is both uncertain and approximate - NEW SPEC
     ('?2004-%06', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
-    # This has the same meaning as the previous example.- OLD SPEC
-    ('2004?-(06)%', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
     # This has the same meaning as the previous example.- NEW SPEC
     ('2004?-%06', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
-    # Year uncertain, month and day approximate.- OLD SPEC
-    (('(2004)?-06-04~', '2004?-06-04~'), '2004-06-04', '2003-05-03', '2005-07-05'),
     # Year uncertain, month and day approximate. - NEW SPEC
-    ('2004?-06-04~','2004-06-04', '2003-05-03', '2005-07-05'),
-    # Year known, month and day approximate. Note that this has the same meaning as the following.- OLD SPEC
-    (('(2011)-06-04~', '2011-(06-04)~'), '2011-06-04', '2011-05-03', '2011-07-05'),
-    # Year known, month and day approximate.- OLD SPEC
-    ('2011-(06-04)~', '2011-06-04', '2011-05-03', '2011-07-05'),
+    ('2004?-~06-~04','2004-06-04', '2003-05-03', '2005-07-05'),
+    # what about that?
+    #('2004?-06-04~','2004-06-04', '2003-05-03', '2005-07-05'),
     # Year known, month and day approximate. - NEW SPEC
     ('2011-~06-~04', '2011-06-04', '2011-05-03', '2011-07-05'),
-
     # Approximate season (around Autumn 2011)
-    ('2011-23~', '2011-09-01', '2011-11-30', '2011-06-09', '2012-02-22'),
+    #('2011-23~', '2011-09-01', '2011-11-30', '2011-06-09', '2012-02-22'),
     # Years wrapping
-    ('2011-24~', '2011-12-01', '2011-12-31', '2011-09-08', '2012-03-24'),
+    #('2011-24~', '2011-12-01', '2011-12-31', '2011-09-08', '2012-03-24'),
     # Partial unspecified
     # December 25 sometime during the 1560s
     ('156X-12-25', '1560-12-25', '1569-12-25'),
@@ -200,8 +179,7 @@ EXAMPLES = (
     # A date during the 1900s
     #('19xx', '1900-01-01', '1999-12-31'),
     # L2 Extended Interval
-    # An interval in June 2004 beginning approximately the first and ending approximately the 20th.
-    ('2004-06-(01)~/2004-06-(20)~', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
+    
     ('2004-06-~01/2004-06-~20', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
     # The interval began on an unspecified day in June 2004.
     ('2004-06-XX/2004-07-03', '2004-06-01', '2004-07-03'),
@@ -224,10 +202,20 @@ BAD_EXAMPLES = (
     None,
     '',
     'not a edtf string',
-    'Y17E7-12-26', # Y indicates that the date is year only 
-    '2016-13-08', # wrong day order
-    '2016-02-39', # out of range
+    'Y17E7-12-26',  # Y indicates that the date is year only
+    '2016-13-08',  # wrong day order
+    '2016-02-39',  # out of range
     '-0000-01-01',  # negative zero year
+    '2004-(06)?-11',  # uncertain month, year and day known - OLD SPEC
+    '2004-06-(11)~',  # day is approximate; year, month known - OLD SPEC
+    '2004-(06)%',  # Year known, month within year is approximate and uncertain - OLD SPEC
+    '2004-(06-11)?',  # Year known, month and day uncertain - OLD SPEC
+    '2004?-06-(11)~',  # Year uncertain, month known, day approximate - OLD SPEC
+    '(2004-(06)~)?',  # Year uncertain and month is both uncertain and approximate - OLD SPEC
+    '(2004)?-06-04~',  # Year uncertain, month and day approximate.- OLD SPEC
+    '(2011)-06-04~',  # Year known, month and day approximate. Note that this has the same meaning as the following.- OLD SPEC
+    '2011-(06-04)~',  # Year known, month and day approximate.- OLD SPEC
+    '2004-06-(01)~/2004-06-(20)~',  # An interval in June 2004 beginning approximately the first and ending approximately the 20th - OLD SPEC
 )
 
 

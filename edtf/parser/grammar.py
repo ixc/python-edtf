@@ -6,7 +6,7 @@ from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified,
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season, PartialUncertainOrApproximateNEW
+    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 
@@ -186,31 +186,6 @@ PartialUnspecified.set_parser(partialUnspecified)
 
 # (* ** Internal Uncertain or Approximate** *)
 
-# this line is out of spec, but the given examples (e.g. '(2004)?-06-04~')
-# appear to require it.
-year_with_brackets = year ^ ("(" + year + ")")
-
-# second clause below needed Optional() around the "year_ua" UASymbol, for dates
-# like '(2011)-06-04~' to work.
-
-IUABase = \
-    (year_with_brackets + UASymbol("year_ua") + "-" + month + Optional("-(" + day + ")" + UASymbol("day_ua"))) \
-    ^ (year_with_brackets + Optional(UASymbol)("year_ua") + "-" + monthDay + Optional(UASymbol)("month_day_ua")) \
-    ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
-        + Optional("-(" + day + ")" + UASymbol("day_ua"))
-    ) \
-    ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
-        + Optional("-" + day)
-    ) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-" + day) \
-    ^ (yearMonth + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua")) \
-    ^ (season("ssn") + UASymbol("season_ua"))
-
-
 # group qualification
 # qualifier right of a component(date, month, day) applies to all components to the left
 group_qual = yearMonth + UASymbol("year_month_ua") + "-" + day \
@@ -226,16 +201,11 @@ indi_qual = UASymbol("year_ua_b") + year + Opt("-" + qual_month + Opt("-" + qual
     ^ qual_year + "-" + UASymbol("month_ua") + month + Opt("-" + qual_day) \
     ^ qual_year + "-" + qual_month + "-" + UASymbol("day_ua") + day
 
-
-partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_ua"))
+partialUncertainOrApproximate = group_qual ^ indi_qual
 PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
-partialUncertainOrApproximate_new = group_qual ^ indi_qual
-PartialUncertainOrApproximateNEW.set_parser(partialUncertainOrApproximate_new)
-
 dateWithInternalUncertainty = partialUncertainOrApproximate \
-    ^ partialUnspecified \
-    ^ partialUncertainOrApproximate_new
+    ^ partialUnspecified
 
 qualifyingString = Regex(r'\S')  # any nonwhitespace char
 
@@ -296,7 +266,6 @@ l2season = year + "-" + seasonL2Number("season")
 Level2Season.set_parser(l2season)
 
 level2Expression = partialUncertainOrApproximate \
-    ^ partialUncertainOrApproximate_new \
     ^ partialUnspecified \
     ^ choiceList \
     ^ inclusiveList \
