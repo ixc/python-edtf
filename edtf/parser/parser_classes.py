@@ -544,13 +544,14 @@ class PartialUncertainOrApproximate(Date):
         self, year=None, month=None, day=None,
         year_ua=False, month_ua = False, day_ua = False,
         year_month_ua = False, month_day_ua = False,
-        ssn=None, season_ua=False, all_ua=False
+        ssn=None, season_ua=False, all_ua=False, year_ua_b = False
     ):
         self.year = year
         self.month = month
         self.day = day
 
         self.year_ua = year_ua
+        self.year_ua_b = year_ua_b
         self.month_ua = month_ua
         self.day_ua = day_ua
 
@@ -632,6 +633,8 @@ class PartialUncertainOrApproximate(Date):
 
         if self.year_ua:
             result += appsettings.PADDING_YEAR_PRECISION * self.year_ua._get_multiplier()
+        if self.year_ua_b:
+            result += appsettings.PADDING_YEAR_PRECISION * self.year_ua_b._get_multiplier()
         if self.month_ua:
             result += appsettings.PADDING_MONTH_PRECISION * self.month_ua._get_multiplier()
         if self.day_ua:
@@ -661,6 +664,58 @@ class PartialUncertainOrApproximate(Date):
                 result += multiplier * appsettings.PADDING_YEAR_PRECISION
 
         return result
+
+
+class PartialUncertainOrApproximateNEW(PartialUncertainOrApproximate):
+    
+    def __str__(self):
+
+        if self.season_ua:
+            return "%s%s" % (self.season, self.season_ua)
+
+        if self.year_ua:
+            y = "%s%s" % (self.year, self.year_ua)
+        else:
+            if self.year_ua_b:
+                y = "%s%s" % (self.year_ua_b, self.year)
+            else:    
+                y = str(self.year)
+
+        if self.month_ua:
+            m = "%s%s" % (self.month_ua, self.month)
+        else:
+            m = str(self.month)
+
+        if self.day:
+            if self.day_ua:
+                d = "%s%s" % (self.day_ua, self.day)
+            else:
+                d = str(self.day)
+        else:
+            d = None
+
+        if self.year_month_ua: # year/month approximate. No brackets needed.
+            ym = "%s-%s%s" % (y, m, self.year_month_ua)
+            if d:
+                result = "%s-%s" % (ym, d)
+            else:
+                result = ym
+        elif self.month_day_ua:
+            if self.year_ua: # we don't need the brackets round month and day
+                result = "%s-%s-%s%s" % (y, m, d, self.month_day_ua)
+            else:
+                result = "%s-(%s-%s)%s" % (y, m, d, self.month_day_ua)
+        else:
+            if d:
+                result = "%s-%s-%s" % (y, m, d)
+            else:
+                result = "%s-%s" % (y, m)
+
+        if self.all_ua:
+            result = "(%s)%s" % (result, self.all_ua)
+
+        return result
+
 
 
 class PartialUnspecified(Unspecified):

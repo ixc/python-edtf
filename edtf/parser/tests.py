@@ -123,26 +123,47 @@ EXAMPLES = (
     ('2004?-06-11', '2004-06-11', '2003-06-11', '2005-06-11'),
     # year and month are approximate; day known
     ('2004-06~-11', '2004-06-11', '2003-05-11', '2005-07-11'),
-    # uncertain month, year and day known
+
+    # uncertain month, year and day known - OLD SPEC
     ('2004-(06)?-11', '2004-06-11', '2004-05-11', '2004-07-11'),
-    # day is approximate; year, month known
+    # uncertain month, year and day known - NEW SPEC
+    ('2004-?06-11', '2004-06-11', '2004-05-11', '2004-07-11'),
+
+    # day is approximate; year, month known - OLD SPEC
     ('2004-06-(11)~', '2004-06-11', '2004-06-10', '2004-06-12'),
-    # Year known, month within year is approximate and uncertain
+    # day is approximate; year, month known - NEW SPEC
+    ('2004-06-~11', '2004-06-11', '2004-06-10', '2004-06-12'),
+    # Year known, month within year is approximate and uncertain - OLD SPEC
     ('2004-(06)%', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
-    # Year known, month and day uncertain
+    # Year known, month within year is approximate and uncertain - NEW SPEC
+    ('2004-%06', '2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30'),
+    # Year known, month and day uncertain - OLD SPEC
     ('2004-(06-11)?', '2004-06-11', '2004-05-10', '2004-07-12'),
-    # Year uncertain, month known, day approximate
+    # Year known, month and day uncertain - NEW SPEC
+    ('2004-?06-?11', '2004-06-11', '2004-05-10', '2004-07-12'),
+    # Year uncertain, month known, day approximate - OLD SPEC
     ('2004?-06-(11)~', '2004-06-11', '2003-06-10', '2005-06-12'),
-    # Year uncertain and month is both uncertain and approximate
+    # Year uncertain, month known, day approximate - NEW SPEC
+    ('2004?-06-~11', '2004-06-11', '2003-06-10', '2005-06-12'),
+    # Year uncertain and month is both uncertain and approximate - OLD SPEC
     ('(2004-(06)~)?', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
-    # This has the same meaning as the previous example.
+    # Year uncertain and month is both uncertain and approximate - NEW SPEC
+    ('?2004-%06', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
+    # This has the same meaning as the previous example.- OLD SPEC
     ('2004?-(06)%', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
-    # Year uncertain, month and day approximate.
+    # This has the same meaning as the previous example.- NEW SPEC
+    ('2004?-%06', '2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30'),
+    # Year uncertain, month and day approximate.- OLD SPEC
     (('(2004)?-06-04~', '2004?-06-04~'), '2004-06-04', '2003-05-03', '2005-07-05'),
-    # Year known, month and day approximate. Note that this has the same meaning as the following.
+    # Year uncertain, month and day approximate. - NEW SPEC
+    ('2004?-06-04~','2004-06-04', '2003-05-03', '2005-07-05'),
+    # Year known, month and day approximate. Note that this has the same meaning as the following.- OLD SPEC
     (('(2011)-06-04~', '2011-(06-04)~'), '2011-06-04', '2011-05-03', '2011-07-05'),
-    # Year known, month and day approximate.
+    # Year known, month and day approximate.- OLD SPEC
     ('2011-(06-04)~', '2011-06-04', '2011-05-03', '2011-07-05'),
+    # Year known, month and day approximate. - NEW SPEC
+    ('2011-~06-~04', '2011-06-04', '2011-05-03', '2011-07-05'),
+
     # Approximate season (around Autumn 2011)
     ('2011-23~', '2011-09-01', '2011-11-30', '2011-06-09', '2012-02-22'),
     # Years wrapping
@@ -181,6 +202,7 @@ EXAMPLES = (
     # L2 Extended Interval
     # An interval in June 2004 beginning approximately the first and ending approximately the 20th.
     ('2004-06-(01)~/2004-06-(20)~', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
+    ('2004-06-~01/2004-06-~20', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
     # The interval began on an unspecified day in June 2004.
     ('2004-06-XX/2004-07-03', '2004-06-01', '2004-07-03'),
     # Year Requiring More than Four Digits - Exponential Form
@@ -213,6 +235,39 @@ class TestParsing(unittest.TestCase):
     def test_non_parsing(self):
         for i in BAD_EXAMPLES:
             self.assertRaises(EDTFParseException, parse, i)
+
+    def testInterval(self):
+        #expression = ('1984~/2004-06', '1984-01-01', '2004-06-30', '1983-01-01', '2004-06-30')
+        #expression = ('/2006', '1996-01-01', '2006-12-31')
+        #expression = ('../2006', '0001-01-01', '2006-12-31')
+        expression = ('../-2006', '-20000000-01-01', '-2006-12-31')
+        #expression = ('2006/', '2006-01-01', '9999-12-31')
+        i = expression[0]
+        expected_lower_strict = expression[1]
+        expected_upper_strict = expression[2]
+
+        def iso_to_struct_time(iso_date):
+            """ Convert YYYY-mm-dd date strings to time structs """
+            if iso_date[0] == '-':
+                is_negative = True
+                iso_date = iso_date[1:]
+            else:
+                is_negative = False
+            y, mo, d = [int(i) for i in iso_date.split('-')]
+            if is_negative:
+                y *= -1
+            return struct_time(
+                [y, mo, d] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+
+        # Convert string date representations into `struct_time`s
+        expected_lower_strict = iso_to_struct_time(expected_lower_strict)
+        expected_upper_strict = iso_to_struct_time(expected_upper_strict)
+
+        f = parse(i)
+        print(str(f.lower_strict()) + '/' + str(f.upper_strict()))
+        self.assertEqual(f.lower_strict(), expected_lower_strict)
+        self.assertEqual(f.upper_strict(), expected_upper_strict)
+         
 
     def test_date_values(self):
         """
