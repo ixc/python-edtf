@@ -3,7 +3,7 @@ import re
 from time import struct_time
 from datetime import date, datetime
 from operator import add, sub
-
+import math
 from dateutil.relativedelta import relativedelta
 
 from edtf import appsettings
@@ -451,13 +451,25 @@ class UnspecifiedIntervalSection(EDTFObject):
                 upper = self.other._strict_date(LATEST)
                 return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
             else:
-                return LongYear(appsettings.BEGINNING_OF_TIME)._strict_date(lean)
+                return struct_time(
+                    (
+                        -math.inf,
+                        1,
+                        1,
+                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
+                )
         else:
             if self.is_unknown:
                 lower = self.other._strict_date(EARLIEST)
                 return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
             else:
-                return LongYear(appsettings.END_OF_TIME)._strict_date(lean)
+                return struct_time(
+                    (
+                        math.inf,
+                        12,
+                        31,
+                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
+                )
 
     @property
     def precision(self):
