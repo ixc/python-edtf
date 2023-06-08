@@ -451,6 +451,7 @@ class UnspecifiedIntervalSection(EDTFObject):
                 upper = self.other._strict_date(LATEST)
                 return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
             else:
+                return -math.inf
                 return struct_time(
                     (
                         -math.inf,
@@ -463,6 +464,7 @@ class UnspecifiedIntervalSection(EDTFObject):
                 lower = self.other._strict_date(EARLIEST)
                 return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
             else:
+                return math.inf
                 return struct_time(
                     (
                         math.inf,
