@@ -3,10 +3,10 @@ import sys
 from datetime import date
 from time import struct_time
 
-from edtf.parser.grammar import parse_edtf as parse
-from edtf.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
+from edtf2.parser.grammar import parse_edtf as parse
+from edtf2.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
     TIME_EMPTY_EXTRAS
-from edtf.parser.edtf_exceptions import EDTFParseException
+from edtf2.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
 # the first item in each tuple is the input EDTF string, and expected parse result.

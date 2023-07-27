@@ -3,11 +3,11 @@ import re
 from time import struct_time
 from datetime import date, datetime
 from operator import add, sub
-import math
+
 from dateutil.relativedelta import relativedelta
 
-from edtf import appsettings
-from edtf.convert import dt_to_struct_time, trim_struct_time, \
+from edtf2 import appsettings
+from edtf2.convert import dt_to_struct_time, trim_struct_time, \
     TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
 
 EARLIEST = 'earliest'
@@ -354,16 +354,28 @@ class Interval(EDTFObject):
 
     def _strict_date(self, lean):
         if lean == EARLIEST:
-            r = self.lower._strict_date(lean)
+            try:
+                r = self.lower._strict_date(lean)
+                if r is None:
+                    raise AttributeError
+                return r
+            except AttributeError: # it's a string, or no date. Result depends on the upper date
+                upper = self.upper._strict_date(LATEST)
+                return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
         else:
-            r = self.upper._strict_date(lean)
-        return r
+            try:
+                r = self.upper._strict_date(lean)
+                if r is None:
+                    raise AttributeError
+                return r
+            except AttributeError: # an 'unknown' or 'open' string - depends on the lower date
+                import pdb; pdb.set_trace()
+                if self.upper and (self.upper == "open" or self.upper.date == "open"):
+                    return dt_to_struct_time(date.today())  # it's still happening
+                else:
+                    lower = self.lower._strict_date(EARLIEST)
+                    return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
 
-    @property
-    def precision(self):
-        if self.lower.precision == self.upper.precision:
-            return self.lower.precision
-        return None
 
 # (* ************************** Level 1 *************************** *)
 
@@ -413,6 +425,11 @@ class UncertainOrApproximate(EDTFObject):
             return str(self.date)
 
     def _strict_date(self, lean):
+        if self.date == "open":
+            return None # depends on the other date
+            return dt_to_struct_time(date.today())
+        if self.date =="unknown":
+            return None # depends on the other date
         return self.date._strict_date(lean)
 
     def _get_fuzzy_padding(self, lean):
@@ -427,6 +444,16 @@ class UncertainOrApproximate(EDTFObject):
         elif self.date.precision == PRECISION_YEAR:
             return multiplier * appsettings.PADDING_YEAR_PRECISION
 
+
+
+class Testi(EDTFObject):
+    # @classmethod
+    # def parse_action(cls, toks):
+    #     args = toks.asList()
+    #     return cls(*args)
+
+    def __init__(self, **args):
+        print(args)
 
 class UnspecifiedIntervalSection(EDTFObject):
 
@@ -446,36 +473,19 @@ class UnspecifiedIntervalSection(EDTFObject):
             return ".."
 
     def _strict_date(self, lean):
+        #import pdb; pdb.set_trace()
         if lean == EARLIEST:
             if self.is_unknown:
                 upper = self.other._strict_date(LATEST)
                 return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
             else:
-                return -math.inf
-                return struct_time(
-                    (
-                        -math.inf,
-                        1,
-                        1,
-                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
-                )
+                return dt_to_struct_time(date.min)  # from the beginning of time; *ahem, i mean python datetime
         else:
             if self.is_unknown:
                 lower = self.other._strict_date(EARLIEST)
                 return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
             else:
-                return math.inf
-                return struct_time(
-                    (
-                        math.inf,
-                        12,
-                        31,
-                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
-                )
-
-    @property
-    def precision(self):
-        return self.other.date.precision or PRECISION_YEAR
+                return dt_to_struct_time(date.max)  # to then end of python datetime
 
 
 class Unspecified(Date):
@@ -484,6 +494,7 @@ class Unspecified(Date):
 
 class Level1Interval(Interval):
     def __init__(self, lower=None, upper=None):
+        #import pdb; pdb.set_trace()
         if lower:
             if lower['date'] == '..':
                 self.lower = UnspecifiedIntervalSection(True, UncertainOrApproximate(**upper))
@@ -538,7 +549,7 @@ class Season(Date):
         return "%s-%s" % (self.year, self.season)
 
     def _precise_month(self, lean):
-        rng = appsettings.SEASON_L2_MONTHS_RANGE[int(self.season)]
+        rng = appsettings.SEASON_MONTHS_RANGE[int(self.season)]
         if lean == EARLIEST:
             return rng[0]
         else:
@@ -558,14 +569,13 @@ class PartialUncertainOrApproximate(Date):
         self, year=None, month=None, day=None,
         year_ua=False, month_ua = False, day_ua = False,
         year_month_ua = False, month_day_ua = False,
-        ssn=None, season_ua=False, all_ua=False, year_ua_b = False
+        ssn=None, season_ua=False, all_ua=False
     ):
         self.year = year
         self.month = month
         self.day = day
 
         self.year_ua = year_ua
-        self.year_ua_b = year_ua_b
         self.month_ua = month_ua
         self.day_ua = day_ua
 
@@ -585,19 +595,16 @@ class PartialUncertainOrApproximate(Date):
         if self.year_ua:
             y = "%s%s" % (self.year, self.year_ua)
         else:
-            if self.year_ua_b:
-                y = "%s%s" % (self.year_ua_b, self.year)
-            else:    
-                y = str(self.year)
+            y = str(self.year)
 
         if self.month_ua:
-            m = "%s%s" % (self.month_ua, self.month)
+            m = "(%s)%s" % (self.month, self.month_ua)
         else:
             m = str(self.month)
 
         if self.day:
             if self.day_ua:
-                d = "%s%s" % (self.day_ua, self.day)
+                d = "(%s)%s" % (self.day, self.day_ua)
             else:
                 d = str(self.day)
         else:
@@ -650,8 +657,6 @@ class PartialUncertainOrApproximate(Date):
 
         if self.year_ua:
             result += appsettings.PADDING_YEAR_PRECISION * self.year_ua._get_multiplier()
-        if self.year_ua_b:
-            result += appsettings.PADDING_YEAR_PRECISION * self.year_ua_b._get_multiplier()
         if self.month_ua:
             result += appsettings.PADDING_MONTH_PRECISION * self.month_ua._get_multiplier()
         if self.day_ua:
@@ -704,14 +709,12 @@ class Consecutives(Interval):
         return "%s..%s" % (self.lower or '', self.upper or '')
 
 
-class EarlierConsecutives(Level1Interval):
-    def __str__(self):
-        return "%s%s" % (self.lower, self.upper)
+class EarlierConsecutives(Consecutives):
+    pass
 
 
-class LaterConsecutives(Level1Interval):
-    def __str__(self):
-        return "%s%s" % (self.lower, self.upper)
+class LaterConsecutives(Consecutives):
+    pass
 
 
 class OneOfASet(EDTFObject):
@@ -771,9 +774,6 @@ class Level2Interval(Level1Interval):
         else:
             self.upper = upper
 
-
-class Level2Season(Season):
-    pass
 
 class ExponentialYear(LongYear):
     def __init__(self, base, exponent, precision=None):

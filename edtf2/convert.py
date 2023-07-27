@@ -1,7 +1,7 @@
 from time import struct_time
 from datetime import date, datetime
 
-from edtf import jdutil
+from edtf2 import jdutil
 
 
 TIME_EMPTY_TIME = [0, 0, 0]  # tm_hour, tm_min, tm_sec

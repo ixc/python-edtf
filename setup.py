@@ -3,13 +3,16 @@ from __future__ import print_function
 import setuptools
 import sys
 
+version = '1.0'
+
 def readme():
     with open('README.md') as f:
         return f.read()
 
 setuptools.setup(
-    name='edtf',
-    use_scm_version={'version_scheme': 'post-release'},
+    name='edtf2',
+    version=version,
+    #use_scm_version={'version_scheme': 'post-release'},
     url='https://github.com/ixc/python-edtf',
     author='Greg Turner',
     author_email='greg@interaction.net.au',
