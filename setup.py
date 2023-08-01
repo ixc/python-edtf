@@ -3,7 +3,7 @@ from __future__ import print_function
 import setuptools
 import sys
 
-version = '1.0'
+version = '5.0.dev0'
 
 def readme():
     with open('README.md') as f:
@@ -13,9 +13,9 @@ setuptools.setup(
     name='edtf2',
     version=version,
     #use_scm_version={'version_scheme': 'post-release'},
-    url='https://github.com/ixc/python-edtf',
-    author='Greg Turner',
-    author_email='greg@interaction.net.au',
+    url='https://github.com/saw-leipzig/python-edtf',
+    author='Sabine Müller',
+    author_email='muellers@saw-leipzig.de',
     description='Python implementation of Library of Congress EDTF (Extended '
                 'Date Time Format) specification',
     long_description=readme(),
@@ -42,7 +42,6 @@ setuptools.setup(
         'edtf',
     ],
     classifiers=[
-        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: MIT License',
