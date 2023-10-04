@@ -5,8 +5,8 @@ In development
 --------------
 
 
-5.0 (2023-07-31)
-----------------
+5.0.0 (2023-10-04)
+------------------
 
 * Breaking Changes: Implementation of the newer specifications from `https://www.loc.gov/standards/datetime/`::
 
