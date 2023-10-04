@@ -3,7 +3,7 @@ from __future__ import print_function
 import setuptools
 import sys
 
-version = '5.0.dev0'
+version = '5.0.0'
 
 def readme():
     with open('README.md') as f:
