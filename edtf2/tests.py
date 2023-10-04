@@ -3,7 +3,7 @@ import unittest
 from time import struct_time
 from datetime import datetime, date
 
-from edtf import convert
+from edtf2 import convert
 
 
 class TestConversions(unittest.TestCase):

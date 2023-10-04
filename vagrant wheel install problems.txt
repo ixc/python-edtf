@@ -1,0 +1,5 @@
+vagrant wheel install problems
+https://stackoverflow.com/questions/56851961/how-to-fix-no-such-file-or-directory-error-in-setuptools-wheel-py157-convert
+
+from that link:
+So it turns out that this problem was being caused by lag in Vagrant/Virtualbox's synced folders. I was trying to build the Python project inside a Vagrant VM shared from the host file system using a synced folder. Copying the project out of the synced folder into another folder in the VM allows it to build. Another dirty hack that worked was to add a time.sleep(1) in the setuptools/wheel.py source file on line 157 before the os.rename that was causing the OS Exception to be raised. This gives the file system a chance to sync, and therefore works around the issue.
