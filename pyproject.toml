@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "python-edtf"
+version = "0.1.0"
+description = ""
+authors = ["Andrew Hankinson <andrew.hankinson@gmail.com>"]
+readme = "README.md"
+packages = [{include = "python_edtf"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dateutil = "^2.9.0.post0"
+pyparsing = "^3.1.2"
+six = "^1.16.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
