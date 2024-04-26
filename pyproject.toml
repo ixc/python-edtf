@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "python-edtf"
+name = "edtf"
 version = "0.1.0"
 description = ""
 authors = ["Andrew Hankinson <andrew.hankinson@gmail.com>"]
