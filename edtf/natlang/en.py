@@ -1,6 +1,6 @@
 """Utilities to derive an EDTF string from an (English) natural language string."""
 from datetime import datetime
-from dateutil.parser import parse
+from dateutil.parser import parse, ParserError
 import re
 from edtf import appsettings
 from six.moves import xrange
@@ -198,7 +198,9 @@ def text_to_edtf_date(text):
                 default=DEFAULT_DATE_2
             )
 
-        except ValueError:
+        except ParserError as pe:
+            return
+        except Exception as e:
             return
 
         if dt1.date() == DEFAULT_DATE_1.date() and \

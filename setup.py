@@ -33,7 +33,7 @@ setuptools.setup(
         ],
     },
     setup_requires=[
-        'setuptools_scm',
+        'setuptools_scm >=5.0.2, <6.0.0',
     ],
     keywords=[
         'edtf',

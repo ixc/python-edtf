@@ -7,6 +7,19 @@ from edtf import jdutil
 TIME_EMPTY_TIME = [0, 0, 0]  # tm_hour, tm_min, tm_sec
 TIME_EMPTY_EXTRAS = [0, 0, -1]  # tm_wday, tm_yday, tm_isdst
 
+def old_specs_to_new_specs_expression(expression):
+    expression = expression.replace("unknown", "")
+    expression = expression.replace("open", "..")
+    expression = expression.replace("u", "X")
+    expression = expression.replace("x", "X")
+    expression = expression.replace("?~", "%")
+    expression = expression.replace("~?", "%")
+    expression = expression.replace("e", "E")
+    expression = expression.replace("y", "Y")
+    expression = expression.replace("p", "S")
+
+    return expression
+
 
 def dt_to_struct_time(dt):
     """
