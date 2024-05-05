@@ -5,6 +5,25 @@ In development
 --------------
 
 
+5.0.0 (2023-10-04)
+------------------
+
+* Breaking Changes: Implementation of the newer specifications from `https://www.loc.gov/standards/datetime/`::
+
+    Differences
+    This specification differs from the earlier draft as follows:
+
+    - the unspecified date character (formerly lower case ‘u’) is superseded by the character (upper case) 'X';
+    - Masked precision is eliminated;
+    - the uncertain and approximate qualifiers, '?' and '~',  when applied together, are combined into a single qualifier character '%';
+    - “qualification from the left” is introduced and replaces the grouping mechanism using parentheses;
+    - the extended interval syntax  keywords 'unknown' and 'open' have been replaced with null and the double-dot notation ['..'] respectively;
+    - the year prefix 'y' and the exponential indicator 'e', both previously lowercase, are now 'Y' and 'E' (uppercase); and
+    - the significant digit indicator 'p' is now 'S' (uppercase).
+
+* Renaming of the project to edtf2: As this project seems to have no longer support from the creator `The Interaction Consortium` we decided to fork it and release it under a new name by our own
+
+
 4.0 (2018-05-31)
 ----------------
 

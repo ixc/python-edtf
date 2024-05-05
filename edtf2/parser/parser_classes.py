@@ -6,8 +6,8 @@ from operator import add, sub
 import math
 from dateutil.relativedelta import relativedelta
 
-from edtf import appsettings
-from edtf.convert import dt_to_struct_time, trim_struct_time, \
+from edtf2 import appsettings
+from edtf2.convert import dt_to_struct_time, trim_struct_time, \
     TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
 
 EARLIEST = 'earliest'
@@ -452,26 +452,12 @@ class UnspecifiedIntervalSection(EDTFObject):
                 return apply_delta(sub, upper, appsettings.DELTA_IF_UNKNOWN)
             else:
                 return -math.inf
-                return struct_time(
-                    (
-                        -math.inf,
-                        1,
-                        1,
-                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
-                )
         else:
             if self.is_unknown:
                 lower = self.other._strict_date(EARLIEST)
                 return apply_delta(add, lower, appsettings.DELTA_IF_UNKNOWN)
             else:
                 return math.inf
-                return struct_time(
-                    (
-                        math.inf,
-                        12,
-                        31,
-                    ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
-                )
 
     @property
     def precision(self):
