@@ -6,7 +6,7 @@ from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified,
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear, UnspecifiedIntervalSection, Testi
+    MaskedPrecision, Level2Interval, ExponentialYear, UnspecifiedIntervalSection# , Testi
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 
