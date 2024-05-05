@@ -2,7 +2,7 @@
 from datetime import datetime
 from dateutil.parser import parse, ParserError
 import re
-from edtf2 import appsettings
+from edtf import appsettings
 from six.moves import xrange
 
 

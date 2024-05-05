@@ -3,10 +3,10 @@ import sys
 from datetime import date
 from time import struct_time
 
-from edtf2.parser.grammar import parse_edtf as parse
-from edtf2.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
+from edtf.parser.grammar import parse_edtf as parse
+from edtf.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
     TIME_EMPTY_EXTRAS
-from edtf2.parser.edtf_exceptions import EDTFParseException
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
 # the first item in each tuple is the input EDTF string, and expected parse result.
@@ -122,8 +122,8 @@ EXAMPLES = (
     # uncertain year; month, day known
     ('2004?-06-11', '2004-06-11', '2003-06-11', '2005-06-11'),
     # year and month are approximate; day known
-    ('2004-06~-11', '2004-06-11', '2003-05-11', '2005-07-11'),  
-    # uncertain month, year and day known 
+    ('2004-06~-11', '2004-06-11', '2003-05-11', '2005-07-11'),
+    # uncertain month, year and day known
     ('2004-?06-11', '2004-06-11', '2004-05-11', '2004-07-11'),
     # day is approximate; year, month known
     ('2004-06-~11', '2004-06-11', '2004-06-10', '2004-06-12'),
@@ -179,7 +179,7 @@ EXAMPLES = (
     # A date during the 1900s
     #('19xx', '1900-01-01', '1999-12-31'),
     # L2 Extended Interval
-    
+
     ('2004-06-~01/2004-06-~20', '2004-06-01', '2004-06-20', '2004-05-31', '2004-06-21'),
     # The interval began on an unspecified day in June 2004.
     ('2004-06-XX/2004-07-03', '2004-06-01', '2004-07-03'),
@@ -255,7 +255,7 @@ class TestParsing(unittest.TestCase):
         print(str(f.lower_strict()) + '/' + str(f.upper_strict()))
         self.assertEqual(f.lower_strict(), expected_lower_strict)
         self.assertEqual(f.upper_strict(), expected_upper_strict)
-         
+
 
     def test_date_values(self):
         """

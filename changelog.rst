@@ -4,6 +4,10 @@ Changelog
 In development
 --------------
 
+5.0.0.develop0 (2024-05-05)
+--------------------------
+
+* Breaking Changes: Rename project back to edtf from edtf2, after the merge of work form https://github.com/saw-leipzig/python-edtf/
 
 5.0.0 (2023-10-04)
 ------------------
@@ -22,6 +26,7 @@ In development
     - the significant digit indicator 'p' is now 'S' (uppercase).
 
 * Renaming of the project to edtf2: As this project seems to have no longer support from the creator `The Interaction Consortium` we decided to fork it and release it under a new name by our own
+* Author: https://github.com/muellersSAW
 
 
 4.0 (2018-05-31)

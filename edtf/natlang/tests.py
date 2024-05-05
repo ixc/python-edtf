@@ -1,5 +1,5 @@
 import unittest
-from edtf2.natlang.en import text_to_edtf
+from edtf.natlang.en import text_to_edtf
 
 # where examples are tuples, the second item is the normalised output
 EXAMPLES = (
@@ -203,7 +203,7 @@ class TestLevel0(unittest.TestCase):
         For each of the examples, establish that:
             - the unicode of the parsed object is acceptably equal to the EDTF string
             - the parsed object is a subclass of EDTFObject
-        :return: 
+        :return:
         """
         for i, o in EXAMPLES:
             e = text_to_edtf(i)

@@ -7,6 +7,6 @@ python:
 before_install:
 - pip install nose coverage 'django<2'
 script:
-- nosetests --verbose --with-coverage --cover-package=edtf2
+- nosetests --verbose --with-coverage --cover-package=edtf
 after_success:
 - coverage report

@@ -1,14 +1,14 @@
-from pyparsing import Literal as L, ParseException, Optional, Opt, OneOrMore, \
-    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums, FollowedBy
+from pyparsing import Literal as L, ParseException, Opt, Optional, OneOrMore, \
+    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums, Group
 
 # (* ************************** Level 0 *************************** *)
-from edtf2.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
+from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
     UncertainOrApproximate, Level1Interval, LongYear, Season, \
     PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
     Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear, UnspecifiedIntervalSection, Testi
+    MaskedPrecision, Level2Interval, ExponentialYear, Level2Season
 
-from edtf2.parser.edtf_exceptions import EDTFParseException
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
 oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])
@@ -96,9 +96,6 @@ LongYear.set_parser(longYearSimple)
 uaDateOrSeason = dateOrSeason + Optional(UASymbol)
 
 
-#unspecifiedIntervalSec = L('..')('unknownOrOpen') + FollowedBy(L("/") + uaDateOrSeason)('other_section_element')
-#Testi.set_parser(unspecifiedIntervalSec)
-
 # bit of a kludge here to get the all the relevant tokens into the parse action
 # cleanly otherwise the parameter names are overlapped.
 def f(toks):
@@ -109,12 +106,10 @@ def f(toks):
 
 
 l1Start = '..' ^ uaDateOrSeason
-#l1Start = unspecifiedIntervalSec ^ uaDateOrSeason
 l1Start.addParseAction(f)
 l1End = uaDateOrSeason ^ '..'
 l1End.addParseAction(f)
 
-#level1Interval = l1Start("lower") + "/" + l1End("upper") 
 level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") \
     ^ l1Start("lower") + "/" + Optional(l1End("upper"))
 Level1Interval.set_parser(level1Interval)
@@ -148,74 +143,65 @@ level1Expression = uncertainOrApproxDate \
 
 # (* ** Internal Unspecified** *)
 
-digitOrU = Word(nums + 'X', exact=1)
+digitOrX = Word(nums + 'X', exact=1)
 
 # 2-digit day with at least one 'X' present
-dayWithU = Combine(
-    ("X" + digitOrU)
-    ^ (digitOrU + 'X')
+dayWithX = Combine(
+    ("X" + digitOrX)
+    ^ (digitOrX + 'X')
 )("day")
 
 # 2-digit month with at least one 'X' present
-monthWithU = Combine(
+monthWithX = Combine(
     oneOf("0X 1X")
-    ^ ("X" + digitOrU)
+    ^ ("X" + digitOrX)
 )("month")
 
 # 4-digit year with at least one 'X' present
-yearWithU = Combine(
-    ('X' + digitOrU + digitOrU + digitOrU)
-    ^ (digitOrU + 'X' + digitOrU + digitOrU)
-    ^ (digitOrU + digitOrU + 'X' + digitOrU)
-    ^ (digitOrU + digitOrU + digitOrU + 'X')
+yearWithX = Combine(
+    ('X' + digitOrX + digitOrX + digitOrX)
+    ^ (digitOrX + 'X' + digitOrX + digitOrX)
+    ^ (digitOrX + digitOrX + 'X' + digitOrX)
+    ^ (digitOrX + digitOrX + digitOrX + 'X')
 )("year")
 
-yearMonthWithU = (
-    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU)
-    ^ (yearWithU + "-" + month)
+yearMonthWithX = (
+    (Combine(year("") ^ yearWithX(""))("year") + "-" + monthWithX)
+    ^ (yearWithX + "-" + month)
 )
 
-monthDayWithU = (
-    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU)
-    ^ (monthWithU + "-" + day)
+monthDayWithX = (
+    (Combine(month("") ^ monthWithX(""))("month") + "-" + dayWithX)
+    ^ (monthWithX + "-" + day)
 )
 
-yearMonthDayWithU = (
-    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day"))
-    ^ (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day"))
-    ^ (year + "-" + month + "-" + dayWithU)
+yearMonthDayWithX = (
+    (yearWithX + "-" + Combine(month("") ^ monthWithX(""))("month") + "-" + Combine(day("") ^ dayWithX(""))("day"))
+    ^ (year + "-" + monthWithX + "-" + Combine(day("") ^ dayWithX(""))("day"))
+    ^ (year + "-" + month + "-" + dayWithX)
 )
 
-partialUnspecified = yearWithU ^ yearMonthWithU ^ yearMonthDayWithU
+partialUnspecified = yearWithX ^ yearMonthWithX ^ yearMonthDayWithX
 PartialUnspecified.set_parser(partialUnspecified)
 
 # (* ** Internal Uncertain or Approximate** *)
 
-# this line is out of spec, but the given examples (e.g. '(2004)?-06-04~')
-# appear to require it.
-year_with_brackets = year ^ ("(" + year + ")")
+# group qualification
+# qualifier right of a component(date, month, day) applies to all components to the left
+group_qual = yearMonth + UASymbol("year_month_ua") + "-" + day \
+    ^ year + UASymbol("year_ua") + "-" + month + Opt("-" + day)
 
-# second clause below needed Optional() around the "year_ua" UASymbol, for dates
-# like '(2011)-06-04~' to work.
+# component qualification
+# qualifier immediate left of a component (date, month, day) applies to that component only
+qual_year = year ^ UASymbol("year_ua_b") + year ^ year + UASymbol("year_ua")
+qual_month = month ^ UASymbol("month_ua") + month
+qual_day = day ^ UASymbol("day_ua") + day
 
-IUABase = \
-    (year_with_brackets + UASymbol("year_ua") + "-" + month + Optional("-(" + day + ")" + UASymbol("day_ua"))) \
-    ^ (year_with_brackets + Optional(UASymbol)("year_ua") + "-" + monthDay + Optional(UASymbol)("month_day_ua")) \
-    ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
-        + Optional("-(" + day + ")" + UASymbol("day_ua"))
-    ) \
-    ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
-        + Optional("-" + day)
-    ) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-" + day) \
-    ^ (yearMonth + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua")) \
-    ^ (season("ssn") + UASymbol("season_ua"))
+indi_qual = UASymbol("year_ua_b") + year + Opt("-" + qual_month + Opt("-" + qual_day)) \
+    ^ qual_year + "-" + UASymbol("month_ua") + month + Opt("-" + qual_day) \
+    ^ qual_year + "-" + qual_month + "-" + UASymbol("day_ua") + day
 
-partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_ua"))
+partialUncertainOrApproximate = group_qual ^ indi_qual
 PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
 dateWithInternalUncertainty = partialUncertainOrApproximate \
@@ -255,10 +241,12 @@ listElement = date \
     ^ unspecified \
     ^ consecutives
 
-earlier = ".." + date("upper")
+earlier = L("..").addParseAction(f)("lower") + date("upper").addParseAction(f)
+later = date("lower").addParseAction(f) + L("..").addParseAction(f)("upper")
+
 EarlierConsecutives.set_parser(earlier)
-later = date("lower") + ".."
 LaterConsecutives.set_parser(later)
+
 
 listContent = (earlier + ZeroOrMore("," + listElement)) \
     ^ (Optional(earlier + ",") + ZeroOrMore(listElement + ",") + later) \
@@ -271,12 +259,19 @@ OneOfASet.set_parser(choiceList)
 inclusiveList = "{" + listContent + "}"
 MultipleDates.set_parser(inclusiveList)
 
+
+# (* *** L2 Season *** *)
+seasonL2Number = oneOf("21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41")
+l2season = year + "-" + seasonL2Number("season")
+Level2Season.set_parser(l2season)
+
 level2Expression = partialUncertainOrApproximate \
     ^ partialUnspecified \
     ^ choiceList \
     ^ inclusiveList \
     ^ level2Interval \
     ^ longYearScientific \
+    ^ l2season \
     ^ seasonQualified
 
 # putting it all together

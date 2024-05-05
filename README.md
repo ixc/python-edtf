@@ -1,4 +1,4 @@
-edtf2
+edtf
 =====
 
 An implementation of EDTF format in Python, together with utility functions for parsing natural language date texts, and converting EDTF dates to related Python `date` or `struct_time` objects.
@@ -9,11 +9,11 @@ This project is based on python-edtf and was developed to include the newest spe
 
 ## To install
 
-    pip install edtf2
+    pip install edtf
 
 ## To use
 
-    >>> from edtf2 import parse_edtf
+    >>> from edtf import parse_edtf
     # Parse an EDTF string to an EDTFObject
     >>> e = parse_edtf("1979-08~") # approx August 1979
     >>> e
@@ -49,7 +49,7 @@ This project is based on python-edtf and was developed to include the newest spe
     >>> coll.objects
     (Date: '1667', Date: '1668', Consecutives: '1670..1672')
 
-The object returned by `parse_edtf()` is an instance of an `edtf2.parser.parser_classes.EDTFObject` subclass, depending on the type of date that was parsed. These classes are:
+The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_classes.EDTFObject` subclass, depending on the type of date that was parsed. These classes are:
 
     # Level 0
     Date
@@ -106,7 +106,7 @@ Test coverage includes every example given in the spec table of features.
 ### Level 1 Extensions
 
 * Uncertain/Approximate dates:
-      
+
         >>> parse_edtf('1979-08-28~') # Approximately August 28th 1979
         UncertainOrApproximate: '1979-08-28~'
 
@@ -175,7 +175,7 @@ Test coverage includes every example given in the spec table of features.
 
 The library includes a basic English natural language parser (it's not yet smart enough to work with occasions such as 'Easter', or in other languages):
 
-    >>> from edtf2 import text_to_edtf
+    >>> from edtf import text_to_edtf
     >>> text_to_edtf("circa August 1979")
     '1979-08~'
 
@@ -273,7 +273,7 @@ Because Python's `datetime` module does not support dates out side the range 1 A
 
 The `struct_time` representation is more difficult to work with, but can be sorted as-is which is the primary use-case, and can be converted relatively easily to `date` or `datetime` objects (provided the year is within 1 to 9999 AD) or to date objects in more flexible libraries like [astropy.time](http://docs.astropy.org/en/stable/time/index.html) for years outside these bounds.
 
-If you are sure you are working with dates within the range supported by Python's `datetime` module, you can get these more convenient objects using the `edtf2.struct_time_to_date` and `edtf2.struct_time_to_datetime` functions.
+If you are sure you are working with dates within the range supported by Python's `datetime` module, you can get these more convenient objects using the `edtf.struct_time_to_date` and `edtf.struct_time_to_datetime` functions.
 
 NOTE: This library previously did return `date` and `datetime` objects from methods by default before we switched to `struct_time`. See ticket https://github.com/ixc/python-edtf/issues/26.
 
@@ -291,7 +291,7 @@ In an ascending sort (most recent last), sort by `lower_strict` to get a natural
     >>> e.lower_strict()[:3]  # Show only interesting parts of struct_time
     (1912, 4, 01)
 
-    >>> from edtf2 import struct_time_to_date
+    >>> from edtf import struct_time_to_date
     >>> struct_time_to_date(e.lower_strict())  # Convert to date
     datetime.date(1912, 4, 01)
 
@@ -336,7 +336,7 @@ Two EDTF dates are considered equal if their unicode() representations are the s
 
 ## Django ORM field
 
-The `edtf2.fields.EDTFField` implements a simple Django field that stores an EDTF object in the database.
+The `edtf.fields.EDTFField` implements a simple Django field that stores an EDTF object in the database.
 
 To store a natural language value on your model, define another field, and set the `natural_text_field` parameter of your `EDTFField`.
 
@@ -348,7 +348,7 @@ When your model is saved, the `natural_text_field` value will be parsed to set t
 Example usage:
 
     from django.db import models
-    from edtf2.fields import EDTFField
+    from edtf.fields import EDTFField
 
     class MyModel(models.Model):
          date_display = models.CharField(

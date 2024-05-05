@@ -10,12 +10,12 @@ def readme():
         return f.read()
 
 setuptools.setup(
-    name='edtf2',
+    name='edtf',
     version=version,
     #use_scm_version={'version_scheme': 'post-release'},
-    url='https://github.com/saw-leipzig/python-edtf',
-    author='Sabine Müller',
-    author_email='muellers@saw-leipzig.de',
+    url='https://github.com/ixc/python-edtf',
+    author='The Interaction Consortium',
+    author_email='studio@interaction.net.au',
     description='Python implementation of Library of Congress EDTF (Extended '
                 'Date Time Format) specification',
     long_description=readme(),

@@ -6,9 +6,9 @@ except:
 from django.db import models
 from django.core.exceptions import FieldDoesNotExist
 
-from edtf2 import parse_edtf, EDTFObject
-from edtf2.natlang import text_to_edtf
-from edtf2.convert import struct_time_to_date, struct_time_to_jd
+from edtf import parse_edtf, EDTFObject
+from edtf.natlang import text_to_edtf
+from edtf.convert import struct_time_to_date, struct_time_to_jd
 
 DATE_ATTRS = (
     'lower_strict',
