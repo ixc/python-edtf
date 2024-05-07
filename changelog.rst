@@ -8,6 +8,9 @@ In development
 --------------------------
 
 * Breaking Changes: Rename project back to edtf from edtf2, after the merge of work form https://github.com/saw-leipzig/python-edtf/
+* Breaking Changes: Drop support for Python 2 and Python 3 versions below 3.8. `v5` will support Python 3.8 to 3.12 at release.
+* Switch from `tox` and `nose` to `pytest` for testing.
+* Consolidate config and packaging from `setup.py` and `setup.cfg` to `pyproject.toml`.
 
 5.0.0 (2023-10-04)
 ------------------
