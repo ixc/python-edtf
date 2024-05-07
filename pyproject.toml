@@ -1,0 +1,74 @@
+[project]
+name = "edtf"
+version = "5.0.0"
+dependencies = [
+    "python-dateutil",
+    "pyparsing",
+    "six"
+]
+description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
+requires-python = ">=3.8"
+readme = {file = "README.txt", content-type = "text/markdown"}
+authors = [
+    { name = "The Interaction Consortium", email = "studio@interaction.net.au"},
+    { name = "Alastair Weakley"},
+    { name = "James Murty"},
+    { name = "Mark Finger" },
+    { name = "Sabine Müller" },
+    { name = "Cole Crawford" }
+]
+maintainers = [
+    { name = "The Interaction Consortium", email = "studio@interaction.net.au" }
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+test = [
+    "django",
+    "pytest"
+]
+
+[project.urls]
+homepage = "https://github.com/ixc/python-edtf"
+issues = "https://github.com/ixc/python-edtf/issues"
+repository = "https://github.com/ixc/python-edtf.git"
+changelog = "https://github.com/ixc/python-edtf/blob/main/changelog.rst"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.wheel]
+universal = false
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    min_version = 4.0
+    env_list = py{38,39,310,311,312}
+    isolated_build = true
+    skip_missing_interpreters = True
+
+    [testenv]
+    deps =
+        pytest
+        django
+    commands = pytest
+"""
+
+[tool.pytest.ini_options]
+python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
