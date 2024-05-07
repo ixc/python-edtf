@@ -22,15 +22,15 @@ jobs:
               with:
                 python-version: ${{ matrix.python-version }}
                 cache: 'pip'
-                cache-dependency-path: '**/setup.cfg'
+                cache-dependency-path: '**/pyproject.toml'
 
             - name: Install dependencies
               run: |
                   python -m pip install --upgrade pip
-                  pip install -r requirements.txt
-            
-            - name: Install test dependencies
-              run: pip install .[test]
+                  pip install .[test]
     
             - name: Run unit tests
-              run: tox
+              run: |
+                pytest edtf/tests.py
+                pytest edtf/natlang/tests.py
+                pytest edtf/parser/tests.py

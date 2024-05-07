@@ -37,8 +37,7 @@ classifiers = [
 [project.optional-dependencies]
 test = [
     "django",
-    "nose",
-    "tox"
+    "pytest"
 ]
 
 [project.urls]
@@ -64,7 +63,7 @@ legacy_tox_ini = """
 
     [testenv]
     deps =
-        nose
+        pytest
         django
-    commands = nosetests
+    commands = pytest
 """
