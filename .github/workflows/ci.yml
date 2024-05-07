@@ -31,6 +31,4 @@ jobs:
     
             - name: Run unit tests
               run: |
-                pytest edtf/tests.py
-                pytest edtf/natlang/tests.py
-                pytest edtf/parser/tests.py
+                pytest

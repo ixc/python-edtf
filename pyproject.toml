@@ -67,3 +67,8 @@ legacy_tox_ini = """
         django
     commands = pytest
 """
+
+[tool.pytest.ini_options]
+python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
