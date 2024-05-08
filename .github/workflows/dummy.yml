@@ -1,0 +1,8 @@
+name: dummy-github-action
+
+on: [push]
+jobs:
+  print-message:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy Action to initialise Actions for the repository"
