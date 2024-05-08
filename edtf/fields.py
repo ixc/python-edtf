@@ -53,7 +53,7 @@ class EDTFField(models.CharField):
         del kwargs["max_length"]
         return name, path, args, kwargs
 
-    def from_db_value(self, value, expression, connection, context=None):
+    def from_db_value(self, value, expression, connection):
         # Converting values to Python objects
         if not value:
             return None
