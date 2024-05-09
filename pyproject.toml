@@ -50,6 +50,9 @@ changelog = "https://github.com/ixc/python-edtf/blob/main/changelog.rst"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages.find = { where = ["."], exclude = ["edtf_django_tests", "edtf_django_tests.*"] }
+
 [tool.wheel]
 universal = false
 
@@ -72,3 +75,4 @@ legacy_tox_ini = """
 python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
 python_classes = ["Test*", "*Tests"]
 python_functions = ["test_*"]
+addopts = "--ignore=edtf_django_tests/"
