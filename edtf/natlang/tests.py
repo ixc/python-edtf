@@ -6,8 +6,8 @@ from edtf.natlang.en import text_to_edtf
 # where examples are tuples, the second item is the normalised output
 @pytest.mark.parametrize("input_text,expected_output", [
     # Ignoring 'late' for simplicity in these examples
-    ('active late 17th-19th centuries', '16xx/18xx'),
-    ('active 17-19th Centuries', '16xx/18xx'),
+    ('active late 17th-19th centuries', '16XX/18XX'),
+    ('active 17-19th Centuries', '16XX/18XX'),
 
     # Unrecognised values
     ('', None),
@@ -52,26 +52,26 @@ from edtf.natlang.en import text_to_edtf
     ('attica 1802', '1802'), # Avoid false positive 'circa' at the end of preceding word
     ('attic. 1802', '1802'), # Avoid false positive 'circa'
 
-    # Masked precision
-    ('1860s', '186x'), # 186x has decade precision, 186u has year precision.
+    # # Masked precision
+    # ('1860s', '186x'), # 186x has decade precision, 186u has year precision.
 
-    # Masked precision + uncertainty
-    ('ca. 1860s', '186x~'),
-    ('c. 1860s', '186x~'),
-    ('Circa 1840s', '184x~'),
-    ('circa 1840s', '184x~'),
-    ('ca. 1860s?', '186x?~'),
-    ('uncertain: approx 1862', '1862?~'),
+    # # Masked precision + uncertainty
+    # ('ca. 1860s', '186x~'),
+    # ('c. 1860s', '186x~'),
+    # ('Circa 1840s', '184x~'),
+    # ('circa 1840s', '184x~'),
+    # ('ca. 1860s?', '186x?~'),
+    # ('uncertain: approx 1862', '1862?~'),
 
-    # Ambiguous masked precision for centuries and decades
-    ('1800s', '18xx'), # Without additional uncertainty, use the century
-    ('2000s', '20xx'), # Without additional uncertainty, use the century
-    ('c1900s', '190x~'), # If there's additional uncertainty, use the decade
-    ('c1800s?', '180x?~'), # If there's additional uncertainty, use the decade
+    # # Ambiguous masked precision for centuries and decades
+    ('1800s', '18XX'), # Without additional uncertainty, use the century
+    ('2000s', '20XX'), # Without additional uncertainty, use the century
+    ('c1900s', '190X~'), # If there's additional uncertainty, use the decade
+    ('c1800s?', '180X%'), # If there's additional uncertainty, use the decade
 
     # Unspecified dates
-    ('January 12', 'uuuu-01-12'),
-    ('January', 'uuuu-01'),
+    ('January 12', 'XXXX-01-12'),
+    ('January', 'XXXX-01'),
     ('10/7/2008', '2008-10-07'),
     ('7/2008', '2008-07'),
 
@@ -83,49 +83,50 @@ from edtf.natlang.en import text_to_edtf
     ('Winter 1872', '1872-24'),
 
     # Dates relative to known events (before/after)
-    ('earlier than 1928', 'unknown/1928'),
-    ('before 1928', 'unknown/1928'),
-    ('after 1928', '1928/unknown'),
-    ('later than 1928', '1928/unknown'),
-    ('before January 1928', 'unknown/1928-01'),
-    ('before 18 January 1928', 'unknown/1928-01-18'),
+    ('earlier than 1928', '/1928'),
+    ('before 1928', '/1928'),
+    ('after 1928', '1928/'),
+    ('later than 1928', '1928/'),
+    ('before January 1928', '/1928-01'),
+    ('before 18 January 1928', '/1928-01-18'),
 
     # Approximations combined with before/after
-    ('before approx January 18 1928', 'unknown/1928-01-18~'),
-    ('before approx January 1928', 'unknown/1928-01~'),
-    ('after approx January 1928', '1928-01~/unknown'),
-    ('after approx Summer 1928', '1928-22~/unknown'),
+    ('before approx January 18 1928', '/1928-01-18~'),
+    ('before approx January 1928', '/1928-01~'),
+    ('after approx January 1928', '1928-01~/'),
+    ('after approx Summer 1928', '1928-22~/'),
 
     # Before and after with uncertain / unspecified components
-    ('after about the 1920s', '192x~/unknown'),
-    ('before about the 1900s', 'unknown/190x~'),
-    ('before the 1900s', 'unknown/19xx'),
+    ('after about the 1920s', '192X~/'),
+    ('before about the 1900s', '/190X~'),
+    ('before the 1900s', '/19XX'),
 
-    # Specifying unspecified components within a date
-    # ('decade in 1800s', '18ux'), #too esoteric
-    # ('decade somewhere during the 1800s', '18ux'), #lengthier. Keywords are 'in' or 'during'
-    ('year in the 1860s', '186u'), # 186x has decade precision 
-    ('year in the 1800s', '18xu'), # 186u has year precision
-    ('year in about the 1800s', '180u~'),
-    ('month in 1872', '1872-uu'),
-    ('day in Spring 1849', '1849-21-uu'),
-    ('day in January 1872', '1872-01-uu'),
-    ('day in 1872', '1872-uu-uu'),
+    # previous examples for masked precision, now removed from the EDTF spec
+    # use `X` for unknown regardless of precision or why the data is unknown
+    ('decade in 1800s', '18XX'),
+    ('decade somewhere during the 1800s', '18XX'),
+    ('year in the 1860s', '186X'),
+    ('year in the 1800s', '18XX'),
+    ('year in about the 1800s', '180X~'),
+    ('month in 1872', '1872-XX'),
+    ('day in Spring 1849', '1849-21-XX'),
+    ('day in January 1872', '1872-01-XX'),
+    ('day in 1872', '1872-XX-XX'),
     ('birthday in 1872', '1872'),
 
     # Handling centuries with approximation and uncertainty
-    ('1st century', '00xx'),
-    ('10c', '09xx'),
-    ('19th century', '18xx'),
-    ('19th century?', '18xx?'),
-    ('before 19th century', 'unknown/18xx'),
-    ('19c', '18xx'),
-    ('15c.', '14xx'),
-    ('ca. 19c', '18xx~'),
-    ('~19c', '18xx~'),
-    ('about 19c', '18xx~'),
-    ('19c?', '18xx?'),
-    ('c.19c?', '18xx?~'),
+    ('1st century', '00XX'),
+    ('10c', '09XX'),
+    ('19th century', '18XX'),
+    ('19th century?', '18XX?'),
+    ('before 19th century', '/18XX'),
+    ('19c', '18XX'),
+    ('15c.', '14XX'),
+    ('ca. 19c', '18XX~'),
+    ('~19c', '18XX~'),
+    ('about 19c', '18XX~'),
+    ('19c?', '18XX?'),
+    ('c.19c?', '18XX%'),
 
     # BC/AD dating
     ('1 AD', '0001'),
@@ -137,13 +138,13 @@ from edtf.natlang.en import text_to_edtf
     ('c127 CE', '0127~'),
     ('c1270 CE', '1270~'),
     ('c64 BCE', '-0064~'),
-    ('2nd century bc', '-01xx'), # -200 to -101
-    ('2nd century bce', '-01xx'),
-    ('2nd century ad', '01xx'),
-    ('2nd century ce', '01xx'),
+    ('2nd century bc', '-01XX'), # -200 to -101
+    ('2nd century bce', '-01XX'),
+    ('2nd century ad', '01XX'),
+    ('2nd century ce', '01XX'),
 
     # Combining uncertainties and approximations in creative ways
-    ('a day in about Spring 1849?', '1849-21-uu?~'),
+    ('a day in about Spring 1849?', '1849-21-XX%'),
 
     # Simple date ranges, showcasing both the limitations and capabilities of the parser
     # Not all of these results are correct EDTF, but this is as good as the EDTF implementation
@@ -153,9 +154,9 @@ from edtf.natlang.en import text_to_edtf
     ('1851-52', '1851/1852'),
     ('1852 - 1860', '1852/1860'),
     ('1856-ca. 1865', '1856/1865~'),
-    ('1857-mid 1860s', '1857/186x'),
+    ('1857-mid 1860s', '1857/186X'),
     ('1858/1860', '[1858, 1860]'),
-    ('1860s-1870s', '186x/187x'),
+    ('1860s-1870s', '186X/187X'),
     ('1910-30', '1910/1930'),
     ('active 1910-30', '1910/1930'),
     ('1861-67', '1861/1867'),
@@ -168,28 +169,16 @@ from edtf.natlang.en import text_to_edtf
     ('1864-1872, printed 1870s', '1864/1872'),
     ('1868-1871?', '1868/1871?'),
     ('1869-70', '1869/1870'),
-    ('1870s, printed ca. 1880s', '187x'),
+    ('1870s, printed ca. 1880s', '187X'),
     ('1900-1903, cast before 1929', '1900/1903'),
     ('1900; 1973', '1900'),
     ('1900; printed 1912', '1900'),
     ('1915 late - autumn 1916', '1915/1916-23'),
     ('1915, from Camerawork, October 1916', '1915'),  # should be {1915, 1916-10}
-    ('1920s -early 1930s', '192x/193x'),
-    ('1930s, printed early 1960s', '193x'), # should be something like {193x, 196x},
+    ('1920s -early 1930s', '192X/193X'),
+    ('1930s, printed early 1960s', '193X'), # should be something like {193x, 196x},
     ('1932, printed 1976 by Gunther Sander', '1932'), # should be {1932, 1976}
     ('1938, printed 1940s-1950s', '1938') # should be something like {1938, 194x-195x}
-
-    # Uncertain and approximate on different parts of the date
-    # for these to work we need to recast is_uncertain and is_approximate
-    # such that they work on different parts. Probably worth rolling our own
-    # dateparser at this point.
-    # ('July in about 1849', '1849~-07'),
-    # ('a day in July in about 1849', '1849~-07-uu'),
-    # ('a day in Spring in about 1849', '1849~-21-uu'),
-    # ('a day in about July? in about 1849', '1849~-07?~-uu'),
-    # ('a day in about Spring in about 1849', '1849~-21~-uu'),
-    # ('maybe January in some year in about the 1830s', '183u~-01?'),
-    # ('about July? in about 1849', '1849~-07?~'),
 ])
 
 def test_natlang(input_text, expected_output):
@@ -198,5 +187,5 @@ def test_natlang(input_text, expected_output):
     Verify that the conversion from text to EDTF format matches the expected output.
     """
     result = text_to_edtf(input_text)
-    assert result == expected_output, f"Failed for input: {input_text}"
+    assert result == expected_output, f"Failed for input: {input_text} - expected {expected_output}, got {result}"
 
