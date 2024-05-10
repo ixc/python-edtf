@@ -713,10 +713,18 @@ class OneOfASet(EDTFObject):
         return "[%s]" % (", ".join([str(o) for o in self.objects]))
 
     def _strict_date(self, lean):
+        strict_dates = [x._strict_date(lean) for x in self.objects]
+        # Accounting for possible 'inf' and '-inf' values
         if lean == LATEST:
-            return max([x._strict_date(lean) for x in self.objects])
+            if any(isinstance(d, float) and d == float('inf') for d in strict_dates):
+                return float('inf')
+            else:
+                return max((d for d in strict_dates if not isinstance(d, float)), default=float('inf'))
         else:
-            return min([x._strict_date(lean) for x in self.objects])
+            if any(isinstance(d, float) and d == float('-inf') for d in strict_dates):
+                return float('-inf')
+            else:
+                return min((d for d in strict_dates if not isinstance(d, float)), default=float('-inf'))
 
 
 class MultipleDates(EDTFObject):
