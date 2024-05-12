@@ -3,12 +3,14 @@ try:
 except:
     import pickle
 
-from django.db import models
 from django.core.exceptions import FieldDoesNotExist
+from django.db import models
+from django.db.models import signals
+from django.db.models.query_utils import DeferredAttribute
 
 from edtf import parse_edtf, EDTFObject
-from edtf.natlang import text_to_edtf
 from edtf.convert import struct_time_to_date, struct_time_to_jd
+from edtf.natlang import text_to_edtf
 
 DATE_ATTRS = (
     'lower_strict',
@@ -16,6 +18,20 @@ DATE_ATTRS = (
     'lower_fuzzy',
     'upper_fuzzy',
 )
+
+class EDTFFieldDescriptor(DeferredAttribute):
+    """
+    Descriptor for the EDTFField's attribute on the model instance.
+    This updates the dependent fields each time this value is set.
+    """
+
+    def __set__(self, instance, value):
+        # First set the value we are given
+        instance.__dict__[self.field.attname] = value
+        # `update_values` may provide us with a new value to set
+        edtf = self.field.update_values(instance, value)
+        if edtf != value:
+            instance.__dict__[self.field.attname] = edtf
 
 
 class EDTFField(models.CharField):
@@ -40,6 +56,7 @@ class EDTFField(models.CharField):
         super(EDTFField, self).__init__(verbose_name, name, **kwargs)
 
     description = "A field for storing complex/fuzzy date specifications in EDTF format."
+    descriptor_class = EDTFFieldDescriptor
 
     def deconstruct(self):
         name, path, args, kwargs = super(EDTFField, self).deconstruct()
@@ -88,7 +105,7 @@ class EDTFField(models.CharField):
             return pickle.dumps(value)
         return value
 
-    def pre_save(self, instance, add):
+    def update_values(self, instance, *args, **kwargs):
         """
         Updates the EDTF value from either the natural_text_field, which is parsed
         with text_to_edtf() and is used for display, or falling back to the direct_input_field,
@@ -123,10 +140,6 @@ class EDTFField(models.CharField):
             # TODO: if both direct_input and natural_text are cleared, should we throw an error?
             edtf = existing_value
 
-        # Update the actual EDTF field in the model if there is a change
-        if edtf != existing_value:
-            setattr(instance, self.attname, edtf)
-
         # Process and update related date fields based on the EDTF object
         for attr in DATE_ATTRS:
             field_attr = f"{attr}_field"
@@ -151,3 +164,12 @@ class EDTFField(models.CharField):
                 else:
                     setattr(instance, g, None)
         return edtf
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        super().contribute_to_class(cls, name, **kwargs)
+        # Attach update_values so that dependent fields declared
+        # after their corresponding edtf field don't stay cleared by
+        # Model.__init__, see Django bug #11196.
+        # Only run post-initialization values update on non-abstract models
+        if not cls._meta.abstract:
+            signals.post_init.connect(self.update_values, sender=cls)
