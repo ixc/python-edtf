@@ -3,12 +3,14 @@ try:
 except:
     import pickle
 
-from django.db import models
 from django.core.exceptions import FieldDoesNotExist
+from django.db import models
+from django.db.models import signals
+from django.db.models.query_utils import DeferredAttribute
 
 from edtf import parse_edtf, EDTFObject
-from edtf.natlang import text_to_edtf
 from edtf.convert import struct_time_to_date, struct_time_to_jd
+from edtf.natlang import text_to_edtf
 
 DATE_ATTRS = (
     'lower_strict',
@@ -17,6 +19,20 @@ DATE_ATTRS = (
     'upper_fuzzy',
 )
 
+class EDTFFieldDescriptor(DeferredAttribute):
+    """
+    Descriptor for the EDTFField's attribute on the model instance.
+    This updates the dependent fields each time this value is set.
+    """
+
+    def __set__(self, instance, value):
+        # First set the value we are given
+        instance.__dict__[self.field.attname] = value
+        # `update_values` may provide us with a new value to set
+        edtf = self.field.update_values(instance, value)
+        if edtf != value:
+            instance.__dict__[self.field.attname] = edtf
+
 
 class EDTFField(models.CharField):
 
@@ -24,6 +40,7 @@ class EDTFField(models.CharField):
         self,
         verbose_name=None, name=None,
         natural_text_field=None,
+        direct_input_field=None,
         lower_strict_field=None,
         upper_strict_field=None,
         lower_fuzzy_field=None,
@@ -31,13 +48,15 @@ class EDTFField(models.CharField):
         **kwargs
     ):
         kwargs['max_length'] = 2000
-        self.natural_text_field, self.lower_strict_field, \
-        self.upper_strict_field, self.lower_fuzzy_field, \
-        self.upper_fuzzy_field = natural_text_field, lower_strict_field, \
-            upper_strict_field, lower_fuzzy_field, upper_fuzzy_field
+        self.natural_text_field, self.direct_input_field, \
+        self.lower_strict_field, self.upper_strict_field, \
+        self.lower_fuzzy_field, self.upper_fuzzy_field = \
+        natural_text_field, direct_input_field, lower_strict_field, \
+        upper_strict_field, lower_fuzzy_field, upper_fuzzy_field
         super(EDTFField, self).__init__(verbose_name, name, **kwargs)
 
-    description = "An field for storing complex/fuzzy date specifications in EDTF format."
+    description = "A field for storing complex/fuzzy date specifications in EDTF format."
+    descriptor_class = EDTFFieldDescriptor
 
     def deconstruct(self):
         name, path, args, kwargs = super(EDTFField, self).deconstruct()
@@ -53,15 +72,17 @@ class EDTFField(models.CharField):
         del kwargs["max_length"]
         return name, path, args, kwargs
 
-    def from_db_value(self, value, expression, connection, context=None):
-        # Converting values to Python objects
-        if not value:
-            return None
+    def from_db_value(self, value, expression, connection):
+        # Converting values from the database to Python objects
+        if value is None:
+            return value
+
         try:
-            return pickle.loads(str(value))
-        except:
-            pass
-        return parse_edtf(value, fail_silently=True)
+            # Try to unpickle if the value was pickled
+            return pickle.loads(value)
+        except (pickle.PickleError, TypeError):
+            # If it fails because it's not pickled data, try parsing as EDTF
+            return parse_edtf(value, fail_silently=True)
 
     def to_python(self, value):
         if isinstance(value, EDTFObject):
@@ -84,37 +105,44 @@ class EDTFField(models.CharField):
             return pickle.dumps(value)
         return value
 
-    def pre_save(self, instance, add):
+    def update_values(self, instance, *args, **kwargs):
         """
-        Updates the edtf value from the value of the display_field.
-        If there's a valid edtf, then set the date values.
+        Updates the EDTF value from either the natural_text_field, which is parsed
+        with text_to_edtf() and is used for display, or falling back to the direct_input_field,
+        which allows directly providing an EDTF string. If one of these provides a valid EDTF object,
+        then set the date values accordingly.
         """
-        if not self.natural_text_field or self.attname not in instance.__dict__:
-            return
+    
+        # Get existing value to determine if update is needed
+        existing_value = getattr(instance, self.attname, None)
+        direct_input = getattr(instance, self.direct_input_field, None)
+        natural_text = getattr(instance, self.natural_text_field, None)
 
-        edtf = getattr(instance, self.attname)
+        # if direct_input is provided and is different from the existing value, update the EDTF field
+        if direct_input and (existing_value is None or str(existing_value) != direct_input):
+            edtf = parse_edtf(direct_input, fail_silently=True) # ParseException if invalid; should this be raised?
+            # TODO pyparsing.ParseExceptions are very noisy and dumps the whole grammar (see https://github.com/ixc/python-edtf/issues/46)
 
-        # Update EDTF field based on latest natural text value, if any
-        natural_text = getattr(instance, self.natural_text_field)
-        if natural_text:
-            edtf = text_to_edtf(natural_text)
+            # set the natural_text (display) field to the direct_input if it is not provided
+            if natural_text is None:
+                setattr(instance, self.natural_text_field, direct_input)
+
+        elif natural_text:
+            edtf_string = text_to_edtf(natural_text)
+            if edtf_string and (existing_value is None or str(existing_value) != edtf_string):
+                edtf = parse_edtf(edtf_string, fail_silently=True) # potetial ParseException if invalid; should this be raised?
+            else:
+                edtf = existing_value
         else:
-            edtf = None
+            if not existing_value:
+                # No inputs provided and no existing value; TODO log this?
+                return
+            # TODO: if both direct_input and natural_text are cleared, should we throw an error?
+            edtf = existing_value
 
-        # TODO If `natural_text_field` becomes cleared the derived EDTF field
-        # value should also be cleared, rather than left at original value?
-
-        # TODO Handle case where EDTF field is set to a string directly, not
-        # via `natural_text_field` (this is a slightly unexpected use-case, but
-        # is a very efficient way to set EDTF values in situations like for API
-        # imports so we probably want to continue to support it?)
-        if edtf and not isinstance(edtf, EDTFObject):
-            edtf = parse_edtf(edtf, fail_silently=True)
-
-        setattr(instance, self.attname, edtf)
-        # set or clear related date fields on the instance
+        # Process and update related date fields based on the EDTF object
         for attr in DATE_ATTRS:
-            field_attr = "%s_field" % attr
+            field_attr = f"{attr}_field"
             g = getattr(self, field_attr, None)
             if g:
                 if edtf:
@@ -136,3 +164,12 @@ class EDTFField(models.CharField):
                 else:
                     setattr(instance, g, None)
         return edtf
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        super().contribute_to_class(cls, name, **kwargs)
+        # Attach update_values so that dependent fields declared
+        # after their corresponding edtf field don't stay cleared by
+        # Model.__init__, see Django bug #11196.
+        # Only run post-initialization values update on non-abstract models
+        if not cls._meta.abstract:
+            signals.post_init.connect(self.update_values, sender=cls)

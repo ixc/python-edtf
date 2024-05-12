@@ -32,3 +32,8 @@ jobs:
             - name: Run unit tests
               run: |
                 pytest
+            
+            - name: Run Django integration tests
+              working-directory: ./edtf_django_tests
+              run: |
+                python manage.py test edtf_integration
