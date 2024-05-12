@@ -225,16 +225,16 @@ def text_to_edtf_date(text):
                 result += 'X'
             elif i == 3 and is_decade > 0:
                 if mentions_year:
-                    result += 'X'  # year precision
+                    result += 'X'  # previously year precision - now just X
                 else:
-                    result += 'X'  # decade precision
+                    result += 'X'  # previously decade precision - now just X
             elif date1[i] == date2[i]:
                 # since both attempts at parsing produced the same result
                 # it must be parsed value, not a default
                 result += date1[i]
             else:
                 # different values were produced, meaning that it's likely
-                # a default. Use 'unspecified'
+                # a default. Use 'X'
                 result += 'X'
 
         # strip off unknown chars from end of string - except the first 4
@@ -273,7 +273,7 @@ def text_to_edtf_date(text):
             result += "~"
 
     # weed out bad parses
-    if result.startswith("uu-uu"):
+    if result.startswith("XX-XX"):
         return None
 
     return result

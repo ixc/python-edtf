@@ -153,9 +153,7 @@ EXAMPLES = (
     # December 1760 or some later month
     ('[1760-12..]', ('1760-12-01', 'inf')),
     # January or February of 1760 or December 1760 or some later month
-    # This test is failing due to a code issue:
-    # TypeError: '>' not supported between instances of 'float' and 'time.struct_time'
-    ('[1760-01, 1760-02, 1760-12..]', ('1760-01-01', 'inf')), #TODO fix in parser_classes
+    ('[1760-01, 1760-02, 1760-12..]', ('1760-01-01', 'inf')),
     # Either the year 1667 or the month December of 1760.
     ('[1667, 1760-12]', ('1667-01-01', '1760-12-31')),
     # Multiple Dates
@@ -164,11 +162,11 @@ EXAMPLES = (
     # The year 1960 and the month December of 1961.
     ('{1960, 1961-12}', ('1960-01-01', '1961-12-31')),
     
-    # Masked Precision --> eliminated
+    # Previously tested masked precision, now eliminated from the spec
     # A date during the 1960s
-    #('196x', '1960-01-01', '1969-12-31'),
+    ('196X', ('1960-01-01', '1969-12-31')),
     # A date during the 1900s
-    #('19xx', '1900-01-01', '1999-12-31'),
+    ('19XX', ('1900-01-01', '1999-12-31')),
 
     # L2 Extended Interval
     # Interval with fuzzy day endpoints in June 2004
@@ -180,6 +178,7 @@ EXAMPLES = (
     ('Y17E7', ('170000000-01-01', '170000000-12-31')),
     # the year -170000000
     ('Y-17E7', ('-170000000-01-01', '-170000000-12-31')),
+    # L2 significant digits
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
     # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
     # ('Y17101E4S3', ('171010000-01-01', '171999999-12-31')),
@@ -227,7 +226,6 @@ def iso_to_struct_time(iso_date):
         y *= -1
     return struct_time([y, mo, d] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
-
 @pytest.mark.parametrize("test_input,expected_tuple", EXAMPLES)
 def test_edtf_examples(test_input, expected_tuple):
     """ Test parsing of EDTF strings with expected outputs. """
@@ -245,25 +243,25 @@ def test_edtf_examples(test_input, expected_tuple):
     elif len(expected_tuple) == 2:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
-        assert result.lower_strict() == lower_strict, "Lower strict date does not match"
-        assert result.upper_strict() == upper_strict, "Upper strict date does not match"
+        assert result.lower_strict() == lower_strict, f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        assert result.upper_strict() == upper_strict, f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
     elif len(expected_tuple) == 3:
         strict_date = iso_to_struct_time(expected_tuple[0])
         lower_fuzzy = iso_to_struct_time(expected_tuple[1])
         upper_fuzzy = iso_to_struct_time(expected_tuple[2])
-        assert result.lower_strict() == strict_date, "Lower strict date does not match"
-        assert result.upper_strict() == strict_date, "Upper strict date does not match"
-        assert result.lower_fuzzy() == lower_fuzzy, "Lower fuzzy date does not match"
-        assert result.upper_fuzzy() == upper_fuzzy, "Upper fuzzy date does not match"
+        assert result.lower_strict() == strict_date, f"Lower strict date does not match. Expected {strict_date}, got {result.lower_strict()}"
+        assert result.upper_strict() == strict_date, f"Upper strict date does not match. Expected {strict_date}, got {result.upper_strict()}"
+        assert result.lower_fuzzy() == lower_fuzzy, f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        assert result.upper_fuzzy() == upper_fuzzy, f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
     elif len(expected_tuple) == 4:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
         lower_fuzzy = iso_to_struct_time(expected_tuple[2])
         upper_fuzzy = iso_to_struct_time(expected_tuple[3])
-        assert result.lower_strict() == lower_strict, "Lower strict date does not match"
-        assert result.upper_strict() == upper_strict, "Upper strict date does not match"
-        assert result.lower_fuzzy() == lower_fuzzy, "Lower fuzzy date does not match"
-        assert result.upper_fuzzy() == upper_fuzzy, "Upper fuzzy date does not match"
+        assert result.lower_strict() == lower_strict, f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        assert result.upper_strict() == upper_strict, f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
+        assert result.lower_fuzzy() == lower_fuzzy, f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        assert result.upper_fuzzy() == upper_fuzzy, f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
 
 
 @pytest.mark.parametrize("bad_input", BAD_EXAMPLES)

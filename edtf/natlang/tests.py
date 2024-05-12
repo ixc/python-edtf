@@ -52,22 +52,18 @@ from edtf.natlang.en import text_to_edtf
     ('attica 1802', '1802'), # Avoid false positive 'circa' at the end of preceding word
     ('attic. 1802', '1802'), # Avoid false positive 'circa'
 
-    # # Masked precision
-    # ('1860s', '186x'), # 186x has decade precision, 186u has year precision.
-
-    # # Masked precision + uncertainty
-    # ('ca. 1860s', '186x~'),
-    # ('c. 1860s', '186x~'),
-    # ('Circa 1840s', '184x~'),
-    # ('circa 1840s', '184x~'),
-    # ('ca. 1860s?', '186x?~'),
-    # ('uncertain: approx 1862', '1862?~'),
-
-    # # Ambiguous masked precision for centuries and decades
-    ('1800s', '18XX'), # Without additional uncertainty, use the century
-    ('2000s', '20XX'), # Without additional uncertainty, use the century
-    ('c1900s', '190X~'), # If there's additional uncertainty, use the decade
-    ('c1800s?', '180X%'), # If there's additional uncertainty, use the decade
+    # Previously tested masked precision, uncertain or ambiguous masked precision
+    ('1860s', '186X'),
+    ('ca. 1860s', '186X~'),
+    ('c. 1860s', '186X~'),
+    ('Circa 1840s', '184X~'),
+    ('circa 1840s', '184X~'),
+    ('ca. 1860s?', '186X%'),
+    ('uncertain: approx 1862', '1862%'),
+    ('1800s', '18XX'),
+    ('2000s', '20XX'),
+    ('c1900s', '190X~'),
+    ('c1800s?', '180X%'),
 
     # Unspecified dates
     ('January 12', 'XXXX-01-12'),
