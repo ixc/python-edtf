@@ -111,29 +111,35 @@ EXAMPLES = (
     ('2010-24', ('2010-12-01', '2010-12-31')),
 
     # ******************************* LEVEL 2 *********************************
-    # Partial Uncertain/Approximate
+    # Qualification
+    # Group qualification: a qualification character to the immediate right of a component applies
+    # to that component as well as to all components to the left.
+    # year, month, and day are uncertain and approximate
+    ('2004-06-11%', ('2004-06-11', '2004-06-09', '2004-06-13')),
     # uncertain year; month, day known
     ('2004?-06-11', ('2004-06-11', '2003-06-11', '2005-06-11')),
     # year and month are approximate; day known
     ('2004-06~-11', ('2004-06-11', '2003-05-11', '2005-07-11')),
-    # uncertain month, year and day known
-    ('2004-?06-11', ('2004-06-11', '2004-05-11', '2004-07-11')),
+
+    # Qualification of individual component: a qualification character to the immediate left
+    # of the component applies to that component only
     # day is approximate; year, month known
     ('2004-06-~11', ('2004-06-11', '2004-06-10', '2004-06-12')),
-    # Year known, month within year is approximate and uncertain - NEW SPEC
+    # Year known, month within year is approximate and uncertain
     ('2004-%06', ('2004-06-01', '2004-06-30', '2004-04-01', '2004-08-30')),
-    # Year known, month and day uncertain - NEW SPEC
+    # Year known, month and day uncertain
     ('2004-?06-?11', ('2004-06-11', '2004-05-10', '2004-07-12')),
-    # Year uncertain, month known, day approximate - NEW SPEC
+    # Year uncertain, month known, day approximate
     ('2004?-06-~11', ('2004-06-11', '2003-06-10', '2005-06-12')),
-    # Year uncertain and month is both uncertain and approximate - NEW SPEC
+    # Year uncertain and month is both uncertain and approximate
     ('?2004-%06', ('2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30')),
     # This has the same meaning as the previous example.- NEW SPEC
     ('2004?-%06', ('2004-06-01', '2004-06-30', '2003-04-01', '2005-08-30')),
-    # Year uncertain, month and day approximate. - NEW SPEC
+    # Year uncertain, month and day approximate
     ('2004?-~06-~04', ('2004-06-04', '2003-05-03', '2005-07-05')),
-    # Year known, month and day approximate. - NEW SPEC
+    # Year known, month and day approximate
     ('2011-~06-~04', ('2011-06-04', '2011-05-03', '2011-07-05')),
+
     # Partial unspecified
     # December 25 sometime during the 1560s
     ('156X-12-25', ('1560-12-25', '1569-12-25')),
@@ -180,7 +186,6 @@ EXAMPLES = (
     ('Y-17E7', ('-170000000-01-01', '-170000000-12-31')),
     # L2 significant digits
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
-    # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
     # ('Y17101E4S3', ('171010000-01-01', '171999999-12-31')),
     # L2 Seasons
     # Spring southern hemisphere, 2001
@@ -190,6 +195,7 @@ EXAMPLES = (
 )
 
 BAD_EXAMPLES = (
+    # parentheses are not used for group qualification in the 2018 spec
     None,
     '',
     'not a edtf string',
