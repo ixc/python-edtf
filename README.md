@@ -196,43 +196,33 @@ The parser can parse strings such as:
     'c.1860' => '1860~' #with or without .
     'ca1860' => '1860~'
     'approx 1860' => '1860~'
-
-    # masked precision
-    '1860s' => '186x' #186x has decade precision, 186u has year precision.
-    '1800s' => '18xx' # without uncertainty indicators, assume century
-
-    # masked precision + uncertainty
-    'ca. 1860s' => '186x~'
-    'circa 1840s' => '184x~'
-    'ca. 1860s?' => '186x?~'
-    'c1800s?' => '180x?~' # with uncertainty indicators, use the decade
+    'ca. 1860s' => '186X~'
+    'circa 1840s' => '184X~'
+    'ca. 1860s?' => '186X?~'
+    'c1800s?' => '180X?~' # with uncertainty indicators, use the decade
 
     # unspecified parts
     'January 12' => 'XXXX-01-12'
     'January' => 'XXXX-01'
     '7/2008' => '2008-07'
+    'month in 1872' => '1872-XX'
+    'day in January 1872' => '1872-01-XX'
+    'day in 1872' => '1872-XX-XX'
 
     #seasons
     'Autumn 1872' => '1872-23'
     'Fall 1872' => '1872-23'
 
     # before/after
-    'earlier than 1928' => 'unknown/1928'
-    'later than 1928' => '1928/unknown'
-    'before January 1928' => 'unknown/1928-01'
-    'after about the 1920s' => '192x~/unknown'
-
-    # unspecified
-    'year in the 1860s' => '186u' #186x has decade precision, 186u has year precision.
-    ('year in the 1800s', '18xu')
-    'month in 1872' => '1872-XX'
-    'day in January 1872' => '1872-01-XX'
-    'day in 1872' => '1872-XX-XX'
+    'earlier than 1928' => '/1928'
+    'later than 1928' => '1928/'
+    'before January 1928' => '/1928-01'
+    'after about the 1920s' => '192X~/'
 
     #centuries
-    '1st century' => '00xx'
-    '10c' => '09xx'
-    '19th century?' => '18xx?'
+    '1st century' => '00XX'
+    '10c' => '09XX'
+    '19th century?' => '18XX?'
 
     # just showing off now...
     'a day in about Spring 1849?' => '1849-21-XX?~'
@@ -243,8 +233,8 @@ The parser can parse strings such as:
     '1851-1852; printed 1853-1854' => '1851/1852'
     '1851-52' => '1851/1852'
     '1856-ca. 1865' => '1856/1865~'
-    '1860s-1870s' => '186x/187x'
-    '1920s -early 1930s' => '192x/193x'
+    '1860s-1870s' => '186X/187X'
+    '1920s - early 1930s' => '192X/193X'
     '1938, printed 1940s-1950s' => '1938'
 
 
