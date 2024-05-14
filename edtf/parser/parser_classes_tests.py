@@ -397,9 +397,6 @@ class Interval(EDTFObject):
             except (
                 AttributeError
             ):  # an 'unknown' or 'open' string - depends on the lower date
-                # import pdb
-
-                # pdb.set_trace()
                 if self.upper and (self.upper == "open" or self.upper.date == "open"):
                     return dt_to_struct_time(date.today())  # it's still happening
                 else:
@@ -502,7 +499,6 @@ class UnspecifiedIntervalSection(EDTFObject):
             return ".."
 
     def _strict_date(self, lean):
-        # import pdb; pdb.set_trace()
         if lean == EARLIEST:
             if self.is_unknown:
                 upper = self.other._strict_date(LATEST)
@@ -525,7 +521,6 @@ class Unspecified(Date):
 
 class Level1Interval(Interval):
     def __init__(self, lower=None, upper=None):
-        # import pdb; pdb.set_trace()
         if lower:
             if lower["date"] == "..":
                 self.lower = UnspecifiedIntervalSection(
