@@ -7,7 +7,7 @@ class TestEvent(models.Model):
     date_display = models.CharField(
         "Date of creation (display)",
         blank=True,
-        null=True,
+        null=False,
         max_length=255,
         help_text="Enter the date in natural language format (e.g., 'Approximately June 2004').",
     )
@@ -16,7 +16,7 @@ class TestEvent(models.Model):
         "Date of creation (EDTF format)",
         max_length=255,
         blank=True,
-        null=True,
+        null=False,
         help_text="Enter the date in EDTF format (e.g., '2004-06~').",
     )
 

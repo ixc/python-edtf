@@ -125,8 +125,8 @@ class EDTFField(models.CharField):
 
         # Get existing value to determine if update is needed
         existing_value = getattr(instance, self.attname, None)
-        direct_input = getattr(instance, self.direct_input_field, None)
-        natural_text = getattr(instance, self.natural_text_field, None)
+        direct_input = getattr(instance, self.direct_input_field, "")
+        natural_text = getattr(instance, self.natural_text_field, "")
 
         # if direct_input is provided and is different from the existing value, update the EDTF field
         if direct_input and (
@@ -138,7 +138,7 @@ class EDTFField(models.CharField):
             # TODO pyparsing.ParseExceptions are very noisy and dumps the whole grammar (see https://github.com/ixc/python-edtf/issues/46)
 
             # set the natural_text (display) field to the direct_input if it is not provided
-            if natural_text is None:
+            if natural_text == "":
                 setattr(instance, self.natural_text_field, direct_input)
 
         elif natural_text:
