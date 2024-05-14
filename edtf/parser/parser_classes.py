@@ -1,17 +1,22 @@
 import calendar
+import math
 import re
-from time import struct_time
 from datetime import date, datetime
 from operator import add, sub
-import math
+from time import struct_time
+
 from dateutil.relativedelta import relativedelta
 
 from edtf import appsettings
-from edtf.convert import dt_to_struct_time, trim_struct_time, \
-    TIME_EMPTY_TIME, TIME_EMPTY_EXTRAS
+from edtf.convert import (
+    TIME_EMPTY_EXTRAS,
+    TIME_EMPTY_TIME,
+    dt_to_struct_time,
+    trim_struct_time,
+)
 
-EARLIEST = 'earliest'
-LATEST = 'latest'
+EARLIEST = "earliest"
+LATEST = "latest"
 
 PRECISION_MILLENIUM = "millenium"
 PRECISION_CENTURY = "century"
@@ -80,14 +85,16 @@ def apply_delta(op, time_struct, delta):
     # Convert result year back to its original millenium
     final_year = dt_result.year - millenium_diff
     return struct_time(
-        (final_year,) + dt_result.timetuple()[1:6] + tuple(TIME_EMPTY_EXTRAS))
+        (final_year,) + dt_result.timetuple()[1:6] + tuple(TIME_EMPTY_EXTRAS)
+    )
 
 
-class EDTFObject(object):
+class EDTFObject:
     """
     Object to attact to a parser to become instantiated when the parser
     completes.
     """
+
     parser = None
 
     @classmethod
@@ -99,9 +106,9 @@ class EDTFObject(object):
     def parse_action(cls, toks):
         kwargs = toks.asDict()
         try:
-            return cls(**kwargs) # replace the token list with the class
+            return cls(**kwargs)  # replace the token list with the class
         except Exception as e:
-            print("trying to %s.__init__(**%s)" % (cls.__name__, kwargs))
+            print(f"trying to {cls.__name__}.__init__(**{kwargs})")
             raise e
 
     @classmethod
@@ -109,14 +116,11 @@ class EDTFObject(object):
         return cls.parser.parseString(s)[0]
 
     def __repr__(self):
-        return "%s: '%s'" % (type(self).__name__, str(self))
+        return f"{type(self).__name__}: '{str(self)}'"
 
     def __init__(self, *args, **kwargs):
-        str = "%s.__init__(*%s, **%s)" % (
-            type(self).__name__,
-            args, kwargs,
-        )
-        raise NotImplementedError("%s is not implemented." % str)
+        str = f"{type(self).__name__}.__init__(*{args}, **{kwargs})"
+        raise NotImplementedError(f"{str} is not implemented.")
 
     def __str__(self):
         raise NotImplementedError
@@ -137,25 +141,30 @@ class EDTFObject(object):
         return relativedelta(0)
 
     def get_is_approximate(self):
-        return getattr(self, '_is_approximate', False)
+        return getattr(self, "_is_approximate", False)
 
     def set_is_approximate(self, val):
         self._is_approximate = val
+
     is_approximate = property(get_is_approximate, set_is_approximate)
 
     def get_is_uncertain(self):
-        return getattr(self, '_is_uncertain', False)
+        return getattr(self, "_is_uncertain", False)
 
     def set_is_uncertain(self, val):
         self._is_uncertain = val
+
     is_uncertain = property(get_is_uncertain, set_is_uncertain)
 
     def get_is_uncertain_and_approximate(self):
-        return getattr(self, '_uncertain_and_approximate', False)
+        return getattr(self, "_uncertain_and_approximate", False)
 
     def set_is_uncertain_and_approximate(self, val):
         self._uncertain_and_approximate = val
-    is_uncertain_and_approximate = property(get_is_uncertain_and_approximate, set_is_uncertain_and_approximate)
+
+    is_uncertain_and_approximate = property(
+        get_is_uncertain_and_approximate, set_is_uncertain_and_approximate
+    )
 
     def lower_fuzzy(self):
         strict_val = self.lower_strict()
@@ -190,7 +199,9 @@ class EDTFObject(object):
             return self.lower_strict() > dt_to_struct_time(other)
         elif isinstance(other, struct_time):
             return self.lower_strict() > trim_struct_time(other)
-        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+        raise TypeError(
+            f"can't compare {type(self).__name__} with {type(other).__name__}"
+        )
 
     def __ge__(self, other):
         if isinstance(other, EDTFObject):
@@ -199,7 +210,9 @@ class EDTFObject(object):
             return self.lower_strict() >= dt_to_struct_time(other)
         elif isinstance(other, struct_time):
             return self.lower_strict() >= trim_struct_time(other)
-        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+        raise TypeError(
+            f"can't compare {type(self).__name__} with {type(other).__name__}"
+        )
 
     def __lt__(self, other):
         if isinstance(other, EDTFObject):
@@ -208,7 +221,9 @@ class EDTFObject(object):
             return self.lower_strict() < dt_to_struct_time(other)
         elif isinstance(other, struct_time):
             return self.lower_strict() < trim_struct_time(other)
-        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+        raise TypeError(
+            f"can't compare {type(self).__name__} with {type(other).__name__}"
+        )
 
     def __le__(self, other):
         if isinstance(other, EDTFObject):
@@ -217,13 +232,15 @@ class EDTFObject(object):
             return self.lower_strict() <= dt_to_struct_time(other)
         elif isinstance(other, struct_time):
             return self.lower_strict() <= trim_struct_time(other)
-        raise TypeError("can't compare %s with %s" % (type(self).__name__, type(other).__name__))
+        raise TypeError(
+            f"can't compare {type(self).__name__} with {type(other).__name__}"
+        )
 
 
 # (* ************************** Level 0 *************************** *)
 
-class Date(EDTFObject):
 
+class Date(EDTFObject):
     def set_year(self, y):
         if y is None:
             raise AttributeError("Year must not be None")
@@ -231,33 +248,35 @@ class Date(EDTFObject):
 
     def get_year(self):
         return self._year
+
     year = property(get_year, set_year)
 
     def set_month(self, m):
         self._month = m
-        if m == None:
+        if m is None:
             self.day = None
 
     def get_month(self):
         return self._month
+
     month = property(get_month, set_month)
 
     def __init__(self, year=None, month=None, day=None, **kwargs):
-        for param in ('date', 'lower', 'upper'):
+        for param in ("date", "lower", "upper"):
             if param in kwargs:
                 self.__init__(**kwargs[param])
                 return
 
-        self.year = year # Year is required, but sometimes passed in as a 'date' dict.
+        self.year = year  # Year is required, but sometimes passed in as a 'date' dict.
         self.month = month
         self.day = day
 
     def __str__(self):
         r = self.year
         if self.month:
-            r += "-%s" % self.month
+            r += f"-{self.month}"
             if self.day:
-                r += "-%s" % self.day
+                r += f"-{self.day}"
         return r
 
     def isoformat(self, default=date.max):
@@ -270,16 +289,18 @@ class Date(EDTFObject):
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
         if lean == EARLIEST:
-            return int(re.sub(r'X', r'0', self.year))
+            return int(re.sub(r"X", r"0", self.year))
         else:
-            return int(re.sub(r'X', r'9', self.year))
+            return int(re.sub(r"X", r"9", self.year))
 
     def _precise_month(self, lean):
         if self.month and self.month != "XX":
             try:
                 return int(self.month)
-            except ValueError as e:
-                raise ValueError("Couldn't convert %s to int (in %s)" % (self.month, self))
+            except ValueError as err:
+                raise ValueError(
+                    f"Couldn't convert {self.month} to int (in {self})"
+                ) from err
         else:
             return 1 if lean == EARLIEST else 12
 
@@ -303,7 +324,9 @@ class Date(EDTFObject):
                 self._precise_year(lean),
                 self._precise_month(lean),
                 self._precise_day(lean),
-            ) + tuple(TIME_EMPTY_TIME) + tuple(TIME_EMPTY_EXTRAS)
+            )
+            + tuple(TIME_EMPTY_TIME)
+            + tuple(TIME_EMPTY_EXTRAS)
         )
 
     @property
@@ -334,14 +357,14 @@ class DateAndTime(EDTFObject):
             return self.isoformat() == other.isoformat()
         elif isinstance(other, struct_time):
             return self._strict_date() == trim_struct_time(other)
-        return super(DateAndTime, self).__eq__(other)
+        return super().__eq__(other)
 
     def __ne__(self, other):
         if isinstance(other, datetime):
             return self.isoformat() != other.isoformat()
         elif isinstance(other, struct_time):
             return self._strict_date() != trim_struct_time(other)
-        return super(DateAndTime, self).__ne__(other)
+        return super().__ne__(other)
 
 
 class Interval(EDTFObject):
@@ -350,7 +373,7 @@ class Interval(EDTFObject):
         self.upper = upper
 
     def __str__(self):
-        return "%s/%s" % (self.lower, self.upper)
+        return f"{self.lower}/{self.upper}"
 
     def _strict_date(self, lean):
         if lean == EARLIEST:
@@ -365,6 +388,7 @@ class Interval(EDTFObject):
             return self.lower.precision
         return None
 
+
 # (* ************************** Level 1 *************************** *)
 
 
@@ -375,7 +399,8 @@ class UA(EDTFObject):
         return cls(*args)
 
     def __init__(self, *args):
-        assert len(args) == 1
+        if len(args) != 1:
+            raise AssertionError("UA must have exactly one argument")
         ua = args[0]
 
         self.is_uncertain = "?" in ua
@@ -408,7 +433,7 @@ class UncertainOrApproximate(EDTFObject):
 
     def __str__(self):
         if self.ua:
-            return "%s%s" % (self.date, self.ua)
+            return f"{self.date}{self.ua}"
         else:
             return str(self.date)
 
@@ -429,7 +454,6 @@ class UncertainOrApproximate(EDTFObject):
 
 
 class UnspecifiedIntervalSection(EDTFObject):
-
     def __init__(self, sectionOpen=False, other_section_element=None):
         if sectionOpen:
             self.is_open = True
@@ -471,19 +495,27 @@ class Unspecified(Date):
 class Level1Interval(Interval):
     def __init__(self, lower=None, upper=None):
         if lower:
-            if lower['date'] == '..':
-                self.lower = UnspecifiedIntervalSection(True, UncertainOrApproximate(**upper))
+            if lower["date"] == "..":
+                self.lower = UnspecifiedIntervalSection(
+                    True, UncertainOrApproximate(**upper)
+                )
             else:
                 self.lower = UncertainOrApproximate(**lower)
         else:
-            self.lower = UnspecifiedIntervalSection(False, UncertainOrApproximate(**upper))
+            self.lower = UnspecifiedIntervalSection(
+                False, UncertainOrApproximate(**upper)
+            )
         if upper:
-            if upper['date'] == '..':
-                self.upper = UnspecifiedIntervalSection(True, UncertainOrApproximate(**lower))
+            if upper["date"] == "..":
+                self.upper = UnspecifiedIntervalSection(
+                    True, UncertainOrApproximate(**lower)
+                )
             else:
                 self.upper = UncertainOrApproximate(**upper)
         else:
-            self.upper = UnspecifiedIntervalSection(False, UncertainOrApproximate(**lower))
+            self.upper = UnspecifiedIntervalSection(
+                False, UncertainOrApproximate(**lower)
+            )
 
     def _get_fuzzy_padding(self, lean):
         if lean == EARLIEST:
@@ -497,7 +529,7 @@ class LongYear(EDTFObject):
         self.year = year
 
     def __str__(self):
-        return "Y%s" % self.year
+        return f"Y{self.year}"
 
     def _precise_year(self):
         return int(self.year)
@@ -505,23 +537,21 @@ class LongYear(EDTFObject):
     def _strict_date(self, lean):
         py = self._precise_year()
         if lean == EARLIEST:
-            return struct_time(
-                [py, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+            return struct_time([py, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
         else:
-            return struct_time(
-                [py, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+            return struct_time([py, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
 
 class Season(Date):
     def __init__(self, year, season, **kwargs):
         self.year = year
-        self.season = season # use season to look up month
+        self.season = season  # use season to look up month
         # day isn't part of the 'season' spec, but it helps the inherited
         # `Date` methods do their thing.
         self.day = None
 
     def __str__(self):
-        return "%s-%s" % (self.year, self.season)
+        return f"{self.year}-{self.season}"
 
     def _precise_month(self, lean):
         rng = appsettings.SEASON_L2_MONTHS_RANGE[int(self.season)]
@@ -535,16 +565,25 @@ class Season(Date):
 
 
 class PartialUncertainOrApproximate(Date):
-
-    def set_year(self, y): # Year can be None.
+    def set_year(self, y):  # Year can be None.
         self._year = y
+
     year = property(Date.get_year, set_year)
 
     def __init__(
-        self, year=None, month=None, day=None,
-        year_ua=False, month_ua = False, day_ua = False,
-        year_month_ua = False, month_day_ua = False,
-        ssn=None, season_ua=False, all_ua=False, year_ua_b = False
+        self,
+        year=None,
+        month=None,
+        day=None,
+        year_ua=False,
+        month_ua=False,
+        day_ua=False,
+        year_month_ua=False,
+        month_day_ua=False,
+        ssn=None,
+        season_ua=False,
+        all_ua=False,
+        year_ua_b=False,
     ):
         self.year = year
         self.month = month
@@ -564,67 +603,51 @@ class PartialUncertainOrApproximate(Date):
         self.all_ua = all_ua
 
     def __str__(self):
-
         if self.season_ua:
-            return "%s%s" % (self.season, self.season_ua)
+            return f"{self.season}{self.season_ua}"
 
         if self.year_ua:
-            y = "%s%s" % (self.year, self.year_ua)
+            y = f"{self.year}{self.year_ua}"
         else:
-            if self.year_ua_b:
-                y = "%s%s" % (self.year_ua_b, self.year)
-            else:
-                y = str(self.year)
+            y = f"{self.year_ua_b}{self.year}" if self.year_ua_b else str(self.year)
 
-        if self.month_ua:
-            m = "%s%s" % (self.month_ua, self.month)
-        else:
-            m = str(self.month)
+        m = f"{self.month_ua}{self.month}" if self.month_ua else str(self.month)
 
         if self.day:
-            if self.day_ua:
-                d = "%s%s" % (self.day_ua, self.day)
-            else:
-                d = str(self.day)
+            d = f"{self.day_ua}{self.day}" if self.day_ua else str(self.day)
         else:
             d = None
 
-        if self.year_month_ua: # year/month approximate. No brackets needed.
-            ym = "%s-%s%s" % (y, m, self.year_month_ua)
-            if d:
-                result = "%s-%s" % (ym, d)
-            else:
-                result = ym
+        if self.year_month_ua:  # year/month approximate. No brackets needed.
+            ym = f"{y}-{m}{self.year_month_ua}"
+            result = f"{ym}-{d}" if d else ym
         elif self.month_day_ua:
-            if self.year_ua: # we don't need the brackets round month and day
-                result = "%s-%s-%s%s" % (y, m, d, self.month_day_ua)
+            if self.year_ua:  # we don't need the brackets round month and day
+                result = f"{y}-{m}-{d}{self.month_day_ua}"
             else:
-                result = "%s-(%s-%s)%s" % (y, m, d, self.month_day_ua)
+                result = f"{y}-({m}-{d}){self.month_day_ua}"
         else:
-            if d:
-                result = "%s-%s-%s" % (y, m, d)
-            else:
-                result = "%s-%s" % (y, m)
+            result = f"{y}-{m}-{d}" if d else f"{y}-{m}"
 
         if self.all_ua:
-            result = "(%s)%s" % (result, self.all_ua)
+            result = f"({result}){self.all_ua}"
 
         return result
 
     def _precise_year(self, lean):
         if self.season:
             return self.season._precise_year(lean)
-        return super(PartialUncertainOrApproximate, self)._precise_year(lean)
+        return super()._precise_year(lean)
 
     def _precise_month(self, lean):
         if self.season:
             return self.season._precise_month(lean)
-        return super(PartialUncertainOrApproximate, self)._precise_month(lean)
+        return super()._precise_month(lean)
 
     def _precise_day(self, lean):
         if self.season:
             return self.season._precise_day(lean)
-        return super(PartialUncertainOrApproximate, self)._precise_day(lean)
+        return super()._precise_day(lean)
 
     def _get_fuzzy_padding(self, lean):
         """
@@ -635,23 +658,42 @@ class PartialUncertainOrApproximate(Date):
         result = relativedelta(0)
 
         if self.year_ua:
-            result += appsettings.PADDING_YEAR_PRECISION * self.year_ua._get_multiplier()
+            result += (
+                appsettings.PADDING_YEAR_PRECISION * self.year_ua._get_multiplier()
+            )
         if self.year_ua_b:
-            result += appsettings.PADDING_YEAR_PRECISION * self.year_ua_b._get_multiplier()
+            result += (
+                appsettings.PADDING_YEAR_PRECISION * self.year_ua_b._get_multiplier()
+            )
         if self.month_ua:
-            result += appsettings.PADDING_MONTH_PRECISION * self.month_ua._get_multiplier()
+            result += (
+                appsettings.PADDING_MONTH_PRECISION * self.month_ua._get_multiplier()
+            )
         if self.day_ua:
             result += appsettings.PADDING_DAY_PRECISION * self.day_ua._get_multiplier()
 
         if self.year_month_ua:
-            result += appsettings.PADDING_YEAR_PRECISION * self.year_month_ua._get_multiplier()
-            result += appsettings.PADDING_MONTH_PRECISION * self.year_month_ua._get_multiplier()
+            result += (
+                appsettings.PADDING_YEAR_PRECISION
+                * self.year_month_ua._get_multiplier()
+            )
+            result += (
+                appsettings.PADDING_MONTH_PRECISION
+                * self.year_month_ua._get_multiplier()
+            )
         if self.month_day_ua:
-            result += appsettings.PADDING_DAY_PRECISION * self.month_day_ua._get_multiplier()
-            result += appsettings.PADDING_MONTH_PRECISION * self.month_day_ua._get_multiplier()
+            result += (
+                appsettings.PADDING_DAY_PRECISION * self.month_day_ua._get_multiplier()
+            )
+            result += (
+                appsettings.PADDING_MONTH_PRECISION
+                * self.month_day_ua._get_multiplier()
+            )
 
         if self.season_ua:
-            result += appsettings.PADDING_SEASON_PRECISION * self.season_ua._get_multiplier()
+            result += (
+                appsettings.PADDING_SEASON_PRECISION * self.season_ua._get_multiplier()
+            )
 
         if self.all_ua:
             multiplier = self.all_ua._get_multiplier()
@@ -687,17 +729,17 @@ class Consecutives(Interval):
             self.upper = upper
 
     def __str__(self):
-        return "%s..%s" % (self.lower or '', self.upper or '')
+        return "{}..{}".format(self.lower or "", self.upper or "")
 
 
 class EarlierConsecutives(Level1Interval):
     def __str__(self):
-        return "%s%s" % (self.lower, self.upper)
+        return f"{self.lower}{self.upper}"
 
 
 class LaterConsecutives(Level1Interval):
     def __str__(self):
-        return "%s%s" % (self.lower, self.upper)
+        return f"{self.lower}{self.upper}"
 
 
 class OneOfASet(EDTFObject):
@@ -710,21 +752,27 @@ class OneOfASet(EDTFObject):
         self.objects = args
 
     def __str__(self):
-        return "[%s]" % (", ".join([str(o) for o in self.objects]))
+        return "[{}]".format(", ".join([str(o) for o in self.objects]))
 
     def _strict_date(self, lean):
         strict_dates = [x._strict_date(lean) for x in self.objects]
         # Accounting for possible 'inf' and '-inf' values
         if lean == LATEST:
-            if any(isinstance(d, float) and d == float('inf') for d in strict_dates):
-                return float('inf')
+            if any(isinstance(d, float) and d == float("inf") for d in strict_dates):
+                return float("inf")
             else:
-                return max((d for d in strict_dates if not isinstance(d, float)), default=float('inf'))
+                return max(
+                    (d for d in strict_dates if not isinstance(d, float)),
+                    default=float("inf"),
+                )
         else:
-            if any(isinstance(d, float) and d == float('-inf') for d in strict_dates):
-                return float('-inf')
+            if any(isinstance(d, float) and d == float("-inf") for d in strict_dates):
+                return float("-inf")
             else:
-                return min((d for d in strict_dates if not isinstance(d, float)), default=float('-inf'))
+                return min(
+                    (d for d in strict_dates if not isinstance(d, float)),
+                    default=float("-inf"),
+                )
 
 
 class MultipleDates(EDTFObject):
@@ -769,6 +817,7 @@ class Level2Interval(Level1Interval):
 class Level2Season(Season):
     pass
 
+
 class ExponentialYear(LongYear):
     def __init__(self, base, exponent, precision=None):
         self.base = base
@@ -780,7 +829,8 @@ class ExponentialYear(LongYear):
 
     def get_year(self):
         if self.precision:
-            return '%sE%sS%s' % (self.base, self.exponent, self.precision)
+            return f"{self.base}E{self.exponent}S{self.precision}"
         else:
-            return '%sE%s' % (self.base, self.exponent)
+            return f"{self.base}E{self.exponent}"
+
     year = property(get_year)

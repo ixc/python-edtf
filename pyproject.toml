@@ -37,7 +37,8 @@ classifiers = [
 [project.optional-dependencies]
 test = [
     "django>=4.2,<5.0",
-    "pytest"
+    "pytest",
+    "ruff"
 ]
 
 [project.urls]
@@ -76,3 +77,44 @@ python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
 python_classes = ["Test*", "*Tests"]
 python_functions = ["test_*"]
 addopts = "--ignore=edtf_django_tests/"
+
+[tool.ruff]
+# Python 3.8
+target-version = "py38"
+
+extend-exclude = [
+    '**/migrations/*',
+]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # pycodestyle warnings
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    ## Flake8 plugins
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C",
+    # flake8-django
+    "DJ",
+    # flake8-bandit
+    "S",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+ignore = [
+    # Ignore Pycodestyle line-length warnings, (mainly long comments).
+    "E501",
+    # Ignore McCabe complexity (for now).
+    "C901",
+]
+

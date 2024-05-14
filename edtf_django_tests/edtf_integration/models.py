@@ -1,4 +1,5 @@
 from django.db import models
+
 from edtf.fields import EDTFField
 
 
@@ -8,7 +9,7 @@ class TestEvent(models.Model):
         blank=True,
         null=True,
         max_length=255,
-        help_text="Enter the date in natural language format (e.g., 'Approximately June 2004')."
+        help_text="Enter the date in natural language format (e.g., 'Approximately June 2004').",
     )
 
     date_edtf_direct = models.CharField(
@@ -16,7 +17,7 @@ class TestEvent(models.Model):
         max_length=255,
         blank=True,
         null=True,
-        help_text="Enter the date in EDTF format (e.g., '2004-06~')."
+        help_text="Enter the date in EDTF format (e.g., '2004-06~').",
     )
 
     # EDTF field that parses the input from either natural language or direct EDTF string
@@ -28,12 +29,12 @@ class TestEvent(models.Model):
     # misparses an EDTF string as a natural language string (e.g. `2020-03-15/2020-04-15` -> `2020-03-15`)
     date_edtf = EDTFField(
         "Date of creation (EDTF)",
-        natural_text_field='date_display',
-        direct_input_field='date_edtf_direct',
-        lower_fuzzy_field='date_earliest',
-        upper_fuzzy_field='date_latest',
-        lower_strict_field='date_sort_ascending',
-        upper_strict_field='date_sort_descending',
+        natural_text_field="date_display",
+        direct_input_field="date_edtf_direct",
+        lower_fuzzy_field="date_earliest",
+        upper_fuzzy_field="date_latest",
+        lower_strict_field="date_sort_ascending",
+        upper_strict_field="date_sort_descending",
         blank=True,
         null=True,
     )
@@ -43,3 +44,14 @@ class TestEvent(models.Model):
     # Computed fields for sorting
     date_sort_ascending = models.FloatField(blank=True, null=True)
     date_sort_descending = models.FloatField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return (
+            f"Test Event: {self.date_display=}, "
+            f"{self.date_edtf_direct=}, "
+            f"{self.date_earliest=}, "
+            f"{self.date_latest=}, "
+            f"{self.date_sort_ascending=}, "
+            f"{self.date_sort_descending=}, "
+            f"{self.date_edtf=}"
+        )

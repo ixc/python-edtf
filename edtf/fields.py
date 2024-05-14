@@ -1,23 +1,21 @@
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import signals
 from django.db.models.query_utils import DeferredAttribute
 
-from edtf import parse_edtf, EDTFObject
+from edtf import EDTFObject, parse_edtf
 from edtf.convert import struct_time_to_date, struct_time_to_jd
 from edtf.natlang import text_to_edtf
 
 DATE_ATTRS = (
-    'lower_strict',
-    'upper_strict',
-    'lower_fuzzy',
-    'upper_fuzzy',
+    "lower_strict",
+    "upper_strict",
+    "lower_fuzzy",
+    "upper_fuzzy",
 )
+
 
 class EDTFFieldDescriptor(DeferredAttribute):
     """
@@ -35,36 +33,48 @@ class EDTFFieldDescriptor(DeferredAttribute):
 
 
 class EDTFField(models.CharField):
-
     def __init__(
         self,
-        verbose_name=None, name=None,
+        verbose_name=None,
+        name=None,
         natural_text_field=None,
         direct_input_field=None,
         lower_strict_field=None,
         upper_strict_field=None,
         lower_fuzzy_field=None,
         upper_fuzzy_field=None,
-        **kwargs
+        **kwargs,
     ):
-        kwargs['max_length'] = 2000
-        self.natural_text_field, self.direct_input_field, \
-        self.lower_strict_field, self.upper_strict_field, \
-        self.lower_fuzzy_field, self.upper_fuzzy_field = \
-        natural_text_field, direct_input_field, lower_strict_field, \
-        upper_strict_field, lower_fuzzy_field, upper_fuzzy_field
-        super(EDTFField, self).__init__(verbose_name, name, **kwargs)
+        kwargs["max_length"] = 2000
+        (
+            self.natural_text_field,
+            self.direct_input_field,
+            self.lower_strict_field,
+            self.upper_strict_field,
+            self.lower_fuzzy_field,
+            self.upper_fuzzy_field,
+        ) = (
+            natural_text_field,
+            direct_input_field,
+            lower_strict_field,
+            upper_strict_field,
+            lower_fuzzy_field,
+            upper_fuzzy_field,
+        )
+        super().__init__(verbose_name, name, **kwargs)
 
-    description = "A field for storing complex/fuzzy date specifications in EDTF format."
+    description = (
+        "A field for storing complex/fuzzy date specifications in EDTF format."
+    )
     descriptor_class = EDTFFieldDescriptor
 
     def deconstruct(self):
-        name, path, args, kwargs = super(EDTFField, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
         if self.natural_text_field:
-            kwargs['natural_text_field'] = self.natural_text_field
+            kwargs["natural_text_field"] = self.natural_text_field
 
         for attr in DATE_ATTRS:
-            field = "%s_field" % attr
+            field = f"{attr}_field"
             f = getattr(self, field, None)
             if f:
                 kwargs[field] = f
@@ -96,11 +106,11 @@ class EDTFField(models.CharField):
     def get_db_prep_save(self, value, connection):
         if value:
             return pickle.dumps(value)
-        return super(EDTFField, self).get_db_prep_save(value, connection)
+        return super().get_db_prep_save(value, connection)
 
     def get_prep_value(self, value):
         # convert python objects to query values
-        value = super(EDTFField, self).get_prep_value(value)
+        value = super().get_prep_value(value)
         if isinstance(value, EDTFObject):
             return pickle.dumps(value)
         return value
@@ -112,15 +122,19 @@ class EDTFField(models.CharField):
         which allows directly providing an EDTF string. If one of these provides a valid EDTF object,
         then set the date values accordingly.
         """
-    
+
         # Get existing value to determine if update is needed
         existing_value = getattr(instance, self.attname, None)
         direct_input = getattr(instance, self.direct_input_field, None)
         natural_text = getattr(instance, self.natural_text_field, None)
 
         # if direct_input is provided and is different from the existing value, update the EDTF field
-        if direct_input and (existing_value is None or str(existing_value) != direct_input):
-            edtf = parse_edtf(direct_input, fail_silently=True) # ParseException if invalid; should this be raised?
+        if direct_input and (
+            existing_value is None or str(existing_value) != direct_input
+        ):
+            edtf = parse_edtf(
+                direct_input, fail_silently=True
+            )  # ParseException if invalid; should this be raised?
             # TODO pyparsing.ParseExceptions are very noisy and dumps the whole grammar (see https://github.com/ixc/python-edtf/issues/46)
 
             # set the natural_text (display) field to the direct_input if it is not provided
@@ -129,8 +143,12 @@ class EDTFField(models.CharField):
 
         elif natural_text:
             edtf_string = text_to_edtf(natural_text)
-            if edtf_string and (existing_value is None or str(existing_value) != edtf_string):
-                edtf = parse_edtf(edtf_string, fail_silently=True) # potetial ParseException if invalid; should this be raised?
+            if edtf_string and (
+                existing_value is None or str(existing_value) != edtf_string
+            ):
+                edtf = parse_edtf(
+                    edtf_string, fail_silently=True
+                )  # potetial ParseException if invalid; should this be raised?
             else:
                 edtf = existing_value
         else:
@@ -157,9 +175,9 @@ class EDTFField(models.CharField):
                         value = struct_time_to_date(value)
                     else:
                         raise NotImplementedError(
-                            u"EDTFField does not support %s as a derived data"
-                            u" field, only FloatField or DateField"
-                            % type(target_field))
+                            f"EDTFField does not support {type(target_field)} as a derived data"
+                            " field, only FloatField or DateField"
+                        )
                     setattr(instance, g, value)
                 else:
                     setattr(instance, g, None)

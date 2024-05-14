@@ -1,26 +1,52 @@
-from pyparsing import Literal as L, ParseException, Optional, Opt, OneOrMore, \
-    ZeroOrMore, oneOf, Regex, Combine, Word, NotAny, nums, FollowedBy
-
-# (* ************************** Level 0 *************************** *)
-from edtf.parser.parser_classes import Date, DateAndTime, Interval, Unspecified, \
-    UncertainOrApproximate, Level1Interval, LongYear, Season, \
-    PartialUncertainOrApproximate, UA, PartialUnspecified, OneOfASet, \
-    Consecutives, EarlierConsecutives, LaterConsecutives, MultipleDates, \
-    MaskedPrecision, Level2Interval, ExponentialYear, UnspecifiedIntervalSection# , Testi
+from pyparsing import (
+    Combine,
+    NotAny,
+    OneOrMore,
+    Optional,
+    ParseException,
+    Regex,
+    Word,
+    ZeroOrMore,
+    nums,
+    oneOf,
+)
+from pyparsing import Literal as L
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 
-oneThru12 = oneOf(['%.2d' % i for i in range(1, 13)])
-oneThru13 = oneOf(['%.2d' % i for i in range(1, 14)])
-oneThru23 = oneOf(['%.2d' % i for i in range(1, 24)])
-zeroThru23 = oneOf(['%.2d' % i for i in range(0, 24)])
-oneThru29 = oneOf(['%.2d' % i for i in range(1, 30)])
-oneThru30 = oneOf(['%.2d' % i for i in range(1, 31)])
-oneThru31 = oneOf(['%.2d' % i for i in range(1, 32)])
-oneThru59 = oneOf(['%.2d' % i for i in range(1, 60)])
-zeroThru59 = oneOf(['%.2d' % i for i in range(0, 60)])
+# (* ************************** Level 0 *************************** *)
+from edtf.parser.parser_classes import (
+    UA,
+    Consecutives,
+    Date,
+    DateAndTime,
+    EarlierConsecutives,
+    ExponentialYear,
+    Interval,
+    LaterConsecutives,
+    Level1Interval,
+    Level2Interval,  # , Testi
+    LongYear,
+    MultipleDates,
+    OneOfASet,
+    PartialUncertainOrApproximate,
+    PartialUnspecified,
+    Season,
+    UncertainOrApproximate,
+    Unspecified,
+)
 
-positiveDigit = Word(nums, exact=1, excludeChars='0')
+oneThru12 = oneOf(["%.2d" % i for i in range(1, 13)])
+oneThru13 = oneOf(["%.2d" % i for i in range(1, 14)])
+oneThru23 = oneOf(["%.2d" % i for i in range(1, 24)])
+zeroThru23 = oneOf(["%.2d" % i for i in range(0, 24)])
+oneThru29 = oneOf(["%.2d" % i for i in range(1, 30)])
+oneThru30 = oneOf(["%.2d" % i for i in range(1, 31)])
+oneThru31 = oneOf(["%.2d" % i for i in range(1, 32)])
+oneThru59 = oneOf(["%.2d" % i for i in range(1, 60)])
+zeroThru59 = oneOf(["%.2d" % i for i in range(0, 60)])
+
+positiveDigit = Word(nums, exact=1, excludeChars="0")
 digit = Word(nums, exact=1)
 
 second = zeroThru59
@@ -50,13 +76,10 @@ date = Combine(year ^ yearMonth ^ yearMonthDay)("date")
 Date.set_parser(date)
 
 zoneOffsetHour = oneThru13
-zoneOffset = L("Z") \
-    ^ (Regex("[+-]")
-        + (zoneOffsetHour + Optional(":" + minute)
-            ^ L("14:00")
-            ^ ("00:" + oneThru59)
-           )
-       )
+zoneOffset = L("Z") ^ (
+    Regex("[+-]")
+    + (zoneOffsetHour + Optional(":" + minute) ^ L("14:00") ^ ("00:" + oneThru59))
+)
 
 baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
@@ -96,92 +119,90 @@ LongYear.set_parser(longYearSimple)
 uaDateOrSeason = dateOrSeason + Optional(UASymbol)
 
 
-#unspecifiedIntervalSec = L('..')('unknownOrOpen') + FollowedBy(L("/") + uaDateOrSeason)('other_section_element')
-#Testi.set_parser(unspecifiedIntervalSec)
+# unspecifiedIntervalSec = L('..')('unknownOrOpen') + FollowedBy(L("/") + uaDateOrSeason)('other_section_element')
+# Testi.set_parser(unspecifiedIntervalSec)
+
 
 # bit of a kludge here to get the all the relevant tokens into the parse action
 # cleanly otherwise the parameter names are overlapped.
 def f(toks):
     try:
-        return {'date': toks[0], 'ua': toks[1]}
+        return {"date": toks[0], "ua": toks[1]}
     except IndexError:
-        return {'date': toks[0], 'ua': None}
+        return {"date": toks[0], "ua": None}
 
 
-l1Start = '..' ^ uaDateOrSeason
-#l1Start = unspecifiedIntervalSec ^ uaDateOrSeason
+l1Start = ".." ^ uaDateOrSeason
+# l1Start = unspecifiedIntervalSec ^ uaDateOrSeason
 l1Start.addParseAction(f)
-l1End = uaDateOrSeason ^ '..'
+l1End = uaDateOrSeason ^ ".."
 l1End.addParseAction(f)
 
-#level1Interval = l1Start("lower") + "/" + l1End("upper")
-level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") \
-    ^ l1Start("lower") + "/" + Optional(l1End("upper"))
+# level1Interval = l1Start("lower") + "/" + l1End("upper")
+level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") ^ l1Start(
+    "lower"
+) + "/" + Optional(l1End("upper"))
 Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
-yearWithOneOrTwoUnspecifedDigits = Combine(
-    digit + digit + (digit ^ 'X') + 'X'
-)("year")
+yearWithOneOrTwoUnspecifedDigits = Combine(digit + digit + (digit ^ "X") + "X")("year")
 monthUnspecified = year + "-" + L("XX")("month")
 dayUnspecified = yearMonth + "-" + L("XX")("day")
 dayAndMonthUnspecified = year + "-" + L("XX")("month") + "-" + L("XX")("day")
 
-unspecified = yearWithOneOrTwoUnspecifedDigits \
-    ^ monthUnspecified \
-    ^ dayUnspecified \
+unspecified = (
+    yearWithOneOrTwoUnspecifedDigits
+    ^ monthUnspecified
+    ^ dayUnspecified
     ^ dayAndMonthUnspecified
+)
 Unspecified.set_parser(unspecified)
 
 # (* *** uncertainOrApproxDate *** *)
 
-uncertainOrApproxDate = date('date') + UASymbol("ua")
+uncertainOrApproxDate = date("date") + UASymbol("ua")
 UncertainOrApproximate.set_parser(uncertainOrApproxDate)
 
-level1Expression = uncertainOrApproxDate \
-    ^ unspecified \
-    ^ level1Interval \
-    ^ longYearSimple \
-    ^ season
+level1Expression = (
+    uncertainOrApproxDate ^ unspecified ^ level1Interval ^ longYearSimple ^ season
+)
 
 # (* ************************** Level 2 *************************** *)
 
 # (* ** Internal Unspecified** *)
 
-digitOrU = Word(nums + 'X', exact=1)
+digitOrU = Word(nums + "X", exact=1)
 
 # 2-digit day with at least one 'X' present
-dayWithU = Combine(
-    ("X" + digitOrU)
-    ^ (digitOrU + 'X')
-)("day")
+dayWithU = Combine(("X" + digitOrU) ^ (digitOrU + "X"))("day")
 
 # 2-digit month with at least one 'X' present
-monthWithU = Combine(
-    oneOf("0X 1X")
-    ^ ("X" + digitOrU)
-)("month")
+monthWithU = Combine(oneOf("0X 1X") ^ ("X" + digitOrU))("month")
 
 # 4-digit year with at least one 'X' present
 yearWithU = Combine(
-    ('X' + digitOrU + digitOrU + digitOrU)
-    ^ (digitOrU + 'X' + digitOrU + digitOrU)
-    ^ (digitOrU + digitOrU + 'X' + digitOrU)
-    ^ (digitOrU + digitOrU + digitOrU + 'X')
+    ("X" + digitOrU + digitOrU + digitOrU)
+    ^ (digitOrU + "X" + digitOrU + digitOrU)
+    ^ (digitOrU + digitOrU + "X" + digitOrU)
+    ^ (digitOrU + digitOrU + digitOrU + "X")
 )("year")
 
-yearMonthWithU = (
-    (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU)
-    ^ (yearWithU + "-" + month)
+yearMonthWithU = (Combine(year("") ^ yearWithU(""))("year") + "-" + monthWithU) ^ (
+    yearWithU + "-" + month
 )
 
-monthDayWithU = (
-    (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU)
-    ^ (monthWithU + "-" + day)
+monthDayWithU = (Combine(month("") ^ monthWithU(""))("month") + "-" + dayWithU) ^ (
+    monthWithU + "-" + day
 )
 
 yearMonthDayWithU = (
-    (yearWithU + "-" + Combine(month("") ^ monthWithU(""))("month") + "-" + Combine(day("") ^ dayWithU(""))("day"))
+    (
+        yearWithU
+        + "-"
+        + Combine(month("") ^ monthWithU(""))("month")
+        + "-"
+        + Combine(day("") ^ dayWithU(""))("day")
+    )
     ^ (year + "-" + monthWithU + "-" + Combine(day("") ^ dayWithU(""))("day"))
     ^ (year + "-" + month + "-" + dayWithU)
 )
@@ -198,30 +219,52 @@ year_with_brackets = year ^ ("(" + year + ")")
 # second clause below needed Optional() around the "year_ua" UASymbol, for dates
 # like '(2011)-06-04~' to work.
 
-IUABase = \
-    (year_with_brackets + UASymbol("year_ua") + "-" + month + Optional("-(" + day + ")" + UASymbol("day_ua"))) \
-    ^ (year_with_brackets + Optional(UASymbol)("year_ua") + "-" + monthDay + Optional(UASymbol)("month_day_ua")) \
-    ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
+IUABase = (
+    (
+        year_with_brackets
+        + UASymbol("year_ua")
+        + "-"
+        + month
         + Optional("-(" + day + ")" + UASymbol("day_ua"))
-    ) \
+    )
     ^ (
-        year_with_brackets + Optional(UASymbol)("year_ua") + "-(" + month + ")" + UASymbol("month_ua")
+        year_with_brackets
+        + Optional(UASymbol)("year_ua")
+        + "-"
+        + monthDay
+        + Optional(UASymbol)("month_day_ua")
+    )
+    ^ (
+        year_with_brackets
+        + Optional(UASymbol)("year_ua")
+        + "-("
+        + month
+        + ")"
+        + UASymbol("month_ua")
+        + Optional("-(" + day + ")" + UASymbol("day_ua"))
+    )
+    ^ (
+        year_with_brackets
+        + Optional(UASymbol)("year_ua")
+        + "-("
+        + month
+        + ")"
+        + UASymbol("month_ua")
         + Optional("-" + day)
-    ) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (yearMonth + UASymbol("year_month_ua") + "-" + day) \
-    ^ (yearMonth + "-(" + day + ")" + UASymbol("day_ua")) \
-    ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua")) \
+    )
+    ^ (yearMonth + UASymbol("year_month_ua") + "-(" + day + ")" + UASymbol("day_ua"))
+    ^ (yearMonth + UASymbol("year_month_ua") + "-" + day)
+    ^ (yearMonth + "-(" + day + ")" + UASymbol("day_ua"))
+    ^ (year + "-(" + monthDay + ")" + UASymbol("month_day_ua"))
     ^ (season("ssn") + UASymbol("season_ua"))
+)
 
 partialUncertainOrApproximate = IUABase ^ ("(" + IUABase + ")" + UASymbol("all_ua"))
 PartialUncertainOrApproximate.set_parser(partialUncertainOrApproximate)
 
-dateWithInternalUncertainty = partialUncertainOrApproximate \
-    ^ partialUnspecified
+dateWithInternalUncertainty = partialUncertainOrApproximate ^ partialUnspecified
 
-qualifyingString = Regex(r'\S')  # any nonwhitespace char
+qualifyingString = Regex(r"\S")  # any nonwhitespace char
 
 # (* ** SeasonQualified ** *)
 seasonQualifier = qualifyingString
@@ -229,14 +272,25 @@ seasonQualified = season + "^" + seasonQualifier
 
 # (* ** Long Year - Scientific Form ** *)
 positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
-longYearScientific = "Y" + Combine(Optional("-") + positiveInteger)("base") + "E" + \
-    positiveInteger("exponent") + Optional("S" + positiveInteger("precision"))
+longYearScientific = (
+    "Y"
+    + Combine(Optional("-") + positiveInteger)("base")
+    + "E"
+    + positiveInteger("exponent")
+    + Optional("S" + positiveInteger("precision"))
+)
 ExponentialYear.set_parser(longYearScientific)
 
 # (* ** level2Interval ** *)
-level2Interval = (dateOrSeason("lower") + "/" + dateWithInternalUncertainty("upper")) \
-    ^ (dateWithInternalUncertainty("lower") + "/" + dateOrSeason("upper")) \
-    ^ (dateWithInternalUncertainty("lower") + "/" + dateWithInternalUncertainty("upper"))
+level2Interval = (
+    (dateOrSeason("lower") + "/" + dateWithInternalUncertainty("upper"))
+    ^ (dateWithInternalUncertainty("lower") + "/" + dateOrSeason("upper"))
+    ^ (
+        dateWithInternalUncertainty("lower")
+        + "/"
+        + dateWithInternalUncertainty("upper")
+    )
+)
 Level2Interval.set_parser(level2Interval)
 
 # (* ** Masked precision ** *) eliminated in latest specs
@@ -244,26 +298,32 @@ Level2Interval.set_parser(level2Interval)
 # MaskedPrecision.set_parser(maskedPrecision)
 
 # (* ** Inclusive list and choice list** *)
-consecutives = (yearMonthDay("lower") + ".." + yearMonthDay("upper")) \
-    ^ (yearMonth("lower") + ".." + yearMonth("upper")) \
+consecutives = (
+    (yearMonthDay("lower") + ".." + yearMonthDay("upper"))
+    ^ (yearMonth("lower") + ".." + yearMonth("upper"))
     ^ (year("lower") + ".." + year("upper"))
+)
 Consecutives.set_parser(consecutives)
 
-listElement = date \
-    ^ dateWithInternalUncertainty \
-    ^ uncertainOrApproxDate \
-    ^ unspecified \
+listElement = (
+    date
+    ^ dateWithInternalUncertainty
+    ^ uncertainOrApproxDate
+    ^ unspecified
     ^ consecutives
+)
 
 earlier = ".." + date("upper")
 EarlierConsecutives.set_parser(earlier)
 later = date("lower") + ".."
 LaterConsecutives.set_parser(later)
 
-listContent = (earlier + ZeroOrMore("," + listElement)) \
-    ^ (Optional(earlier + ",") + ZeroOrMore(listElement + ",") + later) \
-    ^ (listElement + OneOrMore("," + listElement)) \
+listContent = (
+    (earlier + ZeroOrMore("," + listElement))
+    ^ (Optional(earlier + ",") + ZeroOrMore(listElement + ",") + later)
+    ^ (listElement + OneOrMore("," + listElement))
     ^ consecutives
+)
 
 choiceList = "[" + listContent + "]"
 OneOfASet.set_parser(choiceList)
@@ -271,16 +331,20 @@ OneOfASet.set_parser(choiceList)
 inclusiveList = "{" + listContent + "}"
 MultipleDates.set_parser(inclusiveList)
 
-level2Expression = partialUncertainOrApproximate \
-    ^ partialUnspecified \
-    ^ choiceList \
-    ^ inclusiveList \
-    ^ level2Interval \
-    ^ longYearScientific \
+level2Expression = (
+    partialUncertainOrApproximate
+    ^ partialUnspecified
+    ^ choiceList
+    ^ inclusiveList
+    ^ level2Interval
+    ^ longYearScientific
     ^ seasonQualified
+)
 
 # putting it all together
-edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
+edtfParser = (
+    level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
+)
 
 
 def parse_edtf(str, parseAll=True, fail_silently=False):
@@ -290,7 +354,7 @@ def parse_edtf(str, parseAll=True, fail_silently=False):
         p = edtfParser.parseString(str.strip(), parseAll)
         if p:
             return p[0]
-    except ParseException as e:
+    except ParseException as err:
         if fail_silently:
             return None
-        raise EDTFParseException(e)
+        raise EDTFParseException(err) from err
