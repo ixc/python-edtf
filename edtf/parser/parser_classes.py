@@ -785,7 +785,7 @@ class MultipleDates(EDTFObject):
         self.objects = args
 
     def __str__(self):
-        return "{%s}" % (", ".join([str(o) for o in self.objects]))
+        return "{{{}}}".format(", ".join([str(o) for o in self.objects]))
 
     def _strict_date(self, lean):
         if lean == LATEST:
