@@ -375,3 +375,20 @@ Example usage:
 
 
 Since the `EDTFField` and the `_earliest` and `_latest` field values are set automatically, you may want to make them readonly, or not visible in your model admin.
+
+## To develop
+### Setup
+- Clone the repository: `git clone https://github.com/ixc/python-edtf.git`
+- Set up a virtual environment: `python3 -m venv venv`
+- Install the dependencies: `pip install -r dev-requirements.txt`
+- Install precommit hooks: `pre-commit install`
+
+### Running tests
+- From `python-edtf`, run the unit tests: `pytest`
+- From `python-edtf/edtf_django_tests`, run the integration tests: `python manage.py test edtf_integration`
+
+### Linting and formatting
+- Check linting: `ruff check --output-format=github --config pyproject.toml`
+- Check formatting: `ruff format --check --config pyproject.toml`
+- Fix formatting: `ruff format --config pyproject.toml`
+- Linting and formatting checks and attempted fixes are also run as precommit hooks if you installed them.

@@ -1,0 +1,5 @@
+-r requirements.txt  # Include all main requirements
+django>=4.2,<5.0
+pytest
+ruff
+pre-commit

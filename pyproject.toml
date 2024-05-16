@@ -38,7 +38,8 @@ classifiers = [
 test = [
     "django>=4.2,<5.0",
     "pytest",
-    "ruff"
+    "ruff",
+    "pre-commit",
 ]
 
 [project.urls]
@@ -117,4 +118,3 @@ ignore = [
     # Ignore McCabe complexity (for now).
     "C901",
 ]
-
