@@ -89,7 +89,7 @@ class EDTFField(models.CharField):
 
         try:
             # Try to unpickle if the value was pickled
-            return pickle.loads(value)
+            return pickle.loads(value)  # noqa S301
         except (pickle.PickleError, TypeError):
             # If it fails because it's not pickled data, try parsing as EDTF
             return parse_edtf(value, fail_silently=True)

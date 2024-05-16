@@ -1,8 +1,7 @@
 from django.test import TestCase
 
-from edtf.convert import struct_time_to_jd
-from edtf.parser import EDTFObject
-from edtf.parser.grammar import parse_edtf as parse
+from edtf import EDTFObject, struct_time_to_jd
+from edtf import parse_edtf as parse
 
 from .models import TestEvent
 
