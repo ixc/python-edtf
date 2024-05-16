@@ -124,8 +124,8 @@ Test coverage includes every example given in the spec table of features.
 
 * Years exceeding four digits:
 
-        >>> parse_edtf('y-12000') # 12000 years BCE
-        LongYear: 'y-12000'
+        >>> parse_edtf('Y-12000') # 12000 years BCE
+        LongYear: 'Y-12000'
 
 * Season:
 
@@ -167,8 +167,8 @@ Test coverage includes every example given in the spec table of features.
 
 * Year requiring more than 4 digits - exponential form:
 
-        >>> parse_edtf('y-17e7')
-        ExponentialYear: 'y-17e7'
+        >>> parse_edtf('Y-17e7')
+        ExponentialYear: 'Y-17e7'
 
 ### Natural language representation
 
