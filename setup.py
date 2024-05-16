@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import setuptools
-import sys
 
 def readme():
     with open('README.md') as f:

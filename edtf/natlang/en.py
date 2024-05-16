@@ -89,6 +89,7 @@ def text_to_edtf(text):
 
     is_before = re.findall(r'\bbefore\b', t)
     is_before = is_before or re.findall(r'\bearlier\b', t)
+    is_before = is_before or re.findall(r'\baprés\b', t)
 
     is_after = re.findall(r'\bafter\b', t)
     is_after = is_after or re.findall(r'\bsince\b', t)
@@ -133,7 +134,7 @@ def text_to_edtf_date(text):
     is_approximate = is_approximate or re.findall(r'\bcirca\b', t)
     # the word 'approx'/'around'/'about' anywhere
     is_approximate = is_approximate or \
-                     re.findall(r'\b(approx|around|about)', t)
+                     re.findall(r'\b(approx|approximately|around|about)', t)
     # a ~ before a year-ish number
     is_approximate = is_approximate or re.findall(r'\b~\d{4}', t)
     # a ~ at the beginning
