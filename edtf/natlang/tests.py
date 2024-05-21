@@ -1,8 +1,10 @@
+# ruff: noqa: S101 # Asserts are ok in tests
+
 import pytest
+
 from edtf.natlang.en import text_to_edtf
 
 # TODO update the tests and code to test and output the new spec
-
 # where examples are tuples, the second item is the normalised output
 @pytest.mark.parametrize("input_text,expected_output", [
     # Ignoring 'late' for simplicity in these examples
@@ -184,4 +186,3 @@ def test_natlang(input_text, expected_output):
     """
     result = text_to_edtf(input_text)
     assert result == expected_output, f"Failed for input: {input_text} - expected {expected_output}, got {result}"
-
