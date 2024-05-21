@@ -61,8 +61,11 @@ EXAMPLES = (
     # Uncertain/Approximate
     # uncertain: possibly the year 1984, but not definitely
     ("1984?", ("1984-01-01", "1984-12-31", "1983-01-01", "1985-12-31")),
-    ("2004-06-11?", ("2004-06-11", "2004-06-11", "2004-06-10", "2004-06-12")),
-    ("2004-06?", ("2004-06-01", "2004-06-30", "2004-05-01", "2004-07-30")),
+    (
+        "2004-06-11?",
+        ("2004-06-11", "2003-05-10", "2005-07-12"),
+    ),  # everything is fuzzy by 100% for "qualification of a date (complete)" (L1)
+    ("2004-06?", ("2004-06-01", "2004-06-30", "2003-05-01", "2005-07-30")),
     # "approximately" the year 1984
     ("1984~", ("1984-01-01", "1984-12-31", "1983-01-01", "1985-12-31")),
     # the year is approximately 1984 and even that is uncertain
@@ -84,6 +87,7 @@ EXAMPLES = (
     ("0000~", ("0000-01-01", "0000-12-31", "-0001-01-01", "0001-12-31")),
     # L1 Extended Interval
     # beginning unknown, end 2006
+    # for intervals with an unknown beginning or end, the unknown bound is calculated with the constant DELTA_IF_UNKNOWN (10 years)
     ("/2006", ("1996-12-31", "2006-12-31")),
     # beginning June 1, 2004, end unknown
     ("2004-06-01/", ("2004-06-01", "2014-06-01")),
@@ -94,16 +98,16 @@ EXAMPLES = (
     # interval beginning approximately 1984 and ending June 2004
     ("1984~/2004-06", ("1984-01-01", "2004-06-30", "1983-01-01", "2004-06-30")),
     # interval beginning 1984 and ending approximately June 2004
-    ("1984/2004-06~", ("1984-01-01", "2004-06-30", "1984-01-01", "2004-07-30")),
+    ("1984/2004-06~", ("1984-01-01", "2004-06-30", "1984-01-01", "2005-07-30")),
     ("1984?/2004%", ("1984-01-01", "2004-12-31", "1983-01-01", "2006-12-31")),
     ("1984~/2004~", ("1984-01-01", "2004-12-31", "1983-01-01", "2005-12-31")),
     # interval whose beginning is uncertain but thought to be 1984, and whose end is uncertain and approximate but thought to be 2004
-    ("1984-06?/2004-08?", ("1984-06-01", "2004-08-31", "1984-05-01", "2004-09-30")),
+    ("1984-06?/2004-08?", ("1984-06-01", "2004-08-31", "1983-05-01", "2005-09-30")),
     (
         "1984-06-02?/2004-08-08~",
-        ("1984-06-02", "2004-08-08", "1984-06-01", "2004-08-09"),
+        ("1984-06-02", "2004-08-08", "1983-05-01", "2005-09-09"),
     ),
-    ("1984-06-02?/", ("1984-06-02", "1994-06-02", "1984-06-01", "1994-06-02")),
+    ("1984-06-02?/", ("1984-06-02", "1994-06-02", "1983-05-01", "1994-06-02")),
     # Year exceeding 4 digits
     ("Y170000002", ("170000002-01-01", "170000002-12-31")),
     ("Y-170000002", ("-170000002-01-01", "-170000002-12-31")),
@@ -117,7 +121,11 @@ EXAMPLES = (
     # Group qualification: a qualification character to the immediate right of a component applies
     # to that component as well as to all components to the left.
     # year, month, and day are uncertain and approximate
-    ("2004-06-11%", ("2004-06-11", "2004-06-09", "2004-06-13")),
+    # this example appears under "group qualification" but actually parses as L1 UncertainOrApproximate
+    (
+        "2004-06-11%",
+        ("2004-06-11", "2002-04-09", "2006-08-13"),
+    ),  # all parts to the left are fuzzy by 200%
     # uncertain year; month, day known
     ("2004?-06-11", ("2004-06-11", "2003-06-11", "2005-06-11")),
     # year and month are approximate; day known
