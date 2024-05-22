@@ -4,6 +4,11 @@ on:
     workflow_dispatch:
     pull_request:
 
+permissions:
+  contents: write
+  pull-requests: write
+
+
 jobs:
     python-unit:
         runs-on: ubuntu-latest
