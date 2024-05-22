@@ -1,6 +1,9 @@
 edtf
 =====
 
+<!-- Pytest Coverage Comment:Begin -->
+<!-- Pytest Coverage Comment:End -->
+
 An implementation of EDTF format in Python, together with utility functions for parsing natural language date texts, and converting EDTF dates to related Python `date` or `struct_time` objects.
 
 See http://www.loc.gov/standards/datetime/ for the current draft specification.
@@ -376,6 +379,7 @@ Since the `EDTFField` and the `_earliest` and `_latest` field values are set aut
 ### Running tests
 - From `python-edtf`, run the unit tests: `pytest`
 - From `python-edtf/edtf_django_tests`, run the integration tests: `python manage.py test edtf_integration`
+- To run CI locally, use `act`, e.g. `act pull_request` or `act --pull=false --container-architecture linux/amd64`. Some steps may require a Github PAT: `act pull_request --container-architecture linux/amd64 --pull=false -s GITHUB_TOKEN=<your PAT>`
 
 ### Linting and formatting
 - Check linting: `ruff check --output-format=github --config pyproject.toml`

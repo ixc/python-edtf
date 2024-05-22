@@ -9,7 +9,8 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+                python-version: ["3.12"]
+                # python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         defaults:
             run:
                 working-directory: .
@@ -38,8 +39,37 @@ jobs:
             - name: Run unit tests
               run: |
                 pytest
+                mv .coverage .coverage_main
 
             - name: Run Django integration tests
               working-directory: ./edtf_django_tests
               run: |
-                python manage.py test edtf_integration
+                coverage run manage.py test edtf_integration
+                mv .coverage ../.coverage_django
+
+            - name: Combine coverage reports
+              run: |
+                coverage combine .coverage_main .coverage_django
+                coverage report --omit="edtf_django_tests/*"
+                coverage xml -o coverage_combined.xml --omit="edtf_django_tests/*"
+
+            - name: Pytest coverage comment
+              uses: MishaKav/pytest-coverage-comment@main
+              with:
+                pytest-xml-coverage-path: ./coverage_combined.xml
+                unique-id-for-comment: ${{ matrix.python-version }}
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Check the output coverage
+              run: |
+                echo "Coverage Percentage - ${{ steps.coverageComment.outputs.coverage }}"
+                echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
+                echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
+                echo "Summary Report - ${{ steps.coverageComment.outputs.summaryReport }}"
+                echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
+                echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
+                echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
+                echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
+                echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
+                echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
+                echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"

@@ -40,6 +40,8 @@ test = [
     "pytest",
     "ruff",
     "pre-commit",
+    "coverage",
+    "pytest-cov"
 ]
 
 [project.urls]
@@ -77,7 +79,25 @@ legacy_tox_ini = """
 python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
 python_classes = ["Test*", "*Tests"]
 python_functions = ["test_*"]
-addopts = "--ignore=edtf_django_tests/"
+addopts = "--ignore=edtf_django_tests/ --cov=edtf --cov-report=xml"
+plugins = ["pytest_cov"]
+
+[tool.coverage.run]
+# we run the edtf_integration tests but only care about them testing fields.py in the main package
+omit = [
+    "edtf_django_tests/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Don't complain about missing debug-only code:
+    "if __name__ == .__main__.:",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise NotImplemented",
+    "raise NotImplemented"
+]
 
 [tool.ruff]
 # Python 3.8

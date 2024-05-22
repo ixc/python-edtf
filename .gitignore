@@ -42,6 +42,9 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage_combined.xml
+.coverage_main
+.coverage_django
 *,cover
 
 # Translations
