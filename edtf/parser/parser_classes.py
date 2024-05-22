@@ -442,15 +442,27 @@ class UncertainOrApproximate(EDTFObject):
 
     def _get_fuzzy_padding(self, lean):
         if not self.ua:
-            return relativedelta(0)
+            return relativedelta()
         multiplier = self.ua._get_multiplier()
+        padding = relativedelta()
 
-        if self.date.precision == PRECISION_DAY:
-            return multiplier * appsettings.PADDING_DAY_PRECISION
-        elif self.date.precision == PRECISION_MONTH:
-            return multiplier * appsettings.PADDING_MONTH_PRECISION
-        elif self.date.precision == PRECISION_YEAR:
-            return multiplier * appsettings.PADDING_YEAR_PRECISION
+        # Check the presence of uncertainty on each component
+        # self.precision not helpful here:
+        # L1 qualified EDTF dates apply qualification across all parts of the date
+        if self.date.year:
+            padding += relativedelta(
+                years=int(multiplier * appsettings.PADDING_YEAR_PRECISION.years)
+            )
+        if self.date.month:
+            padding += relativedelta(
+                months=int(multiplier * appsettings.PADDING_MONTH_PRECISION.months)
+            )
+        if self.date.day:
+            padding += relativedelta(
+                days=int(multiplier * appsettings.PADDING_DAY_PRECISION.days)
+            )
+
+        return padding
 
 
 class UnspecifiedIntervalSection(EDTFObject):

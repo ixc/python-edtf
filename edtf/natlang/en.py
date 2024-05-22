@@ -14,8 +14,8 @@ from edtf import appsettings
 DEFAULT_DATE_1 = datetime(1234, 1, 1, 0, 0)
 DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
-SHORT_YEAR_RE = r"(-?)([\du])([\dxu])([\dxu])([\dxu])"
-LONG_YEAR_RE = r"y(-?)([1-9]\d\d\d\d+)"
+SHORT_YEAR_RE = r"(-?)([\dX])([\dX])([\dX])([\dX])"
+LONG_YEAR_RE = r"Y(-?)([1-9]\d\d\d\d+)"
 CENTURY_RE = r"(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?"
 CE_RE = r"(\d{1,4}) (ad|ce|bc|bce)"
 
@@ -31,7 +31,7 @@ def text_to_edtf(text):
     Generate EDTF string equivalent of a given natural language date string.
     """
     if not text:
-        return
+        return None
 
     t = text.lower()
 
@@ -101,10 +101,9 @@ def text_to_edtf(text):
     is_after = is_after or re.findall(r"\blater\b", t)
 
     if is_before:
-        result = f"unknown/{result}"
+        result = f"/{result}"  # unknown is replaced with null for intervals
     elif is_after:
-        result = f"{result}/unknown"
-
+        result = f"{result}/"  # unknown is replaced with null for intervals
     return result
 
 
@@ -155,7 +154,7 @@ def text_to_edtf_date(text):
     # detect CE/BCE year form
     is_ce = re.findall(CE_RE, t)
     if is_century:
-        result = "%02dxx" % (int(is_century[0][0]) - 1,)
+        result = "%02dXX" % (int(is_century[0][0]) - 1,)
         is_approximate = is_approximate or re.findall(r"\b(ca?\.?) ?" + CENTURY_RE, t)
         is_uncertain = is_uncertain or re.findall(CENTURY_RE + r"\?", t)
 
@@ -222,25 +221,25 @@ def text_to_edtf_date(text):
             # approximate/uncertain markers to decide whether we treat it as
             # a century or a decade.
             if i == 2 and could_be_century and not (is_approximate or is_uncertain):
-                result += "x"
+                result += "X"
             elif i == 3 and is_decade > 0:
                 if mentions_year:
-                    result += "u"  # year precision
+                    result += "X"  # previously year precision - now just X
                 else:
-                    result += "x"  # decade precision
+                    result += "X"  # previously decade precision - now just X
             elif date1[i] == date2[i]:
                 # since both attempts at parsing produced the same result
                 # it must be parsed value, not a default
                 result += date1[i]
             else:
                 # different values were produced, meaning that it's likely
-                # a default. Use 'unspecified'
-                result += "u"
+                # a default. Use 'X'
+                result += "X"
 
         # strip off unknown chars from end of string - except the first 4
 
         for i in reversed(xrange(len(result))):
-            if result[i] not in ("u", "x", "-"):
+            if result[i] not in ("X", "-"):
                 smallest_length = 4
 
                 if mentions_month:
@@ -264,14 +263,16 @@ def text_to_edtf_date(text):
 
             # end dateutil post-parsing
 
-    if is_uncertain:
-        result += "?"
-
-    if is_approximate:
-        result += "~"
+    if is_uncertain and is_approximate:
+        result += "%"
+    else:
+        if is_uncertain:
+            result += "?"
+        if is_approximate:
+            result += "~"
 
     # weed out bad parses
-    if result.startswith("uu-uu"):
+    if result.startswith("XX-XX"):
         return None
 
     return result

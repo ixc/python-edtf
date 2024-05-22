@@ -61,8 +61,11 @@ EXAMPLES = (
     # Uncertain/Approximate
     # uncertain: possibly the year 1984, but not definitely
     ("1984?", ("1984-01-01", "1984-12-31", "1983-01-01", "1985-12-31")),
-    ("2004-06-11?", ("2004-06-11", "2004-06-11", "2004-06-10", "2004-06-12")),
-    ("2004-06?", ("2004-06-01", "2004-06-30", "2004-05-01", "2004-07-30")),
+    (
+        "2004-06-11?",
+        ("2004-06-11", "2003-05-10", "2005-07-12"),
+    ),  # everything is fuzzy by 100% for "qualification of a date (complete)" (L1)
+    ("2004-06?", ("2004-06-01", "2004-06-30", "2003-05-01", "2005-07-30")),
     # "approximately" the year 1984
     ("1984~", ("1984-01-01", "1984-12-31", "1983-01-01", "1985-12-31")),
     # the year is approximately 1984 and even that is uncertain
@@ -84,6 +87,7 @@ EXAMPLES = (
     ("0000~", ("0000-01-01", "0000-12-31", "-0001-01-01", "0001-12-31")),
     # L1 Extended Interval
     # beginning unknown, end 2006
+    # for intervals with an unknown beginning or end, the unknown bound is calculated with the constant DELTA_IF_UNKNOWN (10 years)
     ("/2006", ("1996-12-31", "2006-12-31")),
     # beginning June 1, 2004, end unknown
     ("2004-06-01/", ("2004-06-01", "2014-06-01")),
@@ -94,16 +98,16 @@ EXAMPLES = (
     # interval beginning approximately 1984 and ending June 2004
     ("1984~/2004-06", ("1984-01-01", "2004-06-30", "1983-01-01", "2004-06-30")),
     # interval beginning 1984 and ending approximately June 2004
-    ("1984/2004-06~", ("1984-01-01", "2004-06-30", "1984-01-01", "2004-07-30")),
+    ("1984/2004-06~", ("1984-01-01", "2004-06-30", "1984-01-01", "2005-07-30")),
     ("1984?/2004%", ("1984-01-01", "2004-12-31", "1983-01-01", "2006-12-31")),
     ("1984~/2004~", ("1984-01-01", "2004-12-31", "1983-01-01", "2005-12-31")),
     # interval whose beginning is uncertain but thought to be 1984, and whose end is uncertain and approximate but thought to be 2004
-    ("1984-06?/2004-08?", ("1984-06-01", "2004-08-31", "1984-05-01", "2004-09-30")),
+    ("1984-06?/2004-08?", ("1984-06-01", "2004-08-31", "1983-05-01", "2005-09-30")),
     (
         "1984-06-02?/2004-08-08~",
-        ("1984-06-02", "2004-08-08", "1984-06-01", "2004-08-09"),
+        ("1984-06-02", "2004-08-08", "1983-05-01", "2005-09-09"),
     ),
-    ("1984-06-02?/", ("1984-06-02", "1994-06-02", "1984-06-01", "1994-06-02")),
+    ("1984-06-02?/", ("1984-06-02", "1994-06-02", "1983-05-01", "1994-06-02")),
     # Year exceeding 4 digits
     ("Y170000002", ("170000002-01-01", "170000002-12-31")),
     ("Y-170000002", ("-170000002-01-01", "-170000002-12-31")),
@@ -113,28 +117,36 @@ EXAMPLES = (
     ("2000-23", ("2000-09-01", "2000-11-30")),
     ("2010-24", ("2010-12-01", "2010-12-31")),
     # ******************************* LEVEL 2 *********************************
-    # Partial Uncertain/Approximate
+    # Qualification
+    # Group qualification: a qualification character to the immediate right of a component applies
+    # to that component as well as to all components to the left.
+    # year, month, and day are uncertain and approximate
+    # this example appears under "group qualification" but actually parses as L1 UncertainOrApproximate
+    (
+        "2004-06-11%",
+        ("2004-06-11", "2002-04-09", "2006-08-13"),
+    ),  # all parts to the left are fuzzy by 200%
     # uncertain year; month, day known
     ("2004?-06-11", ("2004-06-11", "2003-06-11", "2005-06-11")),
     # year and month are approximate; day known
     ("2004-06~-11", ("2004-06-11", "2003-05-11", "2005-07-11")),
-    # uncertain month, year and day known
-    ("2004-?06-11", ("2004-06-11", "2004-05-11", "2004-07-11")),
+    # Qualification of individual component: a qualification character to the immediate left
+    # of the component applies to that component only
     # day is approximate; year, month known
     ("2004-06-~11", ("2004-06-11", "2004-06-10", "2004-06-12")),
-    # Year known, month within year is approximate and uncertain - NEW SPEC
+    # Year known, month within year is approximate and uncertain
     ("2004-%06", ("2004-06-01", "2004-06-30", "2004-04-01", "2004-08-30")),
-    # Year known, month and day uncertain - NEW SPEC
+    # Year known, month and day uncertain
     ("2004-?06-?11", ("2004-06-11", "2004-05-10", "2004-07-12")),
-    # Year uncertain, month known, day approximate - NEW SPEC
+    # Year uncertain, month known, day approximate
     ("2004?-06-~11", ("2004-06-11", "2003-06-10", "2005-06-12")),
-    # Year uncertain and month is both uncertain and approximate - NEW SPEC
+    # Year uncertain and month is both uncertain and approximate
     ("?2004-%06", ("2004-06-01", "2004-06-30", "2003-04-01", "2005-08-30")),
     # This has the same meaning as the previous example.- NEW SPEC
     ("2004?-%06", ("2004-06-01", "2004-06-30", "2003-04-01", "2005-08-30")),
-    # Year uncertain, month and day approximate. - NEW SPEC
+    # Year uncertain, month and day approximate
     ("2004?-~06-~04", ("2004-06-04", "2003-05-03", "2005-07-05")),
-    # Year known, month and day approximate. - NEW SPEC
+    # Year known, month and day approximate
     ("2011-~06-~04", ("2011-06-04", "2011-05-03", "2011-07-05")),
     # Partial unspecified
     # December 25 sometime during the 1560s
@@ -154,12 +166,7 @@ EXAMPLES = (
     # December 1760 or some later month
     ("[1760-12..]", ("1760-12-01", "inf")),
     # January or February of 1760 or December 1760 or some later month
-    # This test is failing due to a code issue:
-    # TypeError: '>' not supported between instances of 'float' and 'time.struct_time'
-    (
-        "[1760-01, 1760-02, 1760-12..]",
-        ("1760-01-01", "inf"),
-    ),  # TODO fix in parser_classes
+    ("[1760-01, 1760-02, 1760-12..]", ("1760-01-01", "inf")),
     # Either the year 1667 or the month December of 1760.
     ("[1667, 1760-12]", ("1667-01-01", "1760-12-31")),
     # Multiple Dates
@@ -167,11 +174,11 @@ EXAMPLES = (
     ("{1667,1668, 1670..1672}", ("1667-01-01", "1672-12-31")),
     # The year 1960 and the month December of 1961.
     ("{1960, 1961-12}", ("1960-01-01", "1961-12-31")),
-    # Masked Precision --> eliminated
+    # Previously tested masked precision, now eliminated from the spec
     # A date during the 1960s
-    # ('196x', '1960-01-01', '1969-12-31'),
+    ("196X", ("1960-01-01", "1969-12-31")),
     # A date during the 1900s
-    # ('19xx', '1900-01-01', '1999-12-31'),
+    ("19XX", ("1900-01-01", "1999-12-31")),
     # L2 Extended Interval
     # Interval with fuzzy day endpoints in June 2004
     (
@@ -185,8 +192,8 @@ EXAMPLES = (
     ("Y17E7", ("170000000-01-01", "170000000-12-31")),
     # the year -170000000
     ("Y-17E7", ("-170000000-01-01", "-170000000-12-31")),
+    # L2 significant digits
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
-    # TODO Not yet implemented, see https://github.com/ixc/python-edtf/issues/12
     # ('Y17101E4S3', ('171010000-01-01', '171999999-12-31')),
     # L2 Seasons
     # Spring southern hemisphere, 2001
@@ -196,6 +203,7 @@ EXAMPLES = (
 )
 
 BAD_EXAMPLES = (
+    # parentheses are not used for group qualification in the 2018 spec
     None,
     "",
     "not a edtf string",
@@ -253,25 +261,45 @@ def test_edtf_examples(test_input, expected_tuple):
     elif len(expected_tuple) == 2:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
-        assert result.lower_strict() == lower_strict, "Lower strict date does not match"
-        assert result.upper_strict() == upper_strict, "Upper strict date does not match"
+        assert (
+            result.lower_strict() == lower_strict
+        ), f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        assert (
+            result.upper_strict() == upper_strict
+        ), f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
     elif len(expected_tuple) == 3:
         strict_date = iso_to_struct_time(expected_tuple[0])
         lower_fuzzy = iso_to_struct_time(expected_tuple[1])
         upper_fuzzy = iso_to_struct_time(expected_tuple[2])
-        assert result.lower_strict() == strict_date, "Lower strict date does not match"
-        assert result.upper_strict() == strict_date, "Upper strict date does not match"
-        assert result.lower_fuzzy() == lower_fuzzy, "Lower fuzzy date does not match"
-        assert result.upper_fuzzy() == upper_fuzzy, "Upper fuzzy date does not match"
+        assert (
+            result.lower_strict() == strict_date
+        ), f"Lower strict date does not match. Expected {strict_date}, got {result.lower_strict()}"
+        assert (
+            result.upper_strict() == strict_date
+        ), f"Upper strict date does not match. Expected {strict_date}, got {result.upper_strict()}"
+        assert (
+            result.lower_fuzzy() == lower_fuzzy
+        ), f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        assert (
+            result.upper_fuzzy() == upper_fuzzy
+        ), f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
     elif len(expected_tuple) == 4:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
         lower_fuzzy = iso_to_struct_time(expected_tuple[2])
         upper_fuzzy = iso_to_struct_time(expected_tuple[3])
-        assert result.lower_strict() == lower_strict, "Lower strict date does not match"
-        assert result.upper_strict() == upper_strict, "Upper strict date does not match"
-        assert result.lower_fuzzy() == lower_fuzzy, "Lower fuzzy date does not match"
-        assert result.upper_fuzzy() == upper_fuzzy, "Upper fuzzy date does not match"
+        assert (
+            result.lower_strict() == lower_strict
+        ), f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        assert (
+            result.upper_strict() == upper_strict
+        ), f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
+        assert (
+            result.lower_fuzzy() == lower_fuzzy
+        ), f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        assert (
+            result.upper_fuzzy() == upper_fuzzy
+        ), f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
 
 
 @pytest.mark.parametrize("bad_input", BAD_EXAMPLES)
