@@ -74,6 +74,8 @@ positiveYear = Word(nums, exact=4)
 negativeYear = NotAny(L("-0000")) + ("-" + positiveYear)
 
 year = Combine(positiveYear ^ negativeYear)("year") + Optional(significantDigits)
+# simple version for Consecutives
+year_basic = Combine(positiveYear ^ negativeYear)("year")
 
 yearMonth = year + "-" + month
 yearMonthDay = year + "-" + monthDay  # o hai iso date
@@ -271,7 +273,9 @@ Level2Interval.set_parser(level2Interval)
 consecutives = (
     (yearMonthDay("lower") + ".." + yearMonthDay("upper"))
     ^ (yearMonth("lower") + ".." + yearMonth("upper"))
-    ^ (year("lower") + ".." + year("upper"))
+    ^ (
+        year_basic("lower") + ".." + year_basic("upper")
+    )  # using year_basic because some tests were throwing `'list' object has no attribute 'expandtabs'` - somewhere, pyparsing.parse_string() was being passed a list
 )
 Consecutives.set_parser(consecutives)
 
