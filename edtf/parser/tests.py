@@ -193,8 +193,14 @@ EXAMPLES = (
     # the year -170000000
     ("Y-17E7", ("-170000000-01-01", "-170000000-12-31")),
     # L2 significant digits
+    # Some year between 1900 and 1999, estimated to be 1950
+    ("1950S2", ("1900-01-01", "1999-12-31")),
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
-    # ('Y17101E4S3', ('171010000-01-01', '171999999-12-31')),
+    ("Y17101E4S3", ("171000000-01-01", "171999999-12-31")),
+    # Some year between 338000 and 338999, estimated to be 338800
+    ("Y3388E2S3", ("338000-01-01", "338999-12-31")),
+    # some year between 171000000 and 171999999 estimated to be 171010000
+    ("Y171010000S3", ("171010000-01-01", "171999999-12-31")),
     # L2 Seasons
     # Spring southern hemisphere, 2001
     ("2001-29", ("2001-09-01", "2001-11-30")),
