@@ -261,7 +261,9 @@ class Date(EDTFObject):
 
     month = property(get_month, set_month)
 
-    def __init__(self, year=None, month=None, day=None, **kwargs):
+    def __init__(
+        self, year=None, month=None, day=None, significant_digits=None, **kwargs
+    ):
         for param in ("date", "lower", "upper"):
             if param in kwargs:
                 self.__init__(**kwargs[param])
@@ -270,6 +272,7 @@ class Date(EDTFObject):
         self.year = year  # Year is required, but sometimes passed in as a 'date' dict.
         self.month = month
         self.day = day
+        self.significant_digits = significant_digits
 
     def __str__(self):
         r = self.year
@@ -277,6 +280,8 @@ class Date(EDTFObject):
             r += f"-{self.month}"
             if self.day:
                 r += f"-{self.day}"
+        if self.significant_digits:
+            r += f"S{self.significant_digits}"
         return r
 
     def isoformat(self, default=date.max):
@@ -336,6 +341,9 @@ class Date(EDTFObject):
         if self.month:
             return PRECISION_MONTH
         return PRECISION_YEAR
+
+    def estimated(self):
+        return self._precise_year(EARLIEST)
 
 
 class DateAndTime(EDTFObject):
@@ -537,11 +545,15 @@ class Level1Interval(Interval):
 
 
 class LongYear(EDTFObject):
-    def __init__(self, year):
+    def __init__(self, year, significant_digits=None):
         self.year = year
+        self.significant_digits = significant_digits
 
     def __str__(self):
-        return f"Y{self.year}"
+        if self.significant_digits:
+            return f"Y{self.year}S{self.significant_digits}"
+        else:
+            return f"Y{self.year}"
 
     def _precise_year(self):
         return int(self.year)
@@ -552,6 +564,9 @@ class LongYear(EDTFObject):
             return struct_time([py, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
         else:
             return struct_time([py, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+
+    def estimated(self):
+        return self._precise_year()
 
 
 class Season(Date):
@@ -827,18 +842,21 @@ class Level2Season(Season):
 
 
 class ExponentialYear(LongYear):
-    def __init__(self, base, exponent, precision=None):
+    def __init__(self, base, exponent, significant_digits=None):
         self.base = base
         self.exponent = exponent
-        self.precision = precision
+        self.significant_digits = significant_digits
 
     def _precise_year(self):
         return int(self.base) * 10 ** int(self.exponent)
 
     def get_year(self):
-        if self.precision:
-            return f"{self.base}E{self.exponent}S{self.precision}"
+        if self.significant_digits:
+            return f"{self.base}E{self.exponent}S{self.significant_digits}"
         else:
             return f"{self.base}E{self.exponent}"
 
     year = property(get_year)
+
+    def estimated(self):
+        return self._precise_year()

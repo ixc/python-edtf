@@ -48,8 +48,9 @@ oneThru31 = oneOf(["%.2d" % i for i in range(1, 32)])
 oneThru59 = oneOf(["%.2d" % i for i in range(1, 60)])
 zeroThru59 = oneOf(["%.2d" % i for i in range(0, 60)])
 
-positiveDigit = Word(nums, exact=1, excludeChars="0")
 digit = Word(nums, exact=1)
+positiveDigit = Word(nums, exact=1, excludeChars="0")
+positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
 
 second = zeroThru59
 minute = zeroThru59
@@ -63,13 +64,16 @@ monthDay = (
     ^ (L("02")("month") + "-" + oneThru29("day"))
 )
 
+# Significant digits suffix
+significantDigits = "S" + Word(nums)("significant_digits")
+
 # 4 digits, 0 to 9
 positiveYear = Word(nums, exact=4)
 
 # Negative version of positive year, but "-0000" is illegal
 negativeYear = NotAny(L("-0000")) + ("-" + positiveYear)
 
-year = Combine(positiveYear ^ negativeYear)("year")
+year = Combine(positiveYear ^ negativeYear)("year") + Optional(significantDigits)
 
 yearMonth = year + "-" + month
 yearMonthDay = year + "-" + monthDay  # o hai iso date
@@ -112,9 +116,13 @@ dateOrSeason = date("") ^ season
 
 # (* *** Long Year - Simple Form *** *)
 
-longYearSimple = "Y" + Combine(
-    Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit)
-)("year")
+longYearSimple = (
+    "Y"
+    + Combine(Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit))(
+        "year"
+    )
+    + Optional(significantDigits)
+)
 LongYear.set_parser(longYearSimple)
 
 # (* *** L1Interval *** *)
@@ -238,13 +246,12 @@ seasonQualifier = qualifyingString
 seasonQualified = season + "^" + seasonQualifier
 
 # (* ** Long Year - Scientific Form ** *)
-positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
 longYearScientific = (
     "Y"
     + Combine(Optional("-") + positiveInteger)("base")
     + "E"
     + positiveInteger("exponent")
-    + Optional("S" + positiveInteger("precision"))
+    + Optional(significantDigits)
 )
 ExponentialYear.set_parser(longYearScientific)
 
