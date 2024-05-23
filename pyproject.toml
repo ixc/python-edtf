@@ -38,10 +38,12 @@ classifiers = [
 test = [
     "django>=4.2,<5.0",
     "pytest",
+    "pytest-django",
     "ruff",
     "pre-commit",
     "coverage",
-    "pytest-cov"
+    "pytest-cov",
+    "junitparser",
 ]
 
 [project.urls]
@@ -79,7 +81,7 @@ legacy_tox_ini = """
 python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
 python_classes = ["Test*", "*Tests"]
 python_functions = ["test_*"]
-addopts = "--ignore=edtf_django_tests/ --cov=edtf --cov-report=xml"
+addopts = "--ignore=edtf_django_tests/ --cov=edtf"
 plugins = ["pytest_cov"]
 
 [tool.coverage.run]

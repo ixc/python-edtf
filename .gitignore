@@ -46,6 +46,10 @@ coverage_combined.xml
 .coverage_main
 .coverage_django
 *,cover
+combined_junit_pytest.xml
+pytest.xml
+junit_pytest_main.xml
+junit_pytest_django.xml
 
 # Translations
 *.mo
