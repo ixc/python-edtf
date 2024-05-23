@@ -72,7 +72,6 @@ The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_c
     PartialUnspecified
     OneOfASet
     MultipleDates
-    MaskedPrecision
     Level2Interval
     Level2Season
     ExponentialYear
@@ -157,11 +156,6 @@ Test coverage includes every example given in the spec table of features.
 
         >>> parse_edtf('{1667,1668, 1670..1672}')
         MultipleDates: '{1667, 1668, 1670..1672}'
-
-* Masked precision:
-
-        >>> parse_edtf('197x') # A date in the 1970s.
-        MaskedPrecision: '197x'
 
 * Level 2 Extended intervals:
 

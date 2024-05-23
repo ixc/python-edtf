@@ -260,10 +260,6 @@ level2Interval = (
 )
 Level2Interval.set_parser(level2Interval)
 
-# (* ** Masked precision ** *) eliminated in latest specs
-# maskedPrecision = Combine(digit + digit + ((digit + "x") ^ "xx"))("year")
-# MaskedPrecision.set_parser(maskedPrecision)
-
 # (* ** Inclusive list and choice list** *)
 consecutives = (
     (yearMonthDay("lower") + ".." + yearMonthDay("upper"))

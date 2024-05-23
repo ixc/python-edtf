@@ -806,10 +806,6 @@ class MultipleDates(EDTFObject):
             return min([x._strict_date(lean) for x in self.objects])
 
 
-class MaskedPrecision(Date):
-    pass
-
-
 class Level2Interval(Level1Interval):
     def __init__(self, lower, upper):
         # Check whether incoming lower/upper values are single-item lists, and
