@@ -1,17 +1,19 @@
-python-edtf
-===========
+edtf2
+=====
 
-An implementation of EDTF format in Python, together with utility functions for parsing natural language date texts, and converting EDTF dates to related Python `date` objects.
+An implementation of EDTF format in Python, together with utility functions for parsing natural language date texts, and converting EDTF dates to related Python `date` or `struct_time` objects.
 
 See http://www.loc.gov/standards/datetime/ for the current draft specification.
 
+This project is based on python-edtf and was developed to include the newest specification
+
 ## To install
 
-    pip install edtf
+    pip install edtf2
 
 ## To use
 
-    >>> from edtf import parse_edtf
+    >>> from edtf2 import parse_edtf
     # Parse an EDTF string to an EDTFObject
     >>> e = parse_edtf("1979-08~") # approx August 1979
     >>> e
@@ -29,16 +31,16 @@ See http://www.loc.gov/standards/datetime/ for the current draft specification.
     ((1979, 7, 1), (1979, 9, 30))
 
     # Date intervals
-    >>> interval = parse_edtf("1979-08~/open")
+    >>> interval = parse_edtf("1979-08~/..")
     >>> interval
-    Level1Interval: '1979-08~/open'
+    Level1Interval: '1979-08~/..'
     # Intervals have lower and upper EDTF objects.
     >>> interval.lower, interval.upper
-    (UncertainOrApproximate: '1979-08~', UncertainOrApproximate: 'open')
-    >>> interval.lower.upper_strict()[:3]
-    (1979, 8, 31)
-    >>> interval.upper.lower_strict() # 'open' is interpreted to mean 'still happening'.
-    [Today's date]
+    (UncertainOrApproximate: '1979-08~', UnspecifiedIntervalSection: '..')
+    >>> interval.lower.lower_strict()[:3], interval.lower.upper_strict()[:3]
+    ((1979, 8, 1), (1979, 8, 31))
+    >>> interval.upper.upper_strict() # '..' is interpreted to mean open interval and is returning -/+ math.inf
+    math.inf
 
     # Date collections
     >>> coll = parse_edtf('{1667,1668, 1670..1672}')
@@ -47,7 +49,7 @@ See http://www.loc.gov/standards/datetime/ for the current draft specification.
     >>> coll.objects
     (Date: '1667', Date: '1668', Consecutives: '1670..1672')
 
-The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_classes.EDTFObject` subclass, depending on the type of date that was parsed. These classes are:
+The object returned by `parse_edtf()` is an instance of an `edtf2.parser.parser_classes.EDTFObject` subclass, depending on the type of date that was parsed. These classes are:
 
     # Level 0
     Date
@@ -58,6 +60,7 @@ The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_c
     UncertainOrApproximate
     Unspecified
     Level1Interval
+    UnspecifiedIntervalSection
     LongYear
     Season
 
@@ -68,9 +71,10 @@ The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_c
     MultipleDates
     MaskedPrecision
     Level2Interval
+    Level2Season
     ExponentialYear
 
-All of these implement `upper/lower_strict/fuzzy()` methods to derive Python `date` objects.
+All of these implement `upper/lower_strict/fuzzy()` methods to derive `struct_time` objects, except of UnspecifiedIntervalSection, that can also return math.inf value
 
 The `*Interval` instances have `upper` and `lower` properties that are themselves `EDTFObject` instances.
 
@@ -86,92 +90,92 @@ Test coverage includes every example given in the spec table of features.
 
 * Date:
 
-      >>> parse_edtf('1979-08') # August 1979
-      Date: '1979-08'
+        >>> parse_edtf('1979-08') # August 1979
+        Date: '1979-08'
 
 * Date and Time:
 
-      >>> parse_edtf('2004-01-01T10:10:10+05:00')
-      DateAndTime: '2004-01-01T10:10:10+05:00'
+        >>> parse_edtf('2004-01-01T10:10:10+05:00')
+        DateAndTime: '2004-01-01T10:10:10+05:00'
 
 * Interval (start/end):
 
-      >>> parse_edtf('1979-08-28/1979-09-25') # From August 28 to September 25 1979
-      Interval: '1979-08-28/1979-09-25'
+        >>> parse_edtf('1979-08-28/1979-09-25') # From August 28 to September 25 1979
+        Interval: '1979-08-28/1979-09-25'
 
 ### Level 1 Extensions
 
 * Uncertain/Approximate dates:
-
-      >>> parse_edtf('1979-08-28~') # Approximately August 28th 1979
-      UncertainOrApproximate: '1979-08-28~'
+      
+        >>> parse_edtf('1979-08-28~') # Approximately August 28th 1979
+        UncertainOrApproximate: '1979-08-28~'
 
 * Unspecified dates:
 
-      >>> parse_edtf('1979-08-uu') # An unknown day in August 1979
-      Unspecified: '1979-08-uu'
-      >>> parse_edtf('1979-uu') # Some month in 1979
-      Unspecified: '1979-uu'
+        >>> parse_edtf('1979-08-XX') # An unknown day in August 1979
+        Unspecified: '1979-08-XX'
+        >>> parse_edtf('1979-XX') # Some month in 1979
+        Unspecified: '1979-XX'
 
 * Extended intervals:
 
-      >>> parse_edtf('1984-06-02?/2004-08-08~')
-      Level1Interval: '1984-06-02?/2004-08-08~'
+        >>> parse_edtf('1984-06-02?/2004-08-08~')
+        Level1Interval: '1984-06-02?/2004-08-08~'
 
 * Years exceeding four digits:
 
-      >>> parse_edtf('y-12000') # 12000 years BCE
-      LongYear: 'y-12000'
+        >>> parse_edtf('y-12000') # 12000 years BCE
+        LongYear: 'y-12000'
 
 * Season:
 
-      >>> parse_edtf('1979-22') # Summer 1979
-      Season: '1979-22'
+        >>> parse_edtf('1979-22') # Summer 1979
+        Season: '1979-22'
 
 ### Level 2 Extensions
 
 * Partial uncertain/approximate:
 
-      >>> parse_edtf('(2011)-06-04~') # year certain, month/day approximate.
-      # Note that the result text is normalized
-      PartialUncertainOrApproximate: '2011-(06-04)~'
+        >>> parse_edtf('(2011)-06-04~') # year certain, month/day approximate.
+        # Note that the result text is normalized
+        PartialUncertainOrApproximate: '2011-(06-04)~'
 
 * Partial unspecified:
 
-      >>> parse_edtf('1979-uu-28') # The 28th day of an uncertain month in 1979
-      PartialUnspecified: '1979-uu-28'
+        >>> parse_edtf('1979-XX-28') # The 28th day of an uncertain month in 1979
+        PartialUnspecified: '1979-XX-28'
 
 * One of a set:
 
-      >>> parse_edtf("[..1760-12-03,1762]")
-      OneOfASet: '[..1760-12-03, 1762]'
+        >>> parse_edtf("[..1760-12-03,1762]")
+        OneOfASet: '[..1760-12-03, 1762]'
 
 * Multiple dates:
 
-      >>> parse_edtf('{1667,1668, 1670..1672}')
-      MultipleDates: '{1667, 1668, 1670..1672}'
+        >>> parse_edtf('{1667,1668, 1670..1672}')
+        MultipleDates: '{1667, 1668, 1670..1672}'
 
 * Masked precision:
 
-      >>> parse_edtf('197x') # A date in the 1970s.
-      MaskedPrecision: '197x'
+        >>> parse_edtf('197x') # A date in the 1970s.
+        MaskedPrecision: '197x'
 
 * Level 2 Extended intervals:
 
-      >>> parse_edtf('2004-06-(01)~/2004-06-(20)~')
-      Level2Interval: '2004-06-(01)~/2004-06-(20)~'
+        >>> parse_edtf('2004-06-(01)~/2004-06-(20)~')
+        Level2Interval: '2004-06-(01)~/2004-06-(20)~'
 
 * Year requiring more than 4 digits - exponential form:
 
-      >>> parse_edtf('y-17e7')
-      ExponentialYear: 'y-17e7'
+        >>> parse_edtf('y-17e7')
+        ExponentialYear: 'y-17e7'
 
 ### Natural language representation
 
 
 The library includes a basic English natural language parser (it's not yet smart enough to work with occasions such as 'Easter', or in other languages):
 
-    >>> from edtf import text_to_edtf
+    >>> from edtf2 import text_to_edtf
     >>> text_to_edtf("circa August 1979")
     '1979-08~'
 
@@ -204,8 +208,8 @@ The parser can parse strings such as:
     'c1800s?' => '180x?~' # with uncertainty indicators, use the decade
 
     # unspecified parts
-    'January 12' => 'uuuu-01-12'
-    'January' => 'uuuu-01'
+    'January 12' => 'XXXX-01-12'
+    'January' => 'XXXX-01'
     '7/2008' => '2008-07'
 
     #seasons
@@ -221,9 +225,9 @@ The parser can parse strings such as:
     # unspecified
     'year in the 1860s' => '186u' #186x has decade precision, 186u has year precision.
     ('year in the 1800s', '18xu')
-    'month in 1872' => '1872-uu'
-    'day in January 1872' => '1872-01-uu'
-    'day in 1872' => '1872-uu-uu'
+    'month in 1872' => '1872-XX'
+    'day in January 1872' => '1872-01-XX'
+    'day in 1872' => '1872-XX-XX'
 
     #centuries
     '1st century' => '00xx'
@@ -231,7 +235,7 @@ The parser can parse strings such as:
     '19th century?' => '18xx?'
 
     # just showing off now...
-    'a day in about Spring 1849?' => '1849-21-uu?~'
+    'a day in about Spring 1849?' => '1849-21-XX?~'
 
     # simple ranges, which aren't as accurate as they could be. The parser is
     limited to only picking the first year range it finds.
@@ -269,7 +273,7 @@ Because Python's `datetime` module does not support dates out side the range 1 A
 
 The `struct_time` representation is more difficult to work with, but can be sorted as-is which is the primary use-case, and can be converted relatively easily to `date` or `datetime` objects (provided the year is within 1 to 9999 AD) or to date objects in more flexible libraries like [astropy.time](http://docs.astropy.org/en/stable/time/index.html) for years outside these bounds.
 
-If you are sure you are working with dates within the range supported by Python's `datetime` module, you can get these more convenient objects using the `edtf.struct_time_to_date` and `edtf.struct_time_to_datetime` functions.
+If you are sure you are working with dates within the range supported by Python's `datetime` module, you can get these more convenient objects using the `edtf2.struct_time_to_date` and `edtf2.struct_time_to_datetime` functions.
 
 NOTE: This library previously did return `date` and `datetime` objects from methods by default before we switched to `struct_time`. See ticket https://github.com/ixc/python-edtf/issues/26.
 
@@ -287,7 +291,7 @@ In an ascending sort (most recent last), sort by `lower_strict` to get a natural
     >>> e.lower_strict()[:3]  # Show only interesting parts of struct_time
     (1912, 4, 01)
 
-    >>> from edtf import struct_time_to_date
+    >>> from edtf2 import struct_time_to_date
     >>> struct_time_to_date(e.lower_strict())  # Convert to date
     datetime.date(1912, 4, 01)
 
@@ -332,7 +336,7 @@ Two EDTF dates are considered equal if their unicode() representations are the s
 
 ## Django ORM field
 
-The `edtf.fields.EDTFField` implements a simple Django field that stores an EDTF object in the database.
+The `edtf2.fields.EDTFField` implements a simple Django field that stores an EDTF object in the database.
 
 To store a natural language value on your model, define another field, and set the `natural_text_field` parameter of your `EDTFField`.
 
@@ -344,7 +348,7 @@ When your model is saved, the `natural_text_field` value will be parsed to set t
 Example usage:
 
     from django.db import models
-    from edtf.fields import EDTFField
+    from edtf2.fields import EDTFField
 
     class MyModel(models.Model):
          date_display = models.CharField(
