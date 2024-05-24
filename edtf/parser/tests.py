@@ -14,8 +14,8 @@ from edtf.parser.parser_classes import TIME_EMPTY_EXTRAS, TIME_EMPTY_TIME, EDTFO
 # where the first value is a tuple, the second item is a tuple of the normalised parse result.
 #
 # The values in the second tuple indicate the iso versions of the derived Python `date`s.
-#  - If there's one other value, all the derived dates should be the same.
-#  - If there're two other values, then all the lower values should be the same
+#  - If there is one other value, all the derived dates should be the same.
+#  - If there are two other values, then all the lower values should be the same
 #    and all the upper values should be the same.
 #  - If there are three other values, then the upper and lower ``_strict`` values
 #    should be the first value, and the upper and lower ``_fuzzy`` values should be
@@ -194,13 +194,21 @@ EXAMPLES = (
     ("Y-17E7", ("-170000000-01-01", "-170000000-12-31")),
     # L2 significant digits
     # Some year between 1900 and 1999, estimated to be 1950
-    ("1950S2", ("1900-01-01", "1999-12-31")),
+    ("1950S2", ("1950-01-01", "1950-12-31", "1900-01-01", "1999-12-31")),
+    ("1953S2", ("1953-01-01", "1953-12-31", "1900-01-01", "1999-12-31")),
+    ("1953S3", ("1953-01-01", "1953-12-31", "1950-01-01", "1959-12-31")),
     # Some year between 171010000 and 171999999, estimated to be 171010000 ('S3' indicates a precision of 3 significant digits.)
-    ("Y17101E4S3", ("171000000-01-01", "171999999-12-31")),
+    (
+        "Y17101E4S3",
+        ("171010000-01-01", "171010000-12-31", "171000000-01-01", "171999999-12-31"),
+    ),
     # Some year between 338000 and 338999, estimated to be 338800
-    ("Y3388E2S3", ("338000-01-01", "338999-12-31")),
+    ("Y3388E2S3", ("338800-01-01", "338800-12-31", "338000-01-01", "338999-12-31")),
     # some year between 171000000 and 171999999 estimated to be 171010000
-    ("Y171010000S3", ("171010000-01-01", "171999999-12-31")),
+    (
+        "Y171010000S3",
+        ("171010000-01-01", "171010000-12-31", "171000000-01-01", "171999999-12-31"),
+    ),
     # L2 Seasons
     # Spring southern hemisphere, 2001
     ("2001-29", ("2001-09-01", "2001-11-30")),

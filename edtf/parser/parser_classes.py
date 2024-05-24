@@ -272,7 +272,9 @@ class Date(EDTFObject):
         self.year = year  # Year is required, but sometimes passed in as a 'date' dict.
         self.month = month
         self.day = day
-        self.significant_digits = significant_digits
+        self.significant_digits = (
+            int(significant_digits) if significant_digits else None
+        )
 
     def __str__(self):
         r = self.year
@@ -290,6 +292,36 @@ class Date(EDTFObject):
             int(self.month or default.month),
             int(self.day or default.day),
         )
+
+    def lower_fuzzy(self):
+        if not hasattr(self, "significant_digits") or not self.significant_digits:
+            return apply_delta(
+                sub, self.lower_strict(), self._get_fuzzy_padding(EARLIEST)
+            )
+        else:
+            total_digits = len(self.year)
+            insignificant_digits = total_digits - self.significant_digits
+            lower_year = (
+                int(self.year)
+                // (10**insignificant_digits)
+                * (10**insignificant_digits)
+            )
+            return struct_time([lower_year, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+
+    def upper_fuzzy(self):
+        if not hasattr(self, "significant_digits") or not self.significant_digits:
+            return apply_delta(
+                add, self.upper_strict(), self._get_fuzzy_padding(LATEST)
+            )
+        else:
+            total_digits = len(self.year)
+            insignificant_digits = total_digits - self.significant_digits
+            upper_year = (int(self.year) // (10**insignificant_digits) + 1) * (
+                10**insignificant_digits
+            ) - 1
+            return struct_time(
+                [upper_year, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
+            )
 
     def _precise_year(self, lean):
         # Replace any ambiguous characters in the year string with 0s or 9s
@@ -547,7 +579,9 @@ class Level1Interval(Interval):
 class LongYear(EDTFObject):
     def __init__(self, year, significant_digits=None):
         self.year = year
-        self.significant_digits = significant_digits
+        self.significant_digits = (
+            int(significant_digits) if significant_digits else None
+        )
 
     def __str__(self):
         if self.significant_digits:
@@ -567,6 +601,42 @@ class LongYear(EDTFObject):
 
     def estimated(self):
         return self._precise_year()
+
+    def lower_fuzzy(self):
+        full_year = self._precise_year()
+        strict_val = self.lower_strict()
+        if not self.significant_digits:
+            return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
+        else:
+            insignificant_digits = len(str(full_year)) - int(self.significant_digits)
+            if insignificant_digits <= 0:
+                return apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
+            padding_value = 10**insignificant_digits
+            sig_digits = full_year // padding_value
+            lower_year = sig_digits * padding_value
+            return apply_delta(
+                sub,
+                struct_time([lower_year, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS),
+                self._get_fuzzy_padding(EARLIEST),
+            )
+
+    def upper_fuzzy(self):
+        full_year = self._precise_year()
+        strict_val = self.upper_strict()
+        if not self.significant_digits:
+            return apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
+        else:
+            insignificant_digits = len(str(full_year)) - self.significant_digits
+            if insignificant_digits <= 0:
+                return apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
+            padding_value = 10**insignificant_digits
+            sig_digits = full_year // padding_value
+            upper_year = (sig_digits + 1) * padding_value - 1
+            return apply_delta(
+                add,
+                struct_time([upper_year, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS),
+                self._get_fuzzy_padding(LATEST),
+            )
 
 
 class Season(Date):
@@ -845,7 +915,9 @@ class ExponentialYear(LongYear):
     def __init__(self, base, exponent, significant_digits=None):
         self.base = base
         self.exponent = exponent
-        self.significant_digits = significant_digits
+        self.significant_digits = (
+            int(significant_digits) if significant_digits else None
+        )
 
     def _precise_year(self):
         return int(self.base) * 10 ** int(self.exponent)
