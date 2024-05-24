@@ -77,7 +77,7 @@ jobs:
                 echo "Coverage Percentage - ${{ steps.coverageComment.outputs.coverage }}"
                 echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
                 echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
-                echo "Summary Report - ${{ steps.coverageComment.outputs.summaryReport }}"
+                echo "Summary Report -" ${{ steps.coverageComment.outputs.summaryReport }}
                 echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
                 echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
                 echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
