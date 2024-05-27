@@ -97,9 +97,9 @@ jobs:
               with:
                 tool: 'pytest'
                 auto-push: false
+                comment-always: true
                 output-file-path: output.json
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 comment-on-alert: true
                 save-data-file: false
-                skip-fetch-gh-pages: true
                 summary-always: true
