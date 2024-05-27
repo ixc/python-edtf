@@ -8,6 +8,8 @@ on:
 permissions:
   checks: write
   contents: write
+  # deployments permission to deploy GitHub pages website
+  deployments: write
   pull-requests: write
 
 
@@ -85,3 +87,19 @@ jobs:
                 echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
                 echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
                 echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
+
+            - name: Run benchmarks
+              run: |
+                pytest -m benchmark --benchmark-json=./output.json
+
+            - name: Publish benchmark results
+              uses: benchmark-action/github-action-benchmark@v1
+              with:
+                tool: 'pytest'
+                auto-push: false
+                output-file-path: output.json
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                comment-on-alert: true
+                save-data-file: false
+                skip-fetch-gh-pages: true
+                summary-always: true

@@ -2,9 +2,10 @@
 
 # It's recommended to `enablePackrat()` immediately after importing pyparsing
 # https://github.com/pyparsing/pyparsing/wiki/Performance-Tips
-import pyparsing
 
-pyparsing.ParserElement.enablePackrat()
+# TODO: uncomment this once benchmark testing has run once in CI
+# import pyparsing
+# pyparsing.ParserElement.enablePackrat()
 
 from pyparsing import (
     Combine,
