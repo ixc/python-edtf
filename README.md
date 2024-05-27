@@ -169,6 +169,7 @@ Test coverage includes every example given in the spec table of features.
         -170000000
 
 * Significant digits:
+
         # '1950S2': some year between 1900 and 1999, estimated to be 1950
         >>> d = parse_edtf('1950S2')
         Date: '1950S2'
@@ -176,7 +177,7 @@ Test coverage includes every example given in the spec table of features.
         (1900, 1, 1)
         >>> d.upper_fuzzy()[:3]
         (1999, 12, 31)
-        # 'Y171010000S3': some year between some year between 171000000 and 171999999 estimated to be 171010000, with 3 significant digits.
+        # 'Y171010000S3': some year between 171000000 and 171999999 estimated to be 171010000, with 3 significant digits.
         >>> l = parse_edtf('Y171010000S3')
         LongYear: 'Y171010000S3'
         >>> l.estimated()
