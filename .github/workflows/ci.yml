@@ -92,6 +92,12 @@ jobs:
               run: |
                 pytest -m benchmark --benchmark-json=./output.json
 
+            - name: Download previous benchmark data
+              uses: actions/cache@v4
+              with:
+                path: ./cache
+                key: ${{ runner.os }}-benchmark
+
             - name: Publish benchmark results
               uses: benchmark-action/github-action-benchmark@v1
               if: github.event_name != 'pull_request'
@@ -101,11 +107,13 @@ jobs:
                 comment-always: true
                 output-file-path: output.json
                 github-token: ${{ secrets.GITHUB_TOKEN }}
-                comment-on-alert: false
+                comment-on-alert: true
                 save-data-file: true
                 summary-always: true
+                # Where the previous data file is stored
+                external-data-json-path: ./cache/benchmark-data.json
 
-            - name: Publish benchmark results
+            - name: Comment on benchmark results without publishing
               uses: benchmark-action/github-action-benchmark@v1
               if: github.event_name == 'pull_request'
               with:
@@ -116,3 +124,4 @@ jobs:
                 comment-on-alert: false
                 save-data-file: true
                 summary-always: true
+                external-data-json-path: ./cache/benchmark-data.json
