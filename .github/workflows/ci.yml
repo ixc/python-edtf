@@ -110,12 +110,9 @@ jobs:
                 comment-on-alert: true
                 save-data-file: true
                 summary-always: true
-                # Where the previous data file is stored
-                external-data-json-path: ./cache/benchmark-data.json
 
             - name: Comment on benchmark results without publishing
               uses: benchmark-action/github-action-benchmark@v1
-              if: github.event_name == 'pull_request'
               with:
                 tool: 'pytest'
                 auto-push: false
