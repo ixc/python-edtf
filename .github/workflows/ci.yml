@@ -116,6 +116,7 @@ jobs:
               with:
                 tool: 'pytest'
                 auto-push: false
+                github-token: ${{ secrets.GITHUB_TOKEN }}
                 comment-always: true
                 output-file-path: output.json
                 comment-on-alert: false
