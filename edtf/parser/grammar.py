@@ -48,8 +48,9 @@ oneThru31 = oneOf(["%.2d" % i for i in range(1, 32)])
 oneThru59 = oneOf(["%.2d" % i for i in range(1, 60)])
 zeroThru59 = oneOf(["%.2d" % i for i in range(0, 60)])
 
-positiveDigit = Word(nums, exact=1, excludeChars="0")
 digit = Word(nums, exact=1)
+positiveDigit = Word(nums, exact=1, excludeChars="0")
+positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
 
 second = zeroThru59
 minute = zeroThru59
@@ -63,13 +64,18 @@ monthDay = (
     ^ (L("02")("month") + "-" + oneThru29("day"))
 )
 
+# Significant digits suffix
+significantDigits = "S" + Word(nums)("significant_digits")
+
 # 4 digits, 0 to 9
 positiveYear = Word(nums, exact=4)
 
 # Negative version of positive year, but "-0000" is illegal
 negativeYear = NotAny(L("-0000")) + ("-" + positiveYear)
 
-year = Combine(positiveYear ^ negativeYear)("year")
+year = Combine(positiveYear ^ negativeYear)("year") + Optional(significantDigits)
+# simple version for Consecutives
+year_basic = Combine(positiveYear ^ negativeYear)("year")
 
 yearMonth = year + "-" + month
 yearMonthDay = year + "-" + monthDay  # o hai iso date
@@ -112,9 +118,13 @@ dateOrSeason = date("") ^ season
 
 # (* *** Long Year - Simple Form *** *)
 
-longYearSimple = "Y" + Combine(
-    Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit)
-)("year")
+longYearSimple = (
+    "Y"
+    + Combine(Optional("-") + positiveDigit + digit + digit + digit + OneOrMore(digit))(
+        "year"
+    )
+    + Optional(significantDigits)
+)
 LongYear.set_parser(longYearSimple)
 
 # (* *** L1Interval *** *)
@@ -238,13 +248,12 @@ seasonQualifier = qualifyingString
 seasonQualified = season + "^" + seasonQualifier
 
 # (* ** Long Year - Scientific Form ** *)
-positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
 longYearScientific = (
     "Y"
     + Combine(Optional("-") + positiveInteger)("base")
     + "E"
     + positiveInteger("exponent")
-    + Optional("S" + positiveInteger("precision"))
+    + Optional(significantDigits)
 )
 ExponentialYear.set_parser(longYearScientific)
 
@@ -260,15 +269,13 @@ level2Interval = (
 )
 Level2Interval.set_parser(level2Interval)
 
-# (* ** Masked precision ** *) eliminated in latest specs
-# maskedPrecision = Combine(digit + digit + ((digit + "x") ^ "xx"))("year")
-# MaskedPrecision.set_parser(maskedPrecision)
-
 # (* ** Inclusive list and choice list** *)
 consecutives = (
     (yearMonthDay("lower") + ".." + yearMonthDay("upper"))
     ^ (yearMonth("lower") + ".." + yearMonth("upper"))
-    ^ (year("lower") + ".." + year("upper"))
+    ^ (
+        year_basic("lower") + ".." + year_basic("upper")
+    )  # using year_basic because some tests were throwing `'list' object has no attribute 'expandtabs'` - somewhere, pyparsing.parse_string() was being passed a list
 )
 Consecutives.set_parser(consecutives)
 

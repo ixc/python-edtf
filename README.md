@@ -72,7 +72,6 @@ The object returned by `parse_edtf()` is an instance of an `edtf.parser.parser_c
     PartialUnspecified
     OneOfASet
     MultipleDates
-    MaskedPrecision
     Level2Interval
     Level2Season
     ExponentialYear
@@ -139,9 +138,8 @@ Test coverage includes every example given in the spec table of features.
 
 * Partial uncertain/approximate:
 
-        >>> parse_edtf('(2011)-06-04~') # year certain, month/day approximate.
-        # Note that the result text is normalized
-        PartialUncertainOrApproximate: '2011-(06-04)~'
+        >>> parse_edtf('2004-06~-11') # year certain, month/day approximate.
+        PartialUncertainOrApproximate: '2004-06~-11'
 
 * Partial unspecified:
 
@@ -158,20 +156,44 @@ Test coverage includes every example given in the spec table of features.
         >>> parse_edtf('{1667,1668, 1670..1672}')
         MultipleDates: '{1667, 1668, 1670..1672}'
 
-* Masked precision:
-
-        >>> parse_edtf('197x') # A date in the 1970s.
-        MaskedPrecision: '197x'
-
 * Level 2 Extended intervals:
 
-        >>> parse_edtf('2004-06-(01)~/2004-06-(20)~')
-        Level2Interval: '2004-06-(01)~/2004-06-(20)~'
+        >>> parse_edtf('2004-06-~01/2004-06-~20')
+        Level2Interval: '2004-06-~01/2004-06-~20'
 
 * Year requiring more than 4 digits - exponential form:
 
-        >>> parse_edtf('Y-17e7')
-        ExponentialYear: 'Y-17e7'
+        >>> e = parse_edtf('Y-17E7')
+        ExponentialYear: 'Y-17E7'
+        >>> e.estimated()
+        -170000000
+
+* Significant digits:
+        # '1950S2': some year between 1900 and 1999, estimated to be 1950
+        >>> d = parse_edtf('1950S2')
+        Date: '1950S2'
+        >>> d.lower_fuzzy()[:3]
+        (1900, 1, 1)
+        >>> d.upper_fuzzy()[:3]
+        (1999, 12, 31)
+        # 'Y171010000S3': some year between some year between 171000000 and 171999999 estimated to be 171010000, with 3 significant digits.
+        >>> l = parse_edtf('Y171010000S3')
+        LongYear: 'Y171010000S3'
+        >>> l.estimated()
+        171010000
+        >>> l.lower_fuzzy()[:3]
+        (171000000, 1, 1)
+        >>> l.upper_fuzzy()[:3]
+        (171999999, 12, 31)
+        # 'Y3388E2S3': some year in exponential notation between 338000 and 338999, estimated to be 338800
+        >>> e = parse_edtf('Y3388E2S3')
+        ExponentialYear: 'Y3388E2S3S3'
+        >>> e.estimated()
+        338800
+        >>> e.lower_fuzzy()[:3]
+        (338000, 1, 1)
+        >>> e.upper_fuzzy()[:3]
+        (338999, 12, 31)
 
 ### Natural language representation
 
