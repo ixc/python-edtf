@@ -101,6 +101,18 @@ jobs:
                 comment-always: true
                 output-file-path: output.json
                 github-token: ${{ secrets.GITHUB_TOKEN }}
-                comment-on-alert: true
+                comment-on-alert: false
+                save-data-file: true
+                summary-always: true
+
+            - name: Publish benchmark results
+              uses: benchmark-action/github-action-benchmark@v1
+              if: github.event_name == 'pull_request'
+              with:
+                tool: 'pytest'
+                auto-push: false
+                comment-always: true
+                output-file-path: output.json
+                comment-on-alert: false
                 save-data-file: true
                 summary-always: true
