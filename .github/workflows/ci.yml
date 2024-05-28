@@ -8,6 +8,8 @@ on:
 permissions:
   checks: write
   contents: write
+  # deployments permission to deploy GitHub pages website
+  deployments: write
   pull-requests: write
 
 
@@ -85,3 +87,39 @@ jobs:
                 echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
                 echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
                 echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
+
+            - name: Run benchmarks
+              run: |
+                pytest -m benchmark --benchmark-json=./output.json
+
+            - name: Download previous benchmark data
+              uses: actions/cache@v4
+              with:
+                path: ./cache
+                key: ${{ runner.os }}-benchmark
+
+            - name: Publish benchmark results
+              uses: benchmark-action/github-action-benchmark@v1
+              if: github.event_name != 'pull_request'
+              with:
+                tool: 'pytest'
+                auto-push: true
+                comment-always: true
+                output-file-path: output.json
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                comment-on-alert: true
+                save-data-file: true
+                summary-always: true
+
+            - name: Comment on benchmark results without publishing
+              uses: benchmark-action/github-action-benchmark@v1
+              with:
+                tool: 'pytest'
+                auto-push: false
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                comment-always: true
+                output-file-path: output.json
+                comment-on-alert: false
+                save-data-file: true
+                summary-always: true
+                external-data-json-path: ./cache/benchmark-data.json

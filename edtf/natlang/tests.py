@@ -185,3 +185,27 @@ def test_natlang(input_text, expected_output):
     assert (
         result == expected_output
     ), f"Failed for input: {input_text} - expected {expected_output}, got {result}"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize(
+    "input_text,expected_output",
+    [
+        ("23rd Dynasty", None),
+        ("January 2008", "2008-01"),
+        ("ca1860", "1860~"),
+        ("uncertain: approx 1862", "1862%"),
+        ("January", "XXXX-01"),
+        ("Winter 1872", "1872-24"),
+        ("before approx January 18 1928", "/1928-01-18~"),
+        ("birthday in 1872", "1872"),
+        ("1270 CE", "1270"),
+        ("2nd century bce", "-01XX"),
+        ("1858/1860", "[1858, 1860]"),
+    ],
+)
+def test_benchmark_natlang(benchmark, input_text, expected_output):
+    """
+    Benchmark selected natural language conversions
+    """
+    benchmark(text_to_edtf, input_text)

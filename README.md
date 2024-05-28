@@ -401,6 +401,7 @@ Since the `EDTFField` and the `_earliest` and `_latest` field values are set aut
 
 ### Running tests
 - From `python-edtf`, run the unit tests: `pytest`
+- From `python-edtf`, run `pytest -m benchmark` to run the benchmarks (published [here]( https://ixc.github.io/python-edtf/dev/bench/))
 - From `python-edtf/edtf_django_tests`, run the integration tests: `python manage.py test edtf_integration`
 - To run CI locally, use `act`, e.g. `act pull_request` or `act --pull=false --container-architecture linux/amd64`. Some steps may require a Github PAT: `act pull_request --container-architecture linux/amd64 --pull=false -s GITHUB_TOKEN=<your PAT>`
 

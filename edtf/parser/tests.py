@@ -216,6 +216,20 @@ EXAMPLES = (
     ("2001-34", ("2001-04-01", "2001-06-30")),
 )
 
+BENCHMARK_EXAMPLES = (
+    "2001-02-03",
+    "2008-12",
+    "2008",
+    "-0999",
+    "2004-01-01T10:10:10+05:00",
+    "-2005/-1999-02",
+    "/2006",
+    "?2004-%06",
+    "[1667, 1760-12]",
+    "Y3388E2S3",
+    "2001-29",
+)
+
 BAD_EXAMPLES = (
     # parentheses are not used for group qualification in the 2018 spec
     None,
@@ -340,3 +354,10 @@ def test_comparisons():
     assert d4 == d5
     assert d1 < d5
     assert d1 > d6
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("test_input", BENCHMARK_EXAMPLES)
+def test_benchmark_parser(benchmark, test_input):
+    """Benchmark parsing of selected EDTF strings."""
+    benchmark(parse, test_input)

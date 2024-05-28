@@ -1,3 +1,12 @@
+# ruff: noqa: E402 I001
+
+# It's recommended to `enablePackrat()` immediately after importing pyparsing
+# https://github.com/pyparsing/pyparsing/wiki/Performance-Tips
+
+import pyparsing
+
+pyparsing.ParserElement.enablePackrat()
+
 from pyparsing import (
     Combine,
     NotAny,
@@ -12,6 +21,7 @@ from pyparsing import (
     oneOf,
 )
 from pyparsing import Literal as L
+
 
 from edtf.parser.edtf_exceptions import EDTFParseException
 

@@ -39,6 +39,7 @@ test = [
     "django>=4.2,<5.0",
     "pytest",
     "pytest-django",
+    "pytest-benchmark",
     "ruff",
     "pre-commit",
     "coverage",
@@ -81,8 +82,11 @@ legacy_tox_ini = """
 python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
 python_classes = ["Test*", "*Tests"]
 python_functions = ["test_*"]
-addopts = "--ignore=edtf_django_tests/ --cov=edtf"
-plugins = ["pytest_cov"]
+markers = [
+    "benchmark: mark a test as a benchmark",
+]
+addopts = "--ignore=edtf_django_tests/ --cov=edtf -m 'not benchmark'"
+plugins = ["pytest_cov", "pytest_benchmark"]
 
 [tool.coverage.run]
 # we run the edtf_integration tests but only care about them testing fields.py in the main package
