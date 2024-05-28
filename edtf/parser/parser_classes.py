@@ -541,7 +541,89 @@ class UnspecifiedIntervalSection(EDTFObject):
 
 
 class Unspecified(Date):
-    pass
+    def __init__(
+        self,
+        year=None,
+        month=None,
+        day=None,
+        significant_digits=None,
+        ua=None,
+        **kwargs,
+    ):
+        for param in ("date", "lower", "upper"):
+            if param in kwargs:
+                self.__init__(**kwargs[param])
+                return
+        self.year = year  # Year is required, but sometimes passed in as a 'date' dict.
+        self.month = month
+        self.day = day
+        self.significant_digits = (
+            int(significant_digits) if significant_digits else None
+        )
+        self.ua = ua if ua else None
+
+    def __str__(self):
+        r = self.year
+        if self.month:
+            r += f"-{self.month}"
+            if self.day:
+                r += f"-{self.day}"
+        if self.ua:
+            r += str(self.ua)
+        return r
+
+    def _get_fuzzy_padding(self, lean):
+        if not self.ua:
+            return relativedelta()
+        multiplier = self.ua._get_multiplier()
+        padding = relativedelta()
+
+        if self.year:
+            if self.precision == PRECISION_MILLENIUM:
+                padding += relativedelta(
+                    years=int(
+                        multiplier * appsettings.PADDING_MILLENNIUM_PRECISION.years
+                    )
+                )
+            elif self.precision == PRECISION_CENTURY:
+                padding += relativedelta(
+                    years=int(multiplier * appsettings.PADDING_CENTURY_PRECISION.years)
+                )
+            elif self.precision == PRECISION_DECADE:
+                padding += relativedelta(
+                    years=int(multiplier * appsettings.PADDING_DECADE_PRECISION.years)
+                )
+            else:
+                padding += relativedelta(
+                    years=int(multiplier * appsettings.PADDING_YEAR_PRECISION.years)
+                )
+        if self.month:
+            padding += relativedelta(
+                months=int(multiplier * appsettings.PADDING_MONTH_PRECISION.months)
+            )
+        if self.day:
+            padding += relativedelta(
+                days=int(multiplier * appsettings.PADDING_DAY_PRECISION.days)
+            )
+
+        return padding
+
+    @property
+    def precision(self):
+        if self.day:
+            return PRECISION_DAY
+        if self.month:
+            return PRECISION_MONTH
+        if self.year:
+            if self.year.isdigit():
+                return PRECISION_YEAR
+            if len(self.year) == 4 and self.year.endswith("XXX"):
+                return PRECISION_MILLENIUM
+            if len(self.year) == 4 and self.year.endswith("XX"):
+                return PRECISION_CENTURY
+            if len(self.year) == 4 and self.year.endswith("X"):
+                return PRECISION_DECADE
+        raise ValueError(f"Unspecified date {self} has no precision")
 
 
 class Level1Interval(Interval):

@@ -161,17 +161,19 @@ level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") ^ l1Start(
 Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
-yearWithOneOrTwoUnspecifedDigits = Combine(digit + digit + (digit ^ "X") + "X")("year")
+yearWithOneOrTwoOrThreeUnspecifedDigits = Combine(
+    digit + (digit ^ "X") + (digit ^ "X") + "X"
+)("year")
 monthUnspecified = year + "-" + L("XX")("month")
 dayUnspecified = yearMonth + "-" + L("XX")("day")
 dayAndMonthUnspecified = year + "-" + L("XX")("month") + "-" + L("XX")("day")
 
 unspecified = (
-    yearWithOneOrTwoUnspecifedDigits
+    yearWithOneOrTwoOrThreeUnspecifedDigits
     ^ monthUnspecified
     ^ dayUnspecified
     ^ dayAndMonthUnspecified
-)
+) + Optional(UASymbol)("ua")
 Unspecified.set_parser(unspecified)
 
 # (* *** uncertainOrApproxDate *** *)
