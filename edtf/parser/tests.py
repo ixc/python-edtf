@@ -94,7 +94,7 @@ EXAMPLES = (
     ("1XXX", ("1000-01-01", "1999-12-31")),
     ("1XXX~", ("1000-01-01", "1999-12-31", "0000-01-01", "2999-12-31")),
     ("156X~", ("1560-01-01", "1569-12-31", "1550-01-01", "1579-12-31")),
-    ("-01XX~", ("-0199-01-01", "-0100-12-31", "-0299-01-01", "-0000-12-31")),
+    ("-01XX~", ("-0199-01-01", "-0100-12-31", "-0299-01-01", "0000-12-31")),
     # L1 Extended Interval
     # beginning unknown, end 2006
     # for intervals with an unknown beginning or end, the unknown bound is calculated with the constant DELTA_IF_UNKNOWN (10 years)
