@@ -343,13 +343,13 @@ edtfParser = (
 )
 
 
-def parse_edtf(str, parseAll=True, fail_silently=False, debug=None):
+def parse_edtf(input_string, parseAll=True, fail_silently=False, debug=None):
     if debug is None:
         debug = DEBUG_PYPARSING
     try:
-        if not str:
+        if not input_string:
             raise ParseException("You must supply some input text")
-        p = edtfParser.parseString(str.strip(), parseAll)
+        p = edtfParser.parseString(input_string.strip(), parseAll)
         if p:
             return p[0]
     except ParseException as err:
@@ -357,6 +357,8 @@ def parse_edtf(str, parseAll=True, fail_silently=False, debug=None):
             return None
         if debug:
             raise
-        near_text = str[max(err.loc - 10, 0) : err.loc + 10]
+        near_text = ""
+        if input_string:
+            near_text = input_string[max(err.loc - 10, 0) : err.loc + 10]
         full_msg = f"Error at position {err.loc}: Invalid input or format near '{near_text}'. Please provide a valid EDTF string."
         raise EDTFParseException(full_msg) from None
