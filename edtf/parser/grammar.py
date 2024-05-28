@@ -162,7 +162,7 @@ Level1Interval.set_parser(level1Interval)
 
 # (* *** unspecified *** *)
 yearWithOneOrTwoOrThreeUnspecifedDigits = Combine(
-    digit + (digit ^ "X") + (digit ^ "X") + "X"
+    Optional("-") + digit + (digit ^ "X") + (digit ^ "X") + "X"
 )("year")
 monthUnspecified = year + "-" + L("XX")("month")
 dayUnspecified = yearMonth + "-" + L("XX")("day")

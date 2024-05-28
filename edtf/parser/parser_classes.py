@@ -561,16 +561,13 @@ class Unspecified(Date):
             int(significant_digits) if significant_digits else None
         )
         self.ua = ua if ua else None
+        self.negative = self.year.startswith("-")
 
     def __str__(self):
-        r = self.year
-        if self.month:
-            r += f"-{self.month}"
-            if self.day:
-                r += f"-{self.day}"
+        base = super().__str__()
         if self.ua:
-            r += str(self.ua)
-        return r
+            base += str(self.ua)
+        return base
 
     def _get_fuzzy_padding(self, lean):
         if not self.ua:
@@ -579,24 +576,16 @@ class Unspecified(Date):
         padding = relativedelta()
 
         if self.year:
-            if self.precision == PRECISION_MILLENIUM:
-                padding += relativedelta(
-                    years=int(
-                        multiplier * appsettings.PADDING_MILLENNIUM_PRECISION.years
-                    )
-                )
-            elif self.precision == PRECISION_CENTURY:
-                padding += relativedelta(
-                    years=int(multiplier * appsettings.PADDING_CENTURY_PRECISION.years)
-                )
-            elif self.precision == PRECISION_DECADE:
-                padding += relativedelta(
-                    years=int(multiplier * appsettings.PADDING_DECADE_PRECISION.years)
-                )
-            else:
-                padding += relativedelta(
-                    years=int(multiplier * appsettings.PADDING_YEAR_PRECISION.years)
-                )
+            year_no_symbol = self.year.lstrip("-")
+            years_padding = self._calculate_years_padding(multiplier, year_no_symbol)
+            # Reverse the padding for negative years and earliest calculations
+            # if self.negative:
+            #     years_padding = -years_padding if lean == EARLIEST else years_padding
+            # else:
+            #     years_padding = years_padding if lean == EARLIEST else -years_padding
+
+            padding += years_padding
+
         if self.month:
             padding += relativedelta(
                 months=int(multiplier * appsettings.PADDING_MONTH_PRECISION.months)
@@ -608,6 +597,184 @@ class Unspecified(Date):
 
         return padding
 
+    def _calculate_years_padding(self, multiplier, year_no_symbol):
+        if self.precision == PRECISION_MILLENIUM:
+            return relativedelta(
+                years=int(multiplier * appsettings.PADDING_MILLENNIUM_PRECISION.years)
+            )
+        elif self.precision == PRECISION_CENTURY:
+            return relativedelta(
+                years=int(multiplier * appsettings.PADDING_CENTURY_PRECISION.years)
+            )
+        elif self.precision == PRECISION_DECADE:
+            return relativedelta(
+                years=int(multiplier * appsettings.PADDING_DECADE_PRECISION.years)
+            )
+        else:
+            return relativedelta(
+                years=int(multiplier * appsettings.PADDING_YEAR_PRECISION.years)
+            )
+
+    def lower_fuzzy(self):
+        time_empty_time_tuple = tuple(TIME_EMPTY_TIME)
+        time_empty_extras_tuple = tuple(TIME_EMPTY_EXTRAS)
+        strict_val = (
+            self.lower_strict()
+        )  # negative handled in the lower_strict() override
+
+        if self.negative:
+            adjusted = apply_delta(sub, strict_val, self._get_fuzzy_padding(LATEST))
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                adjusted = struct_time(
+                    (adjusted.tm_year, 1, 1)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+            elif self.precision == PRECISION_MONTH:
+                adjusted = struct_time(
+                    (adjusted.tm_year, adjusted.tm_mon, 1)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+        else:
+            adjusted = apply_delta(sub, strict_val, self._get_fuzzy_padding(EARLIEST))
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                adjusted = struct_time(
+                    (adjusted.tm_year, 1, 1)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+            elif self.precision == PRECISION_MONTH:
+                days_in_month = calendar.monthrange(adjusted.tm_year, adjusted.tm_mon)[
+                    1
+                ]
+                adjusted = struct_time(
+                    (adjusted.tm_year, adjusted.tm_mon, days_in_month)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+
+        return adjusted
+
+    def upper_fuzzy(self):
+        time_empty_time_tuple = tuple(TIME_EMPTY_TIME)
+        time_empty_extras_tuple = tuple(TIME_EMPTY_EXTRAS)
+        strict_val = (
+            self.upper_strict()
+        )  # negative handled in the upper_strict() override
+
+        if self.negative:
+            adjusted = apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                adjusted = struct_time(
+                    (adjusted.tm_year, 12, 31)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+            elif self.precision == PRECISION_MONTH:
+                days_in_month = calendar.monthrange(adjusted.tm_year, adjusted.tm_mon)[
+                    1
+                ]
+                adjusted = struct_time(
+                    (adjusted.tm_year, adjusted.tm_mon, days_in_month)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+        else:
+            adjusted = apply_delta(add, strict_val, self._get_fuzzy_padding(LATEST))
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                adjusted = struct_time(
+                    (adjusted.tm_year, 12, 31)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+            elif self.precision == PRECISION_MONTH:
+                adjusted = struct_time(
+                    (adjusted.tm_year, adjusted.tm_mon, 1)
+                    + time_empty_time_tuple
+                    + time_empty_extras_tuple
+                )
+
+        return adjusted
+
+    def lower_strict(self):
+        if self.negative:
+            strict_val = self._strict_date(
+                lean=LATEST
+            )  # gets the year right, but need to adjust day and month
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                return struct_time(
+                    (strict_val.tm_year, 1, 1)
+                    + tuple(TIME_EMPTY_TIME)
+                    + tuple(TIME_EMPTY_EXTRAS)
+                )
+            elif self.precision == PRECISION_MONTH:
+                days_in_month = calendar.monthrange(
+                    strict_val.tm_year, strict_val.tm_mon
+                )[1]
+                return struct_time(
+                    (strict_val.tm_year, strict_val.tm_mon, days_in_month)
+                    + tuple(TIME_EMPTY_TIME)
+                    + tuple(TIME_EMPTY_EXTRAS)
+                )
+            else:
+                return strict_val
+        else:
+            return self._strict_date(lean=EARLIEST)
+
+    def upper_strict(self):
+        if self.negative:
+            strict_val = self._strict_date(lean=EARLIEST)
+            if (
+                self.precision == PRECISION_YEAR
+                or self.precision == PRECISION_DECADE
+                or self.precision == PRECISION_CENTURY
+                or self.precision == PRECISION_MILLENIUM
+            ):
+                return struct_time(
+                    (strict_val.tm_year, 12, 31)
+                    + tuple(TIME_EMPTY_TIME)
+                    + tuple(TIME_EMPTY_EXTRAS)
+                )
+            elif self.precision == PRECISION_MONTH:
+                days_in_month = calendar.monthrange(
+                    strict_val.tm_year, strict_val.tm_mon
+                )[1]
+                return struct_time(
+                    (strict_val.tm_year, strict_val.tm_mon, days_in_month)
+                    + tuple(TIME_EMPTY_TIME)
+                    + tuple(TIME_EMPTY_EXTRAS)
+                )
+            else:
+                return strict_val
+        else:
+            return self._strict_date(lean=LATEST)
+
     @property
     def precision(self):
         if self.day:
@@ -615,13 +782,14 @@ class Unspecified(Date):
         if self.month:
             return PRECISION_MONTH
         if self.year:
-            if self.year.isdigit():
+            year_no_symbol = self.year.lstrip("-")
+            if year_no_symbol.isdigit():
                 return PRECISION_YEAR
-            if len(self.year) == 4 and self.year.endswith("XXX"):
+            if len(year_no_symbol) == 4 and year_no_symbol.endswith("XXX"):
                 return PRECISION_MILLENIUM
-            if len(self.year) == 4 and self.year.endswith("XX"):
+            if len(year_no_symbol) == 4 and year_no_symbol.endswith("XX"):
                 return PRECISION_CENTURY
-            if len(self.year) == 4 and self.year.endswith("X"):
+            if len(year_no_symbol) == 4 and year_no_symbol.endswith("X"):
                 return PRECISION_DECADE
         raise ValueError(f"Unspecified date {self} has no precision")
 
