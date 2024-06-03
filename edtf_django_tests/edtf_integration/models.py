@@ -49,9 +49,5 @@ class TestEvent(models.Model):
         return (
             f"Test Event: {self.date_display=}, "
             f"{self.date_edtf_direct=}, "
-            f"{self.date_earliest=}, "
-            f"{self.date_latest=}, "
-            f"{self.date_sort_ascending=}, "
-            f"{self.date_sort_descending=}, "
             f"{self.date_edtf=}"
         )
