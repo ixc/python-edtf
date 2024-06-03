@@ -4,10 +4,12 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import signals
 from django.db.models.query_utils import DeferredAttribute
+from pyparsing import ParseException
 
 from edtf import EDTFObject, parse_edtf
 from edtf.convert import struct_time_to_date, struct_time_to_jd
 from edtf.natlang import text_to_edtf
+from edtf.parser.edtf_exceptions import EDTFParseException
 
 DATE_ATTRS = (
     "lower_strict",
@@ -132,10 +134,12 @@ class EDTFField(models.CharField):
         if direct_input and (
             existing_value is None or str(existing_value) != direct_input
         ):
-            edtf = parse_edtf(
-                direct_input, fail_silently=True
-            )  # ParseException if invalid; should this be raised?
-            # TODO pyparsing.ParseExceptions are very noisy and dumps the whole grammar (see https://github.com/ixc/python-edtf/issues/46)
+            try:
+                edtf = parse_edtf(
+                    direct_input, fail_silently=True
+                )  # ParseException if invalid; should this be raised?
+            except ParseException as err:
+                raise EDTFParseException(direct_input, err) from None
 
             # set the natural_text (display) field to the direct_input if it is not provided
             if natural_text == "":
