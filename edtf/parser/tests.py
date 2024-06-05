@@ -240,6 +240,24 @@ BENCHMARK_EXAMPLES = (
     "2001-29",
 )
 
+APPROXIMATE_UNCERTAIN_EXAMPLES = (
+    # first part of tuple is the input EDTF string, second part is a tuple of booleans:
+    # uncertain ?, approximate ~, both uncertain and approximate %
+    ("2004", (False, False, False)),
+    ("2006-06-11", (False, False, False)),
+    ("-0999", (False, False, False)),
+    ("1984?", (True, False, False)),
+    ("2004-06-11?", (True, False, False)),
+    ("1984~", (False, True, False)),
+    ("1984%", (False, False, True)),
+    ("1984~/2004-06", (False, True, False)),
+    ("2004-%06", (False, False, True)),
+    ("2004?-~06-~04", (True, True, False)),
+    ("2011-~06-~04", (False, True, False)),
+    ("2004-06-~01/2004-06-~20", (False, True, False)),
+    ("156X~", (False, True, False)),
+)
+
 BAD_EXAMPLES = (
     # parentheses are not used for group qualification in the 2018 spec
     None,
@@ -379,3 +397,17 @@ def test_comparisons():
 def test_benchmark_parser(benchmark, test_input):
     """Benchmark parsing of selected EDTF strings."""
     benchmark(parse, test_input)
+
+
+@pytest.mark.parametrize("test_input,expected_tuple", APPROXIMATE_UNCERTAIN_EXAMPLES)
+def test_approximate_uncertain(test_input, expected_tuple):
+    """Test parsing of EDTF strings and check .is_uncertain, .is_approximate,
+    and .is_uncertain_and_approximate properties. The expected_tuple should have three
+    values, the first should be a boolean indicating if the date is uncertain,
+    the second should be a boolean indicating if the date is approximate, and the
+    third should be a boolean indicating if the date is both uncertain and approximate."""
+    result = parse(test_input)
+    assert isinstance(result, EDTFObject), "Result should be an instance of EDTFObject"
+    assert result.is_uncertain == expected_tuple[0]
+    assert result.is_approximate == expected_tuple[1]
+    assert result.is_uncertain_and_approximate == expected_tuple[2]
