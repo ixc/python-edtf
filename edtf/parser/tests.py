@@ -347,6 +347,14 @@ def test_non_parsing(bad_input):
         parse(bad_input)
 
 
+@pytest.mark.parametrize("bad_input", [None, ""])
+def test_empty_input(bad_input):
+    """Test that empty input raises a specific exception."""
+    with pytest.raises(EDTFParseException) as exc_info:
+        parse(bad_input)
+    assert "You must supply some input text" in str(exc_info.value)
+
+
 def test_comparisons():
     """Test comparisons between parsed EDTF objects and standard dates."""
     d1 = parse("1979-08~")

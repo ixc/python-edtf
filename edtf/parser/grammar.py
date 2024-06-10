@@ -4,6 +4,7 @@
 # https://github.com/pyparsing/pyparsing/wiki/Performance-Tips
 
 import pyparsing
+from edtf.appsettings import DEBUG_PYPARSING
 
 pyparsing.ParserElement.enablePackrat()
 
@@ -342,14 +343,18 @@ edtfParser = (
 )
 
 
-def parse_edtf(str, parseAll=True, fail_silently=False):
+def parse_edtf(input_string, parseAll=True, fail_silently=False, debug=None):
+    if debug is None:
+        debug = DEBUG_PYPARSING
+    if not input_string:
+        raise EDTFParseException(input_string)
     try:
-        if not str:
-            raise ParseException("You must supply some input text")
-        p = edtfParser.parseString(str.strip(), parseAll)
+        p = edtfParser.parseString(input_string.strip(), parseAll)
         if p:
             return p[0]
     except ParseException as err:
         if fail_silently:
             return None
-        raise EDTFParseException(err) from err
+        if debug:
+            raise
+        raise EDTFParseException(input_string, err) from None
