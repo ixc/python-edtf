@@ -91,7 +91,7 @@ def apply_delta(op, time_struct, delta):
 
 class EDTFObject:
     """
-    Object to attact to a parser to become instantiated when the parser
+    Object to attach to a parser to become instantiated when the parser
     completes.
     """
 
@@ -470,6 +470,11 @@ class UncertainOrApproximate(EDTFObject):
     def __init__(self, date, ua):
         self.date = date
         self.ua = ua
+        self.is_uncertain = ua.is_uncertain if ua else False
+        self.is_approximate = ua.is_approximate if ua else False
+        self.is_uncertain_and_approximate = (
+            ua.is_uncertain_and_approximate if ua else False
+        )
 
     def __str__(self):
         if self.ua:
@@ -558,6 +563,11 @@ class Unspecified(Date):
             **kwargs,
         )
         self.ua = ua
+        self.is_uncertain = ua.is_uncertain if ua else False
+        self.is_approximate = ua.is_approximate if ua else False
+        self.is_uncertain_and_approximate = (
+            ua.is_uncertain_and_approximate if ua else False
+        )
         self.negative = self.year.startswith("-")
 
     def __str__(self):
@@ -709,6 +719,12 @@ class Level1Interval(Interval):
             self.upper = UnspecifiedIntervalSection(
                 False, UncertainOrApproximate(**lower)
             )
+        self.is_approximate = self.lower.is_approximate or self.upper.is_approximate
+        self.is_uncertain = self.lower.is_uncertain or self.upper.is_uncertain
+        self.is_uncertain_and_approximate = (
+            self.lower.is_uncertain_and_approximate
+            or self.upper.is_uncertain_and_approximate
+        )
 
     def _get_fuzzy_padding(self, lean):
         if lean == EARLIEST:
@@ -839,6 +855,27 @@ class PartialUncertainOrApproximate(Date):
         self.season_ua = season_ua
 
         self.all_ua = all_ua
+
+        uas = [
+            year_ua,
+            month_ua,
+            day_ua,
+            year_month_ua,
+            month_day_ua,
+            season_ua,
+            all_ua,
+        ]
+        self.is_uncertain = any(
+            item.is_uncertain for item in uas if hasattr(item, "is_uncertain")
+        )
+        self.is_approximate = any(
+            item.is_approximate for item in uas if hasattr(item, "is_approximate")
+        )
+        self.is_uncertain_and_approximate = any(
+            item.is_uncertain_and_approximate
+            for item in uas
+            if hasattr(item, "is_uncertain_and_approximate")
+        )
 
     def __str__(self):
         if self.season_ua:
@@ -1046,6 +1083,12 @@ class Level2Interval(Level1Interval):
             self.upper = upper[0]
         else:
             self.upper = upper
+        self.is_approximate = self.lower.is_approximate or self.upper.is_approximate
+        self.is_uncertain = self.lower.is_uncertain or self.upper.is_uncertain
+        self.is_uncertain_and_approximate = (
+            self.lower.is_uncertain_and_approximate
+            or self.upper.is_uncertain_and_approximate
+        )
 
 
 class Level2Season(Season):

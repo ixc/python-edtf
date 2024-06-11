@@ -342,6 +342,51 @@ One can interpret uncertain or approximate dates as 'plus or minus a [level of p
 
 If a date is both uncertain __and__ approximate, the padding is applied twice, i.e. it gets 100% * 2 padding, or 'plus or minus two [levels of precision]'.
 
+### Qualification properties
+EDTF objects support properties that provide an overview of how the object is qualified:
+- `.is_uncertain (?)`
+- `.is_approximate (~)`
+- `.is_uncertain_and_approximate (%)`
+These properties represent whether the any part of the date object is uncertain, approximate, or uncertain and approximate. For ranges, the properties are true if any part of the range (lower or upper section) is qualified as such. A date is not necessarily uncertain and approximate if it is separately both uncertain and approximate - it must have the "%" qualifier to be considered uncertain and aproximate.
+```python
+>>> parse_edtf("2006-06-11")
+Date: '2006-06-11'
+>>> parse_edtf("2006-06-11").is_uncertain
+False
+>>> parse_edtf("2006-06-11").is_approximate
+False
+
+>>> parse_edtf("1984?")
+UncertainOrApproximate: '1984?'
+>>> parse_edtf("1984?").is_approximate
+False
+>>> parse_edtf("1984?").is_uncertain
+True
+>>> parse_edtf("1984?").is_uncertain_and_approximate
+False
+
+>>> parse_edtf("1984%").is_uncertain
+False
+>>> parse_edtf("1984%").is_uncertain_and_approximate
+True
+
+>>> parse_edtf("1984~/2004-06")
+Level1Interval: '1984~/2004-06'
+>>> parse_edtf("1984~/2004-06").is_approximate
+True
+>>> parse_edtf("1984~/2004-06").is_uncertain
+False
+
+>>> parse_edtf("2004?-~06-~04")
+PartialUncertainOrApproximate: '2004?-~06-~04'
+>>> parse_edtf("2004?-~06-~04").is_approximate
+True
+>>> parse_edtf("2004?-~06-~04").is_uncertain
+True
+>>> parse_edtf("2004?-~06-~04").is_uncertain_and_approximate
+False
+```
+
 ### Seasons
 
 Seasons are interpreted as Northern Hemisphere by default. To change this, override the month mapping in `appsettings.py`.

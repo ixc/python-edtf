@@ -48,21 +48,12 @@ class EDTFField(models.CharField):
         **kwargs,
     ):
         kwargs["max_length"] = 2000
-        (
-            self.natural_text_field,
-            self.direct_input_field,
-            self.lower_strict_field,
-            self.upper_strict_field,
-            self.lower_fuzzy_field,
-            self.upper_fuzzy_field,
-        ) = (
-            natural_text_field,
-            direct_input_field,
-            lower_strict_field,
-            upper_strict_field,
-            lower_fuzzy_field,
-            upper_fuzzy_field,
-        )
+        self.natural_text_field = natural_text_field
+        self.direct_input_field = direct_input_field
+        self.lower_strict_field = lower_strict_field
+        self.upper_strict_field = upper_strict_field
+        self.lower_fuzzy_field = lower_fuzzy_field
+        self.upper_fuzzy_field = upper_fuzzy_field
         super().__init__(verbose_name, name, **kwargs)
 
     description = (
@@ -74,6 +65,8 @@ class EDTFField(models.CharField):
         name, path, args, kwargs = super().deconstruct()
         if self.natural_text_field:
             kwargs["natural_text_field"] = self.natural_text_field
+        if self.direct_input_field:
+            kwargs["direct_input_field"] = self.direct_input_field
 
         for attr in DATE_ATTRS:
             field = f"{attr}_field"
@@ -152,7 +145,7 @@ class EDTFField(models.CharField):
             ):
                 edtf = parse_edtf(
                     edtf_string, fail_silently=True
-                )  # potetial ParseException if invalid; should this be raised?
+                )  # potential ParseException if invalid; should this be raised?
             else:
                 edtf = existing_value
         else:
