@@ -866,7 +866,7 @@ class PartialUncertainOrApproximate(Date):
             all_ua,
         ]
         self.is_uncertain = any(
-            item.is_uncertain for item in uas if hasattr(item, "is_approximate")
+            item.is_uncertain for item in uas if hasattr(item, "is_uncertain")
         )
         self.is_approximate = any(
             item.is_approximate for item in uas if hasattr(item, "is_approximate")

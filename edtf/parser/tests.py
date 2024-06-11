@@ -253,6 +253,7 @@ APPROXIMATE_UNCERTAIN_EXAMPLES = (
     ("1984~/2004-06", (False, True, False)),
     ("2004-%06", (False, False, True)),
     ("2004?-~06-~04", (True, True, False)),
+    ("2004?-06-04", (True, False, False)),
     ("2011-~06-~04", (False, True, False)),
     ("2004-06-~01/2004-06-~20", (False, True, False)),
     ("156X~", (False, True, False)),

@@ -378,7 +378,8 @@ True
 False
 
 >>> parse_edtf("2004?-~06-~04")
-PartialUncertainOrApproximate: '2004?-~06-~04'>>> L2_PartialUncertainOrApproximate.is_approximate
+PartialUncertainOrApproximate: '2004?-~06-~04'
+>>> parse_edtf("2004?-~06-~04").is_approximate
 True
 >>> parse_edtf("2004?-~06-~04").is_uncertain
 True
