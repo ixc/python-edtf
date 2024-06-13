@@ -74,6 +74,26 @@ class TestEventModelTests(TestCase):
         self.assertEqual(self.event3.date_display, "2019-11")
         self.assertEqual(self.event4.date_display, "Approximately August 2018")
 
+    def test_date_display_with_none_or_empty_string(self):
+        """
+        Test that the date_display field is correctly populated when the
+        `natural_date` field is set to empty string (for example, if it
+        were used with `null=False` in the model definition) or set to
+        None (if it were used with `null=True`).
+        """
+        event = TestEvent(date_display="")
+        event.date_edtf_direct = "2020-03-15/2020-04-15"
+        # Trigger the descriptor to update the date_display field
+        event.date_edtf = ""
+        self.assertEqual(event.date_display, "2020-03-15/2020-04-15")
+
+        event = TestEvent(date_display=None)
+        # Verify date_display is set to None even though the field is `null=False`
+        self.assertIsNone(event.date_display)
+        event.date_edtf_direct = "2020-03-15/2020-04-15"
+        event.date_edtf = ""
+        self.assertEqual(event.date_display, "2020-03-15/2020-04-15")
+
     def test_comparison(self):
         # test equality of the same dates
         self.assertEqual(
