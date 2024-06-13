@@ -135,7 +135,7 @@ class EDTFField(models.CharField):
                 raise EDTFParseException(direct_input, err) from None
 
             # set the natural_text (display) field to the direct_input if it is not provided
-            if natural_text == "":
+            if not natural_text:
                 setattr(instance, self.natural_text_field, direct_input)
 
         elif natural_text:
