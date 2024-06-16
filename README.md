@@ -444,7 +444,7 @@ False
 ### Seasons
 
 [!IMPORTANT]
-Seasons are interpreted as Northern Hemisphere by default. To change this, override the month mapping in `appsettings.py`.
+Seasons are interpreted as Northern Hemisphere by default. To change this, override the month mapping in [`appsettings.py`](edtf/appsettings.py).
 
 ### Comparisons
 
