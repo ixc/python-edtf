@@ -16,6 +16,7 @@ authors = [
     { name = "Mark Finger" },
     { name = "Sabine Müller" },
     { name = "Cole Crawford" }
+    { name = "Klaus Rettinghaus" }
 ]
 maintainers = [
     { name = "The Interaction Consortium", email = "studio@interaction.net.au" }
