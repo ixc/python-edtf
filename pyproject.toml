@@ -12,10 +12,11 @@ readme = {file = "README.txt", content-type = "text/markdown"}
 authors = [
     { name = "The Interaction Consortium", email = "studio@interaction.net.au"},
     { name = "Alastair Weakley"},
+    { name = "Greg Turner"},
     { name = "James Murty"},
     { name = "Mark Finger" },
     { name = "Sabine Müller" },
-    { name = "Cole Crawford" }
+    { name = "Cole Crawford" },
     { name = "Klaus Rettinghaus" }
 ]
 maintainers = [
