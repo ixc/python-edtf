@@ -4,7 +4,6 @@ import re
 from datetime import datetime
 
 from dateutil.parser import ParserError, parse
-from six.moves import xrange
 
 from edtf import appsettings
 
@@ -216,7 +215,7 @@ def text_to_edtf_date(text):
         mentions_month = re.findall(r"\bmonth\b.+(in|during)\b", t)
         mentions_day = re.findall(r"\bday\b.+(in|during)\b", t)
 
-        for i in xrange(len(date1)):
+        for i in range(len(date1)):
             # if the given year could be a century (e.g. '1800s') then use
             # approximate/uncertain markers to decide whether we treat it as
             # a century or a decade.
@@ -238,7 +237,7 @@ def text_to_edtf_date(text):
 
         # strip off unknown chars from end of string - except the first 4
 
-        for i in reversed(xrange(len(result))):
+        for i in reversed(range(len(result))):
             if result[i] not in ("X", "-"):
                 smallest_length = 4
 
