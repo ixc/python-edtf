@@ -215,6 +215,7 @@ class EDTFField(models.CharField):
                     f"You must specify a '{field_alias}' for EDTFField",
                     hint=None,
                     obj=self,
+                    id="python-edtf.EDTF01",
                 )
             ]
 
@@ -227,6 +228,7 @@ class EDTFField(models.CharField):
                     f"'{self.name}' refers to a non-existent '{field_alias}' field: '{field_name}'",
                     hint=None,
                     obj=self,
+                    id="python-edtf.EDTF02",
                 )
             ]
         return []
