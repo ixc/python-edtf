@@ -122,3 +122,38 @@ class TestEventModelTests(TestCase):
             self.event2.date_edtf,
             "2019-11 is less than 2021-05-06",
         )
+
+    def test_field_related_field_specification(self):
+        edtf_field_on_model = TestEvent._meta.get_field("date_edtf")
+        required_fields = (
+            "direct_input_field",
+            "lower_fuzzy_field",
+            "lower_strict_field",
+            "natural_text_field",
+            "upper_fuzzy_field",
+            "upper_strict_field",
+        )
+        for field_alias in required_fields:
+            # Remove the alias from the edtf_field
+            orig_value = getattr(edtf_field_on_model, field_alias)
+            setattr(edtf_field_on_model, field_alias, None)
+            errors = edtf_field_on_model.check()
+            self.assertEqual(len(errors), 1)
+            self.assertTrue(field_alias in errors[0].msg)
+            # Replace the field so later tests can still work
+            setattr(edtf_field_on_model, field_alias, orig_value)
+
+            # TODO: this is not working yet
+            # # Remove the field from the model
+            # referenced_field_name = getattr(edtf_field_on_model, field_alias)
+            # orig_fields = TestEvent._meta.local_fields
+            # TestEvent._meta.local_fields = [  # type: ignore
+            #     field
+            #     for field in TestEvent._meta.local_fields
+            #     if field.name != referenced_field_name
+            # ]
+            # errors = TestEvent._meta.get_field("date_edtf").check()
+            # self.assertEqual(len(errors), 1)
+            # self.assertTrue(referenced_field_name in errors[0].msg)
+            # # Replace the field so later tests can still work
+            # TestEvent._meta.local_fields = orig_fields
