@@ -337,8 +337,8 @@ The `struct_time` representation is more difficult to work with, but can be sort
 
 If you are sure you are working with dates within the range supported by Python's `datetime` module, you can get these more convenient objects using the `edtf.struct_time_to_date` and `edtf.struct_time_to_datetime` functions.
 
-[!NOTE]
-This library previously did return `date` and `datetime` objects from methods by default before we switched to `struct_time`. See ticket <https://github.com/ixc/python-edtf/issues/26>.
+> [!NOTE]
+> This library previously did return `date` and `datetime` objects from methods by default before we switched to `struct_time`. See ticket <https://github.com/ixc/python-edtf/issues/26>.
 
 ### `lower_strict` and `upper_strict`
 
@@ -443,8 +443,8 @@ False
 
 ### Seasons
 
-[!IMPORTANT]
-Seasons are interpreted as Northern Hemisphere by default. To change this, override the month mapping in [`appsettings.py`](edtf/appsettings.py).
+> [!IMPORTANT]
+> Seasons are interpreted as Northern Hemisphere by default. To change this, override the month mapping in [`appsettings.py`](edtf/appsettings.py).
 
 ### Comparisons
 
@@ -458,8 +458,8 @@ To store a natural language value on your model, define another field, and set t
 
 When your model is saved, the `natural_text_field` value will be parsed to set the `date_edtf` value, and the underlying EDTF object will set the `_earliest` and `_latest` fields on the model to a float value representing the Julian Date.
 
-[!WARNING]
-The conversion to and from Julian Date numerical values can be inaccurate, especially for ancient dates back to thousands of years BC. Ideally Julian Date values should be used for range and ordering operations only where complete accuracy is not required. They should __not__ be used for definitive storage or for display after roundtrip conversions.
+> [!WARNING]
+> The conversion to and from Julian Date numerical values can be inaccurate, especially for ancient dates back to thousands of years BC. Ideally Julian Date values should be used for range and ordering operations only where complete accuracy is not required. They should __not__ be used for definitive storage or for display after roundtrip conversions.
 
 Example usage:
 
