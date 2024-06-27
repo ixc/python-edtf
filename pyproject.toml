@@ -4,7 +4,6 @@ version = "5.0.0"
 dependencies = [
     "python-dateutil",
     "pyparsing",
-    "six"
 ]
 description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
 requires-python = ">=3.8"
