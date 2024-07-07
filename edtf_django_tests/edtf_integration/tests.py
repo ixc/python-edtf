@@ -122,3 +122,34 @@ class TestEventModelTests(TestCase):
             self.event2.date_edtf,
             "2019-11 is less than 2021-05-06",
         )
+
+    def test_field_related_field_specification(self):
+        edtf_field_on_model = TestEvent._meta.get_field("date_edtf")
+        required_fields = (
+            "direct_input_field",
+            "lower_fuzzy_field",
+            "lower_strict_field",
+            "natural_text_field",
+            "upper_fuzzy_field",
+            "upper_strict_field",
+        )
+        for field_alias in required_fields:
+            # Remove the alias from the edtf_field
+            orig_value = getattr(edtf_field_on_model, field_alias)
+            setattr(edtf_field_on_model, field_alias, None)
+            errors = edtf_field_on_model.check()
+            self.assertEqual(len(errors), 1)
+            self.assertTrue(field_alias in errors[0].msg)
+            # Should be an 'alias not specified' error
+            self.assertEqual(errors[0].id, "python-edtf.EDTF01")
+
+            # Point the alias to a non-existent field
+            setattr(edtf_field_on_model, field_alias, "fake")
+            errors = edtf_field_on_model.check()
+            self.assertEqual(len(errors), 1)
+            self.assertTrue(field_alias in errors[0].msg)
+            # Should be a 'non-eixstent field' error
+            self.assertEqual(errors[0].id, "python-edtf.EDTF02")
+
+            # Repair the field so later tests can still work
+            setattr(edtf_field_on_model, field_alias, orig_value)

@@ -1,5 +1,6 @@
 import pickle
 
+from django.core import checks
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import signals
@@ -188,3 +189,46 @@ class EDTFField(models.CharField):
         # Only run post-initialization values update on non-abstract models
         if not cls._meta.abstract:
             signals.post_init.connect(self.update_values, sender=cls)
+
+    def check(self, **kwargs):
+        errors = super().check(**kwargs)
+
+        for field_alias in [
+            "direct_input_field",
+            "lower_fuzzy_field",
+            "lower_strict_field",
+            "natural_text_field",
+            "upper_fuzzy_field",
+            "upper_strict_field",
+        ]:
+            errors.extend(self._check_field(field_alias))
+
+        return errors
+
+    def _check_field(self, field_alias):
+        field_name = getattr(self, field_alias, None)
+
+        # Check if the alias value has been provided in the field definition
+        if not field_name:
+            return [
+                checks.Error(
+                    f"You must specify a '{field_alias}' for EDTFField",
+                    hint=None,
+                    obj=self,
+                    id="python-edtf.EDTF01",
+                )
+            ]
+
+        # Check if the field that is referenced actually exists
+        try:
+            self.model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            return [
+                checks.Error(
+                    f"'{self.name}' refers to a non-existent '{field_alias}' field: '{field_name}'",
+                    hint=None,
+                    obj=self,
+                    id="python-edtf.EDTF02",
+                )
+            ]
+        return []
