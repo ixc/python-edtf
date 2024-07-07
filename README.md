@@ -515,3 +515,7 @@ Since the `EDTFField` and the `_earliest` and `_latest` field values are set aut
 * Check formatting: `ruff format --check --config pyproject.toml`
 * Fix formatting: `ruff format --config pyproject.toml`
 * Linting and formatting checks and attempted fixes are also run as precommit hooks if you installed them.
+
+### Coverage and benchmraks
+
+Coverage reports are generated and added as comments to commits, and also visible in the actions log. Benchmarks are run on pull requests and are published [here]( https://ixc.github.io/python-edtf/dev/bench/) and also visible in the actions log.
