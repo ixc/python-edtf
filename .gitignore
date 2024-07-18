@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+venv/
 build/
 develop-eggs/
 dist/
@@ -41,7 +42,14 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage_combined.xml
+.coverage_main
+.coverage_django
 *,cover
+combined_junit_pytest.xml
+pytest.xml
+junit_pytest_main.xml
+junit_pytest_django.xml
 
 # Translations
 *.mo
@@ -49,6 +57,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+db.sqlite3
 
 # Sphinx documentation
 docs/_build/

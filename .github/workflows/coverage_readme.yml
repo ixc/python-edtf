@@ -1,0 +1,68 @@
+name: Update Coverage on Readme
+on:
+  push:
+    branches:
+      - main
+
+# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+# `contents` is for permission to the contents of the repository.
+# `pull-requests` is for permission to pull request
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+# see: https://github.com/MishaKav/pytest-coverage-comment
+jobs:
+  update-coverage-on-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+          cache: 'pip'
+          cache-dependency-path: '**/pyproject.toml'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[test]
+
+      - name: Run tests and generate coverage
+        run: |
+          pytest
+          mv .coverage .coverage_main
+          cd edtf_django_tests
+          coverage run manage.py test edtf_integration
+          mv .coverage ../.coverage_django
+          cd ..
+          coverage combine .coverage_main .coverage_django
+          coverage report --omit="edtf_django_tests/*"
+          coverage xml -o coverage_combined.xml --omit="edtf_django_tests/*"
+
+      - name: Pytest coverage comment
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: coverageComment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: ./coverage_combined.xml
+          hide-comment: true
+
+      - name: Update Readme with Coverage Html
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          sed -i '/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/c\<!-- Pytest Coverage Comment:Begin -->\n\${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->' ./README.md
+
+      - name: Commit & Push changes to README
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m 'Update coverage badge in README'
+          git push

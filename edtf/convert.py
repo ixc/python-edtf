@@ -1,11 +1,24 @@
-from time import struct_time
 from datetime import date, datetime
+from time import struct_time
 
 from edtf import jdutil
 
-
 TIME_EMPTY_TIME = [0, 0, 0]  # tm_hour, tm_min, tm_sec
 TIME_EMPTY_EXTRAS = [0, 0, -1]  # tm_wday, tm_yday, tm_isdst
+
+
+def old_specs_to_new_specs_expression(expression):
+    expression = expression.replace("unknown", "")
+    expression = expression.replace("open", "..")
+    expression = expression.replace("u", "X")
+    expression = expression.replace("x", "X")
+    expression = expression.replace("?~", "%")
+    expression = expression.replace("~?", "%")
+    expression = expression.replace("e", "E")
+    expression = expression.replace("y", "Y")
+    expression = expression.replace("p", "S")
+
+    return expression
 
 
 def dt_to_struct_time(dt):
@@ -19,16 +32,15 @@ def dt_to_struct_time(dt):
     """
     if isinstance(dt, datetime):
         return struct_time(
-            [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second] +
-            TIME_EMPTY_EXTRAS
+            [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+            + TIME_EMPTY_EXTRAS
         )
     elif isinstance(dt, date):
         return struct_time(
             [dt.year, dt.month, dt.day] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
         )
     else:
-        raise NotImplementedError(
-            "Cannot convert %s to `struct_time`" % type(dt))
+        raise NotImplementedError(f"Cannot convert {type(dt)} to `struct_time`")
 
 
 def struct_time_to_date(st):
@@ -99,11 +111,10 @@ def jd_to_struct_time(jd):
     # This conversion can return negative values for items we do not want to be
     # negative: month, day, hour, minute, second.
     year, month, day, hour, minute, second = _roll_negative_time_fields(
-        year, month, day, hour, minute, second)
-
-    return struct_time(
-        [year, month, day, hour, minute, second] + TIME_EMPTY_EXTRAS
+        year, month, day, hour, minute, second
     )
+
+    return struct_time([year, month, day, hour, minute, second] + TIME_EMPTY_EXTRAS)
 
 
 def _roll_negative_time_fields(year, month, day, hour, minute, second):

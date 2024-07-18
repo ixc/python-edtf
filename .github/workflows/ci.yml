@@ -1,8 +1,17 @@
 name: CI
 
 on:
-    workflow_dispatch:
     pull_request:
+    push:
+    workflow_dispatch:
+
+permissions:
+  checks: write
+  contents: write
+  # deployments permission to deploy GitHub pages website
+  deployments: write
+  pull-requests: write
+
 
 jobs:
     python-unit:
@@ -18,7 +27,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
                 python-version: ${{ matrix.python-version }}
                 cache: 'pip'
@@ -28,7 +37,90 @@ jobs:
               run: |
                   python -m pip install --upgrade pip
                   pip install .[test]
-    
+
+            - name: Check Python linting (Ruff)
+              run: ruff check --output-format=github
+
+            - name: Check Python formatting (Ruff)
+              run: ruff format --check
+
             - name: Run unit tests
               run: |
-                pytest
+                pytest --junitxml=junit_pytest_main.xml --cov-report=term-missing:skip-covered
+                mv .coverage .coverage_main
+
+            - name: Run Django integration tests
+              working-directory: ./edtf_django_tests
+              run: |
+                pytest edtf_integration/tests.py --ds=edtf_django_tests.settings --junitxml=../junit_pytest_django.xml --cov-report=term-missing:skip-covered
+                mv .coverage ../.coverage_django
+
+            - name: Combine coverage reports
+              run: |
+                coverage combine .coverage_main .coverage_django
+                coverage report --omit="edtf_django_tests/*"
+                coverage xml -o coverage_combined.xml --omit="edtf_django_tests/*"
+
+            - name: Combine JUnit XML reports
+              run: |
+                python combine_junit.py combined_junit_pytest.xml junit_pytest_main.xml junit_pytest_django.xml
+
+            - name: Pytest coverage comment
+              id: coverageComment
+              uses: MishaKav/pytest-coverage-comment@main
+              with:
+                pytest-xml-coverage-path: ./coverage_combined.xml
+                junitxml-path: ./combined_junit_pytest.xml
+                unique-id-for-comment: ${{ matrix.python-version }}
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Check the output coverage
+              run: |
+                echo "Coverage Percentage - ${{ steps.coverageComment.outputs.coverage }}"
+                echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
+                echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
+                echo "Summary Report -" ${{ steps.coverageComment.outputs.summaryReport }}
+                echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
+                echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
+                echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
+                echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
+                echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
+                echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
+                echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
+
+            - name: Run benchmarks
+              run: |
+                pytest -m benchmark --benchmark-json=./output.json
+
+            - name: Download previous benchmark data
+              uses: actions/cache@v4
+              with:
+                path: ./cache
+                key: ${{ runner.os }}-benchmark
+
+            - name: Publish benchmark results
+              uses: benchmark-action/github-action-benchmark@v1
+              if: github.event_name == 'pull_request' && github.repository == 'ixc/python-edtf'
+              with:
+                tool: 'pytest'
+                auto-push: true
+                comment-always: true
+                output-file-path: output.json
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                comment-on-alert: true
+                save-data-file: true
+                summary-always: true
+
+            - name: Comment on benchmark results without publishing
+              if: github.event_name != 'pull_request' || github.repository != 'ixc/python-edtf'
+              uses: benchmark-action/github-action-benchmark@v1
+              with:
+                tool: 'pytest'
+                auto-push: false
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                comment-always: true
+                output-file-path: output.json
+                comment-on-alert: false
+                save-data-file: true
+                summary-always: true
+                external-data-json-path: ./cache/benchmark-data.json

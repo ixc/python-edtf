@@ -1,3 +1,2 @@
 python-dateutil
 pyparsing
-six
