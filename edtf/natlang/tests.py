@@ -207,8 +207,8 @@ class TestLevel0(unittest.TestCase):
         """
         for i, o in EXAMPLES:
             e = text_to_edtf(i)
-            print("%s => %s" % (i, e))
-            self.assertEqual(e, o)
+            print(f"{i} => {e}")
+            self.assertEqual(e, o, msg=f"Testing {i}")
 
 
 if __name__ == '__main__':

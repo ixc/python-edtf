@@ -59,8 +59,7 @@ def trim_struct_time(st, strip_time=False):
     """
     if strip_time:
         return struct_time(list(st[:3]) + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
-    else:
-        return struct_time(list(st[:6]) + TIME_EMPTY_EXTRAS)
+    return struct_time(list(st[:6]) + TIME_EMPTY_EXTRAS)
 
 
 def struct_time_to_jd(st):
@@ -106,7 +105,7 @@ def jd_to_struct_time(jd):
     )
 
 
-def _roll_negative_time_fields(year, month, day, hour, minute, second):
+def _roll_negative_time_fields(year, month, day, hour, minute, second) -> tuple:
     """
     Fix date/time fields which have nonsense negative values for any field
     except for year by rolling the overall date/time value backwards, treating
@@ -142,4 +141,5 @@ def _roll_negative_time_fields(year, month, day, hour, minute, second):
         year += int(month / 12.0)  # Adjust by whole year in months
         year -= 1  # Subtract 1 for negative minutes
         month %= 12  # Convert negative month to positive remainder
-    return (year, month, day, hour, minute, second)
+
+    return year, month, day, hour, minute, second

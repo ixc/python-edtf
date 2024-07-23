@@ -36,6 +36,11 @@ UNCERTAIN_CENTURY_RE = re.compile(r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|
 APPROX_CE_RE = re.compile(r'\b(ca?\.?) ?(\d{1,4}) (ad|ce|bc|bce)')
 UNCERTAIN_CE_RE = re.compile(r'(\d{1,4}) (ad|ce|bc|bce)\?')
 
+MENTIONS_YEAR = re.compile(r'\byear\b.+(in|during)\b')
+MENTIONS_MONTH = re.compile(r'\bmonth\b.+(in|during)\b')
+MENTIONS_DAY = re.compile(r'\bday\b.+(in|during)\b')
+
+
 
 # Set of RE rules that will cause us to abort text processing, since we know
 # the results will be wrong.
@@ -212,9 +217,9 @@ def text_to_edtf_date(text) -> Optional[str]:
         date2 = dt2.isoformat()[:10]
 
         # guess precision of 'unspecified' characters to use
-        mentions_year = re.findall(r'\byear\b.+(in|during)\b', t)
-        mentions_month = re.findall(r'\bmonth\b.+(in|during)\b', t)
-        mentions_day = re.findall(r'\bday\b.+(in|during)\b', t)
+        mentions_year = re.findall(MENTIONS_YEAR, t)
+        mentions_month = re.findall(MENTIONS_MONTH, t)
+        mentions_day = re.findall(MENTIONS_DAY, t)
 
         for i in range(len(date1)):
             # if the given year could be a century (e.g. '1800s') then use

@@ -282,14 +282,16 @@ level2Expression = partialUncertainOrApproximate \
 edtfParser = level0Expression("level0") ^ level1Expression("level1") ^ level2Expression("level2")
 
 
-def parse_edtf(str, parseAll=True, fail_silently=False):
+def parse_edtf(inp: str, parse_all: bool = True, fail_silently: bool = False):
+    if not inp:
+        raise ParseException("You must supply some input text")
+
     try:
-        if not str:
-            raise ParseException("You must supply some input text")
-        p = edtfParser.parseString(str.strip(), parseAll)
-        if p:
-            return p[0]
+        p = edtfParser.parseString(inp.strip(), parse_all)
     except ParseException as e:
         if fail_silently:
             return None
         raise EDTFParseException(e)
+
+    if p:
+        return p[0]

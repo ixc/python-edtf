@@ -3,10 +3,11 @@ import sys
 from datetime import date
 from time import struct_time
 
+from pyparsing import ParseException
+
 from edtf.parser.grammar import parse_edtf as parse
 from edtf.parser.parser_classes import EDTFObject, TIME_EMPTY_TIME, \
     TIME_EMPTY_EXTRAS
-from edtf.parser.edtf_exceptions import EDTFParseException
 
 # Example object types and attributes.
 # the first item in each tuple is the input EDTF string, and expected parse result.
@@ -192,17 +193,30 @@ BAD_EXAMPLES = (
     None,
     '',
     'not a edtf string',
-    'y17e7-12-26', # not implemented
-    '2016-13-08', # wrong day order
-    '2016-02-39', # out of range
+    'y17e7-12-26',  # not implemented
+    '2016-13-08',  # wrong day order
+    '2016-02-39',  # out of range
     '-0000-01-01',  # negative zero year
 )
 
 
 class TestParsing(unittest.TestCase):
+    def iso_to_struct_time(self, iso_date):
+        """ Convert YYYY-mm-dd date strings to time structs """
+        if iso_date[0] == '-':
+            is_negative = True
+            iso_date = iso_date[1:]
+        else:
+            is_negative = False
+        y, mo, d = [int(i) for i in iso_date.split('-')]
+        if is_negative:
+            y *= -1
+        return struct_time(
+            [y, mo, d] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
+
     def test_non_parsing(self):
         for i in BAD_EXAMPLES:
-            self.assertRaises(EDTFParseException, parse, i)
+            self.assertRaises(ParseException, parse, i)
 
     def test_date_values(self):
         """
@@ -217,13 +231,15 @@ class TestParsing(unittest.TestCase):
             else:
                 o = i
 
-            sys.stdout.write("parsing '%s'" % i)
+            sys.stdout.write(f"parsing '{i}'")
             f = parse(i)
-            sys.stdout.write(" => %s()\n" % type(f).__name__)
+            sys.stdout.write(f" => {type(f).__name__}()\n")
             self.assertIsInstance(f, EDTFObject)
-            self.assertEqual(str(f), o)
+            self.assertEqual(str(f), o, msg=f"Testing {i}")
 
-            if len(e) == 5:
+            if len(e) == 1:
+                continue
+            elif len(e) == 5:
                 expected_lower_strict = e[1]
                 expected_upper_strict = e[2]
                 expected_lower_fuzzy = e[3]
@@ -243,33 +259,21 @@ class TestParsing(unittest.TestCase):
                 expected_upper_strict = e[1]
                 expected_lower_fuzzy = e[1]
                 expected_upper_fuzzy = e[1]
-            if len(e) == 1:
+            else:
+                print(f"Unexpected value {e}; skipping.")
                 continue
 
-            def iso_to_struct_time(iso_date):
-                """ Convert YYYY-mm-dd date strings to time structs """
-                if iso_date[0] == '-':
-                    is_negative = True
-                    iso_date = iso_date[1:]
-                else:
-                    is_negative = False
-                y, mo, d = [int(i) for i in iso_date.split('-')]
-                if is_negative:
-                    y *= -1
-                return struct_time(
-                    [y, mo, d] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
-
             # Convert string date representations into `struct_time`s
-            expected_lower_strict = iso_to_struct_time(expected_lower_strict)
-            expected_upper_strict = iso_to_struct_time(expected_upper_strict)
-            expected_lower_fuzzy = iso_to_struct_time(expected_lower_fuzzy)
-            expected_upper_fuzzy = iso_to_struct_time(expected_upper_fuzzy)
+            exp_lower_str = self.iso_to_struct_time(expected_lower_strict)
+            exp_upper_str = self.iso_to_struct_time(expected_upper_strict)
+            exp_lower_fuzz = self.iso_to_struct_time(expected_lower_fuzzy)
+            exp_upper_fuzz = self.iso_to_struct_time(expected_upper_fuzzy)
 
             try:
-                self.assertEqual(f.lower_strict(), expected_lower_strict)
-                self.assertEqual(f.upper_strict(), expected_upper_strict)
-                self.assertEqual(f.lower_fuzzy(), expected_lower_fuzzy)
-                self.assertEqual(f.upper_fuzzy(), expected_upper_fuzzy)
+                self.assertEqual(f.lower_strict(), exp_lower_str)
+                self.assertEqual(f.upper_strict(), exp_upper_str)
+                self.assertEqual(f.lower_fuzzy(), exp_lower_fuzz)
+                self.assertEqual(f.upper_fuzzy(), exp_upper_fuzz)
             except Exception as x:
                 # Write to stdout for manual debugging, I guess
                 sys.stdout.write(str(x))
