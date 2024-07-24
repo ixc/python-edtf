@@ -1,4 +1,5 @@
 """Utilities to derive an EDTF string from an (English) natural language string."""
+import functools
 from datetime import datetime
 from typing import Optional
 
@@ -40,15 +41,12 @@ MENTIONS_YEAR = re.compile(r'\byear\b.+(in|during)\b')
 MENTIONS_MONTH = re.compile(r'\bmonth\b.+(in|during)\b')
 MENTIONS_DAY = re.compile(r'\bday\b.+(in|during)\b')
 
-
-
 # Set of RE rules that will cause us to abort text processing, since we know
 # the results will be wrong.
-REJECT_RULES = (
-    re.compile(r'.*dynasty.*'),  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
-)
+REJECT_RULES = re.compile(r'.*dynasty.*')  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
 
 
+@functools.lru_cache()
 def text_to_edtf(text: str) -> Optional[str]:
     """
     Generate EDTF string equivalent of a given natural language date string.
@@ -123,7 +121,8 @@ def text_to_edtf(text: str) -> Optional[str]:
     return result
 
 
-def text_to_edtf_date(text) -> Optional[str]:
+@functools.lru_cache()
+def text_to_edtf_date(text: str) -> Optional[str]:
     """
     Return EDTF string equivalent of a given natural language date string.
 
@@ -137,9 +136,8 @@ def text_to_edtf_date(text) -> Optional[str]:
     t = text.lower()
     result = ''
 
-    for reject_re in REJECT_RULES:
-        if re.match(reject_re, t):
-            return None
+    if re.match(REJECT_RULES, t):
+        return None
 
     # matches on '1800s'. Needs to happen before is_decade.
     could_be_century: list = re.findall(MIGHT_BE_CENTURY, t)
@@ -185,7 +183,6 @@ def text_to_edtf_date(text) -> Optional[str]:
 
     else:
         # try dateutil.parse
-
         try:
             # parse twice, using different defaults to see what was
             # parsed and what was guessed.
