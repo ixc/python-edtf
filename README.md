@@ -253,7 +253,7 @@ The library includes a basic English natural language parser (it's not yet smart
 '1979-08~'
 ```
 
-Note that the result is a string, not an `ETDFObject`.
+Note that the result is a string, not an `EDTFObject`.
 
 The parser can parse strings such as:
 
