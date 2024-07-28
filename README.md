@@ -331,7 +331,7 @@ Since EDTF dates are often regions, and often imprecise, we need to use a few di
 
 ### `struct_time` date representation
 
-Because Python's `datetime` module does not support dates out side the range 1 AD to 9999 AD we return dates as `time.struct_time` objects by default instead of the `datetime.date` or `datetime.datetime` objects you might expect.
+Because Python's `datetime` module does not support dates outside the range 1 AD to 9999 AD we return dates as `time.struct_time` objects by default instead of the `datetime.date` or `datetime.datetime` objects you might expect.
 
 The `struct_time` representation is more difficult to work with, but can be sorted as-is which is the primary use-case, and can be converted relatively easily to `date` or `datetime` objects (provided the year is within 1 to 9999 AD) or to date objects in more flexible libraries like [astropy.time](http://docs.astropy.org/en/stable/time/index.html) for years outside these bounds.
 
@@ -372,7 +372,7 @@ These dates indicate the earliest and latest dates that are __possible__ in the 
 
 These values are useful for filtering results - i.e. testing which EDTF dates might conceivably fall into, or overlap, a desired date range.
 
-The fuzzy dates are derived from the strict dates, plus or minus a level of padding that depends on how precise the date specfication is. For the case of approximate or uncertain dates, we (arbitrarily) pad the ostensible range by 100% of the uncertain timescale, or by a 12 weeks in the case of seasons. That is, if a date is approximate at the month scale, it is padded by a month. If it is approximate at the year scale, it is padded by a year:
+The fuzzy dates are derived from the strict dates, plus or minus a level of padding that depends on how precise the date specification is. For the case of approximate or uncertain dates, we (arbitrarily) pad the ostensible range by 100% of the uncertain timescale, or by a 12 weeks in the case of seasons. That is, if a date is approximate at the month scale, it is padded by a month. If it is approximate at the year scale, it is padded by a year:
 
 ```python
 >>> e = parse_edtf('1912-04~')
@@ -400,7 +400,7 @@ EDTF objects support properties that provide an overview of how the object is qu
 * `.is_approximate (~)`
 * `.is_uncertain_and_approximate (%)`
 
-These properties represent whether the any part of the date object is uncertain, approximate, or uncertain and approximate. For ranges, the properties are true if any part of the range (lower or upper section) is qualified as such. A date is not necessarily uncertain and approximate if it is separately both uncertain and approximate - it must have the "%" qualifier to be considered uncertain and aproximate.
+These properties represent whether the any part of the date object is uncertain, approximate, or uncertain and approximate. For ranges, the properties are true if any part of the range (lower or upper section) is qualified as such. A date is not necessarily uncertain and approximate if it is separately both uncertain and approximate - it must have the "%" qualifier to be considered uncertain and approximate.
 
 ```python
 >>> parse_edtf("2006-06-11")
