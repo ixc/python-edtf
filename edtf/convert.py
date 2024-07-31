@@ -60,7 +60,7 @@ def struct_time_to_datetime(st: struct_time) -> datetime:
     return datetime(*st[:6])
 
 
-def trim_struct_time(st: struct_time, strip_time=False) -> struct_time:
+def trim_struct_time(st: struct_time, strip_time: bool = False) -> struct_time:
     """
     Return a `struct_time` based on the one provided but with the extra fields
     `tm_wday`, `tm_yday`, and `tm_isdst` reset to default values.
