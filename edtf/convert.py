@@ -39,11 +39,10 @@ def dt_to_struct_time(dt):
         return struct_time(
             [dt.year, dt.month, dt.day] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS
         )
-    else:
-        raise NotImplementedError(f"Cannot convert {type(dt)} to `struct_time`")
+    raise NotImplementedError(f"Cannot convert {type(dt)} to `struct_time`")
 
 
-def struct_time_to_date(st):
+def struct_time_to_date(st: struct_time) -> date:
     """
     Return a `datetime.date` representing the provided `struct_time.
 
@@ -52,7 +51,7 @@ def struct_time_to_date(st):
     return date(*st[:3])
 
 
-def struct_time_to_datetime(st):
+def struct_time_to_datetime(st: struct_time) -> datetime:
     """
     Return a `datetime.datetime` representing the provided `struct_time.
 
@@ -61,7 +60,7 @@ def struct_time_to_datetime(st):
     return datetime(*st[:6])
 
 
-def trim_struct_time(st, strip_time=False):
+def trim_struct_time(st: struct_time, strip_time=False) -> struct_time:
     """
     Return a `struct_time` based on the one provided but with the extra fields
     `tm_wday`, `tm_yday`, and `tm_isdst` reset to default values.
@@ -75,7 +74,7 @@ def trim_struct_time(st, strip_time=False):
         return struct_time(list(st[:6]) + TIME_EMPTY_EXTRAS)
 
 
-def struct_time_to_jd(st):
+def struct_time_to_jd(st: struct_time) -> float:
     """
     Return a float number representing the Julian Date for the given
     `struct_time`.
@@ -91,7 +90,7 @@ def struct_time_to_jd(st):
     return jdutil.date_to_jd(year, month, day)
 
 
-def jd_to_struct_time(jd):
+def jd_to_struct_time(jd: float) -> struct_time:
     """
     Return a `struct_time` converted from a Julian Date float number.
 

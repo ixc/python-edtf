@@ -18,7 +18,7 @@ import math
 #       time deltas if one date is from before 10-15-1582.
 
 
-def mjd_to_jd(mjd):
+def mjd_to_jd(mjd: float) -> float:
     """
     Convert Modified Julian Day to Julian Day.
 
@@ -37,7 +37,7 @@ def mjd_to_jd(mjd):
     return mjd + 2400000.5
 
 
-def jd_to_mjd(jd):
+def jd_to_mjd(jd: float) -> float:
     """
     Convert Julian Day to Modified Julian Day
 
@@ -55,7 +55,7 @@ def jd_to_mjd(jd):
     return jd - 2400000.5
 
 
-def date_to_jd(year, month, day):
+def date_to_jd(year: int, month: int, day: float) -> float:
     """
     Convert a date to Julian Day.
 
@@ -117,7 +117,7 @@ def date_to_jd(year, month, day):
     return jd
 
 
-def jd_to_date(jd):
+def jd_to_date(jd: float) -> tuple:
     """
     Convert Julian Day to date.
 
@@ -175,7 +175,7 @@ def jd_to_date(jd):
     return year, month, day
 
 
-def hmsm_to_days(hour=0, min=0, sec=0, micro=0):
+def hmsm_to_days(hour: int = 0, min: int = 0, sec: int = 0, micro: int = 0) -> float:
     """
     Convert hours, minutes, seconds, and microseconds to fractional days.
 
@@ -262,7 +262,7 @@ def days_to_hmsm(days):
     return int(hour), int(min), int(sec), int(micro)
 
 
-def datetime_to_jd(date):
+def datetime_to_jd(date: dt.datetime) -> float:
     """
     Convert a `datetime.datetime` object to Julian Day.
 
@@ -291,7 +291,7 @@ def datetime_to_jd(date):
     return date_to_jd(date.year, date.month, days)
 
 
-def jd_to_datetime(jd):
+def jd_to_datetime(jd: float) -> dt.datetime:
     """
     Convert a Julian Day to an `jdutil.datetime` object.
 
@@ -321,7 +321,7 @@ def jd_to_datetime(jd):
     return datetime(year, month, day, hour, min, sec, micro)
 
 
-def timedelta_to_days(td):
+def timedelta_to_days(td: dt.timedelta) -> float:
     """
     Convert a `datetime.timedelta` object to a total number of days.
 
