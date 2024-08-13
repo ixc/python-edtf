@@ -100,7 +100,7 @@ jobs:
 
             - name: Publish benchmark results
               uses: benchmark-action/github-action-benchmark@v1
-              if: github.event_name == 'pull_request' && github.repository == 'ixc/python-edtf'
+              if: github.event_name == 'pull_request' && github.repository == 'rism-digital/python-edtf'
               with:
                 tool: 'pytest'
                 auto-push: true
@@ -112,7 +112,7 @@ jobs:
                 summary-always: true
 
             - name: Comment on benchmark results without publishing
-              if: github.event_name != 'pull_request' || github.repository != 'ixc/python-edtf'
+              if: github.event_name != 'pull_request' || github.repository != 'rism-digital/python-edtf'
               uses: benchmark-action/github-action-benchmark@v1
               with:
                 tool: 'pytest'
