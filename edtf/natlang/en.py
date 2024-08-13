@@ -14,36 +14,42 @@ from edtf import appsettings
 DEFAULT_DATE_1 = datetime(1234, 1, 1, 0, 0)
 DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
-SHORT_YEAR_RE = re.compile(r'(-?)([\du])([\dxu])([\dxu])([\dxu])')
-LONG_YEAR_RE = re.compile(r'y(-?)([1-9]\d\d\d\d+)')
-CENTURY_RE = re.compile(r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?')
-CENTURY_RANGE = re.compile(r'\b(\d\d)(th|st|nd|rd|)-(\d\d)(th|st|nd|rd) [cC]')
-CE_RE = re.compile(r'(\d{1,4}) (ad|ce|bc|bce)')
-ONE_DIGIT_PARTIAL_FIRST = re.compile(r'\d\D\b')
-TWO_DIGIT_PARTIAL_FIRST = re.compile(r'\d\d\b')
-PARTIAL_CHECK = re.compile(r'\b\d\d\d\d$')
+SHORT_YEAR_RE = re.compile(r"(-?)([\du])([\dxu])([\dxu])([\dxu])")
+LONG_YEAR_RE = re.compile(r"y(-?)([1-9]\d\d\d\d+)")
+CENTURY_RE = re.compile(r"(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?")
+CENTURY_RANGE = re.compile(r"\b(\d\d)(th|st|nd|rd|)-(\d\d)(th|st|nd|rd) [cC]")
+CE_RE = re.compile(r"(\d{1,4}) (ad|ce|bc|bce)")
+ONE_DIGIT_PARTIAL_FIRST = re.compile(r"\d\D\b")
+TWO_DIGIT_PARTIAL_FIRST = re.compile(r"\d\d\b")
+PARTIAL_CHECK = re.compile(r"\b\d\d\d\d$")
 SLASH_YEAR = re.compile(r"(\d\d\d\d)/(\d\d\d\d)")
 BEFORE_CHECK = re.compile(r"\b(?:before|earlier|avant)\b")
 AFTER_CHECK = re.compile(r"\b(after|since|later|aprés|apres)\b")
-APPROX_CHECK = re.compile(r'\b(?:ca?\.? ?\d{4}|circa|approx|approximately|around|about|~\d{3,4})|(?:^~)')
+APPROX_CHECK = re.compile(
+    r"\b(?:ca?\.? ?\d{4}|circa|approx|approximately|around|about|~\d{3,4})|(?:^~)"
+)
 UNCERTAIN_CHECK = re.compile(r"\b(?:uncertain|possibly|maybe|guess|\d{3,4}\?)")
-UNCERTAIN_REPL = re.compile(r'(\d{4})\?')
-MIGHT_BE_CENTURY = re.compile(r'(\d{2}00)s')
-MIGHT_BE_DECADE = re.compile(r'(\d{3}0)s')
+UNCERTAIN_REPL = re.compile(r"(\d{4})\?")
+MIGHT_BE_CENTURY = re.compile(r"(\d{2}00)s")
+MIGHT_BE_DECADE = re.compile(r"(\d{3}0)s")
 
-APPROX_CENTURY_RE = re.compile(r'\b(ca?\.?) ?(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?')
-UNCERTAIN_CENTURY_RE = re.compile(r'(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?\?')
+APPROX_CENTURY_RE = re.compile(
+    r"\b(ca?\.?) ?(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?"
+)
+UNCERTAIN_CENTURY_RE = re.compile(
+    r"(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?\?"
+)
 
-APPROX_CE_RE = re.compile(r'\b(ca?\.?) ?(\d{1,4}) (ad|ce|bc|bce)')
-UNCERTAIN_CE_RE = re.compile(r'(\d{1,4}) (ad|ce|bc|bce)\?')
+APPROX_CE_RE = re.compile(r"\b(ca?\.?) ?(\d{1,4}) (ad|ce|bc|bce)")
+UNCERTAIN_CE_RE = re.compile(r"(\d{1,4}) (ad|ce|bc|bce)\?")
 
-MENTIONS_YEAR = re.compile(r'\byear\b.+(in|during)\b')
-MENTIONS_MONTH = re.compile(r'\bmonth\b.+(in|during)\b')
-MENTIONS_DAY = re.compile(r'\bday\b.+(in|during)\b')
+MENTIONS_YEAR = re.compile(r"\byear\b.+(in|during)\b")
+MENTIONS_MONTH = re.compile(r"\bmonth\b.+(in|during)\b")
+MENTIONS_DAY = re.compile(r"\bday\b.+(in|during)\b")
 
 # Set of RE rules that will cause us to abort text processing, since we know
 # the results will be wrong.
-REJECT_RULES = re.compile(r'.*dynasty.*')  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
+REJECT_RULES = re.compile(r".*dynasty.*")  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
 
 
 @functools.lru_cache()
@@ -57,16 +63,16 @@ def text_to_edtf(text: str) -> Optional[str]:
     t = text.lower()
 
     # try parsing the whole thing
-    result = text_to_edtf_date(t)
+    result: Optional[str] = text_to_edtf_date(t)
 
     if not result:
         # split by list delims and move fwd with the first thing that returns a non-empty string.
         # TODO: assemble multiple dates into a {} or [] structure.
         for split in [",", ";", "or"]:
             for list_item in t.split(split):
-
                 # try parsing as an interval - split by '-'
-                toks = list_item.split("-")
+                toks: list[str] = list_item.split("-")
+
                 if len(toks) == 2:
                     d1 = toks[0].strip()
                     d2 = toks[1].strip()
@@ -74,10 +80,16 @@ def text_to_edtf(text: str) -> Optional[str]:
                     # match looks from the beginning of the string, search
                     # looks anywhere.
 
-                    if re.match(ONE_DIGIT_PARTIAL_FIRST, d2):  # 1-digit year partial e.g. 1868-9
-                        if re.search(PARTIAL_CHECK, d1):  # TODO: evaluate it and see if it's a year
+                    if re.match(
+                        ONE_DIGIT_PARTIAL_FIRST, d2
+                    ):  # 1-digit year partial e.g. 1868-9
+                        if re.search(
+                            PARTIAL_CHECK, d1
+                        ):  # TODO: evaluate it and see if it's a year
                             d2 = d1[-4:-1] + d2
-                    elif re.match(TWO_DIGIT_PARTIAL_FIRST, d2):  # 2-digit year partial e.g. 1809-10
+                    elif re.match(
+                        TWO_DIGIT_PARTIAL_FIRST, d2
+                    ):  # 2-digit year partial e.g. 1809-10
                         if re.search(PARTIAL_CHECK, d1):
                             d2 = d1[-4:-2] + d2
                     else:
@@ -134,7 +146,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
         return None
 
     t = text.lower()
-    result = ''
+    result: str = ""
 
     if re.match(REJECT_RULES, t):
         return None
@@ -143,7 +155,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
     could_be_century: list = re.findall(MIGHT_BE_CENTURY, t)
     # matches on '1800s' and '1910s'. Removes the 's'.
     # Needs to happen before is_uncertain because e.g. "1860s?"
-    t, is_decade = re.subn(MIGHT_BE_DECADE, r'\1', t)
+    t, is_decade = re.subn(MIGHT_BE_DECADE, r"\1", t)
 
     # detect approximation signifiers
     # a few 'circa' abbreviations just before the year
@@ -151,7 +163,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
     # the word 'circa' anywhere
 
     # detect uncertainty signifiers
-    t, is_uncertain = re.subn(UNCERTAIN_REPL, r'\1', t)
+    t, is_uncertain = re.subn(UNCERTAIN_REPL, r"\1", t)
     is_uncertain = is_uncertain or re.findall(UNCERTAIN_CHECK, t)
 
     # detect century forms
@@ -191,7 +203,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
                 dayfirst=appsettings.DAY_FIRST,
                 yearfirst=False,
                 fuzzy=True,  # force a match, even if it's default date
-                default=DEFAULT_DATE_1
+                default=DEFAULT_DATE_1,
             )
 
             dt2 = parse(
@@ -199,14 +211,13 @@ def text_to_edtf_date(text: str) -> Optional[str]:
                 dayfirst=appsettings.DAY_FIRST,
                 yearfirst=False,
                 fuzzy=True,  # force a match, even if it's default date
-                default=DEFAULT_DATE_2
+                default=DEFAULT_DATE_2,
             )
 
         except ValueError:
             return None
 
-        if dt1.date() == DEFAULT_DATE_1.date() and \
-                dt2.date() == DEFAULT_DATE_2.date():
+        if dt1.date() == DEFAULT_DATE_1.date() and dt2.date() == DEFAULT_DATE_2.date():
             # couldn't parse anything - defaults are untouched.
             return None
 
@@ -223,12 +234,12 @@ def text_to_edtf_date(text: str) -> Optional[str]:
             # approximate/uncertain markers to decide whether we treat it as
             # a century or a decade.
             if i == 2 and could_be_century and not (is_approximate or is_uncertain):
-                result += 'x'
+                result += "x"
             elif i == 3 and is_decade:
                 if mentions_year:
-                    result += 'u'  # year precision
+                    result += "X"  # year precision
                 else:
-                    result += 'x'  # decade precision
+                    result += "x"  # decade precision
             elif date1[i] == date2[i]:
                 # since both attempts at parsing produced the same result
                 # it must be parsed value, not a default
@@ -236,12 +247,12 @@ def text_to_edtf_date(text: str) -> Optional[str]:
             else:
                 # different values were produced, meaning that it's likely
                 # a default. Use 'unspecified'
-                result += "u"
+                result += "X"
 
         # strip off unknown chars from end of string - except the first 4
 
         for i in reversed(range(len(result))):
-            if result[i] not in ('u', 'x', '-'):
+            if result[i] not in ("X", "-"):
                 smallest_length = 4
 
                 if mentions_month:
@@ -265,14 +276,16 @@ def text_to_edtf_date(text: str) -> Optional[str]:
 
             # end dateutil post-parsing
 
-    if is_uncertain:
-        result += "?"
-
-    if is_approximate:
-        result += "~"
+    if is_uncertain and is_approximate:
+        result += "%"
+    else:
+        if is_uncertain:
+            result += "?"
+        if is_approximate:
+            result += "~"
 
     # weed out bad parses
-    if result.startswith("uu-uu"):
+    if result.startswith("XX-XX"):
         return None
 
     return result
