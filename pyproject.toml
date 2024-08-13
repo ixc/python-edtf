@@ -1,18 +1,147 @@
-[tool.poetry]
+[project]
 name = "edtf"
-version = "4.0.1+enh"
-description = ""
-authors = ["Andrew Hankinson <andrew.hankinson@gmail.com>"]
-readme = "README.md"
-packages = [{include = "edtf"}]
+version = "5.0.0"
+dependencies = [
+    "python-dateutil",
+    "pyparsing",
+]
+description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
+requires-python = ">=3.8"
+readme = {file = "README.md", content-type = "text/markdown"}
+authors = [
+    { name = "The Interaction Consortium", email = "studio@interaction.net.au"},
+    { name = "Alastair Weakley"},
+    { name = "Greg Turner"},
+    { name = "James Murty"},
+    { name = "Mark Finger" },
+    { name = "Sabine Müller" },
+    { name = "Cole Crawford" },
+    { name = "Klaus Rettinghaus" }
+]
+maintainers = [
+    { name = "The Interaction Consortium", email = "studio@interaction.net.au" }
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-python-dateutil = "^2.9.0.post0"
-pyparsing = "^3.1.2"
-six = "^1.16.0"
+[project.optional-dependencies]
+test = [
+    "django>=4.2,<5.0",
+    "pytest",
+    "pytest-django",
+    "pytest-benchmark",
+    "ruff",
+    "pre-commit",
+    "coverage",
+    "pytest-cov",
+    "junitparser",
+]
 
+[project.urls]
+homepage = "https://github.com/ixc/python-edtf"
+issues = "https://github.com/ixc/python-edtf/issues"
+repository = "https://github.com/ixc/python-edtf.git"
+changelog = "https://github.com/ixc/python-edtf/blob/main/changelog.rst"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages.find = { where = ["."], exclude = ["edtf_django_tests", "edtf_django_tests.*"] }
+
+[tool.wheel]
+universal = false
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    min_version = 4.0
+    env_list = py{38,39,310,311,312}
+    isolated_build = true
+    skip_missing_interpreters = True
+
+    [testenv]
+    deps =
+        pytest
+        django
+    commands = pytest
+"""
+
+[tool.pytest.ini_options]
+python_files = ["tests.py", "test_*.py", "*_test.py", "*_tests.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+markers = [
+    "benchmark: mark a test as a benchmark",
+]
+addopts = "--ignore=edtf_django_tests/ --cov=edtf -m 'not benchmark'"
+plugins = ["pytest_cov", "pytest_benchmark"]
+
+[tool.coverage.run]
+# we run the edtf_integration tests but only care about them testing fields.py in the main package
+omit = [
+    "edtf_django_tests/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Don't complain about missing debug-only code:
+    "if __name__ == .__main__.:",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise NotImplemented",
+    "raise NotImplemented"
+]
+
+[tool.ruff]
+# Python 3.8
+target-version = "py38"
+
+extend-exclude = [
+    '**/migrations/*',
+]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # pycodestyle warnings
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    ## Flake8 plugins
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C",
+    # flake8-django
+    "DJ",
+    # flake8-bandit
+    "S",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+ignore = [
+    # Ignore Pycodestyle line-length warnings, (mainly long comments).
+    "E501",
+    # Ignore McCabe complexity (for now).
+    "C901",
+]

@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: "business-facing/layer"
+      - id: trailing-whitespace
+        exclude: "business-facing/layer"
+      - id: check-yaml
+        exclude: "business-facing/layer"
+      - id: check-json
+        exclude: "business-facing/layer"
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+    rev: v0.4.4
+    hooks:
+      # Run the linter, and enable lint fixes
+      - id: ruff
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
