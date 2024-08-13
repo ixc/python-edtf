@@ -1,12 +1,12 @@
 """Utilities to derive an EDTF string from an (English) natural language string."""
 import functools
+import re
 from datetime import datetime
 from typing import Optional
 
 from dateutil.parser import parse
-import re
-from edtf import appsettings
 
+from edtf import appsettings
 
 # two dates where every digit of an ISO date representation is different,
 # and one is in the past and one is in the future.
