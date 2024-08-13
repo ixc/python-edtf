@@ -98,10 +98,6 @@ class EDTFObject:
 
     parser = None
 
-    def __init__(self, *args, **kwargs):
-        errmsg: str = f"{type(self).__name__}.__init__(*{args}, **{kwargs})"
-        raise NotImplementedError(f"{errmsg} is not implemented.")
-
     @classmethod
     def set_parser(cls, p):
         cls.parser = p
@@ -288,6 +284,7 @@ class Date(EDTFObject):
 
     def get_year(self) -> int:
         return self._year
+
     year = property(get_year, set_year)
 
     def set_month(self, m: Optional[int]):
@@ -297,6 +294,7 @@ class Date(EDTFObject):
 
     def get_month(self) -> Optional[int]:
         return self._month
+
     month = property(get_month, set_month)
 
     def __str__(self):
@@ -932,8 +930,9 @@ class PartialUncertainOrApproximate(Date):
 
         return result
 
-    def set_year(self, y): # Year can be None.
+    def set_year(self, y):  # Year can be None.
         self._year = y
+
     year = property(Date.get_year, set_year)
 
     def _precise_year(self, lean: str):
