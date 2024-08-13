@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime
 from operator import add, sub
 from time import struct_time
+from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 

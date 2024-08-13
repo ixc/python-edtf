@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 
 from edtf import appsettings
 
@@ -126,9 +126,9 @@ def text_to_edtf(text: str) -> Optional[str]:
     is_after = re.findall(AFTER_CHECK, t)
 
     if is_before:
-        result = f"unknown/{result}"
+        result = f"/{result}"
     elif is_after:
-        result = f"{result}/unknown"
+        result = f"{result}/"
 
     return result
 
@@ -172,7 +172,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
     # detect CE/BCE year form
     is_ce = re.findall(CE_RE, t)
     if is_century:
-        result = "%02dxx" % (int(is_century[0][0]) - 1,)
+        result = "%02dXX" % (int(is_century[0][0]) - 1,)
         is_approximate = is_approximate or re.findall(APPROX_CENTURY_RE, t)
         is_uncertain = is_uncertain or re.findall(UNCERTAIN_CENTURY_RE, t)
 
@@ -214,8 +214,10 @@ def text_to_edtf_date(text: str) -> Optional[str]:
                 default=DEFAULT_DATE_2,
             )
 
-        except ValueError:
-            return None
+        except ParserError:
+            return
+        except Exception:
+            return
 
         if dt1.date() == DEFAULT_DATE_1.date() and dt2.date() == DEFAULT_DATE_2.date():
             # couldn't parse anything - defaults are untouched.
@@ -234,12 +236,12 @@ def text_to_edtf_date(text: str) -> Optional[str]:
             # approximate/uncertain markers to decide whether we treat it as
             # a century or a decade.
             if i == 2 and could_be_century and not (is_approximate or is_uncertain):
-                result += "x"
+                result += "X"
             elif i == 3 and is_decade:
                 if mentions_year:
                     result += "X"  # year precision
                 else:
-                    result += "x"  # decade precision
+                    result += "X"  # decade precision
             elif date1[i] == date2[i]:
                 # since both attempts at parsing produced the same result
                 # it must be parsed value, not a default
