@@ -104,7 +104,7 @@ def text_to_edtf(text: str) -> Optional[str]:
                     r2 = text_to_edtf_date(d2)
 
                     if r1 and r2:
-                        result = r1 + "/" + r2
+                        result = f"{r1}/{r2}"
                         return result
 
                 # is it an either/or year "1838/1862" - that has a different
