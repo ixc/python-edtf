@@ -7,8 +7,6 @@ An implementation of EDTF format in Python, together with utility functions for 
 
 See <http://www.loc.gov/standards/datetime/> for the final draft specification.
 
-This project is based on python-edtf and was developed to include the newest specification
-
 ## To install
 
 ```shell
