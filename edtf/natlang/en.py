@@ -15,7 +15,6 @@ from edtf import appsettings
 DEFAULT_DATE_1 = datetime(1234, 1, 1, 0, 0)
 DEFAULT_DATE_2 = datetime(5678, 10, 10, 0, 0)
 
-SHORT_YEAR_RE = re.compile(r"(-?)([\du])([\dxu])([\dxu])([\dxu])")
 LONG_YEAR_RE = re.compile(r"y(-?)([1-9]\d\d\d\d+)")
 CENTURY_RE = re.compile(r"(\d{1,2})(c\.?|(st|nd|rd|th) century)\s?(ad|ce|bc|bce)?")
 CENTURY_RANGE = re.compile(r"\b(\d\d)(th|st|nd|rd|)-(\d\d)(th|st|nd|rd) [cC]")
@@ -27,7 +26,7 @@ SLASH_YEAR = re.compile(r"(\d\d\d\d)/(\d\d\d\d)")
 BEFORE_CHECK = re.compile(r"\b(?:before|earlier|avant)\b")
 AFTER_CHECK = re.compile(r"\b(after|since|later|aprés|apres)\b")
 APPROX_CHECK = re.compile(
-    r"\b(?:ca?\.? ?\d{4}|circa|approx|approximately|around|about|~\d{3,4})|(?:^~)"
+    r"\b(?:ca?\.? ?\d{4}|circa|approx|approximately|around|about|~\d{3,4})|^~"
 )
 UNCERTAIN_CHECK = re.compile(r"\b(?:uncertain|possibly|maybe|guess|\d{3,4}\?)")
 UNCERTAIN_REPL = re.compile(r"(\d{4})\?")
