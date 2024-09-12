@@ -28,7 +28,7 @@ PRECISION_SEASON = "season"
 PRECISION_DAY = "day"
 
 
-def days_in_month(year: int, month: int) -> dict:
+def days_in_month(year: int, month: int) -> int:
     """
     Return the number of days in the given year and month, where month is
     1=January to 12=December, and respecting leap years as identified by
