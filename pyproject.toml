@@ -1,6 +1,8 @@
 [project]
 name = "edtf"
 version = "5.0.0"
+license = { file = "LICENSE" }
+keywords = ['edtf']
 dependencies = [
     "python-dateutil",
     "pyparsing",
