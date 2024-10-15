@@ -67,6 +67,7 @@ jobs:
 
             - name: Pytest coverage comment
               id: coverageComment
+              if: github.event_name == 'push' && github.ref_name == 'main'
               uses: MishaKav/pytest-coverage-comment@main
               with:
                 pytest-xml-coverage-path: ./coverage_combined.xml
