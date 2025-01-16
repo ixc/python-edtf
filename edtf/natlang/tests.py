@@ -182,9 +182,9 @@ def test_natlang(input_text, expected_output):
     Verify that the conversion from text to EDTF format matches the expected output.
     """
     result = text_to_edtf(input_text)
-    assert (
-        result == expected_output
-    ), f"Failed for input: {input_text} - expected {expected_output}, got {result}"
+    assert result == expected_output, (
+        f"Failed for input: {input_text} - expected {expected_output}, got {result}"
+    )
 
 
 @pytest.mark.benchmark

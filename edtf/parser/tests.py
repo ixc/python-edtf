@@ -312,51 +312,51 @@ def test_edtf_examples(test_input, expected_tuple):
 
     # Unpack expected results based on their count
     if len(expected_tuple) == 1:
-        assert (
-            result_date == expected_tuple[0]
-        ), f"Expected {expected_tuple[0]}, got {result_date}"
+        assert result_date == expected_tuple[0], (
+            f"Expected {expected_tuple[0]}, got {result_date}"
+        )
     elif len(expected_tuple) == 2:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
-        assert (
-            result.lower_strict() == lower_strict
-        ), f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
-        assert (
-            result.upper_strict() == upper_strict
-        ), f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
+        assert result.lower_strict() == lower_strict, (
+            f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        )
+        assert result.upper_strict() == upper_strict, (
+            f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
+        )
     elif len(expected_tuple) == 3:
         strict_date = iso_to_struct_time(expected_tuple[0])
         lower_fuzzy = iso_to_struct_time(expected_tuple[1])
         upper_fuzzy = iso_to_struct_time(expected_tuple[2])
-        assert (
-            result.lower_strict() == strict_date
-        ), f"Lower strict date does not match. Expected {strict_date}, got {result.lower_strict()}"
-        assert (
-            result.upper_strict() == strict_date
-        ), f"Upper strict date does not match. Expected {strict_date}, got {result.upper_strict()}"
-        assert (
-            result.lower_fuzzy() == lower_fuzzy
-        ), f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
-        assert (
-            result.upper_fuzzy() == upper_fuzzy
-        ), f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
+        assert result.lower_strict() == strict_date, (
+            f"Lower strict date does not match. Expected {strict_date}, got {result.lower_strict()}"
+        )
+        assert result.upper_strict() == strict_date, (
+            f"Upper strict date does not match. Expected {strict_date}, got {result.upper_strict()}"
+        )
+        assert result.lower_fuzzy() == lower_fuzzy, (
+            f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        )
+        assert result.upper_fuzzy() == upper_fuzzy, (
+            f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
+        )
     elif len(expected_tuple) == 4:
         lower_strict = iso_to_struct_time(expected_tuple[0])
         upper_strict = iso_to_struct_time(expected_tuple[1])
         lower_fuzzy = iso_to_struct_time(expected_tuple[2])
         upper_fuzzy = iso_to_struct_time(expected_tuple[3])
-        assert (
-            result.lower_strict() == lower_strict
-        ), f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
-        assert (
-            result.upper_strict() == upper_strict
-        ), f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
-        assert (
-            result.lower_fuzzy() == lower_fuzzy
-        ), f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
-        assert (
-            result.upper_fuzzy() == upper_fuzzy
-        ), f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
+        assert result.lower_strict() == lower_strict, (
+            f"Lower strict date does not match. Expected {lower_strict}, got {result.lower_strict()}"
+        )
+        assert result.upper_strict() == upper_strict, (
+            f"Upper strict date does not match. Expected {upper_strict}, got {result.upper_strict()}"
+        )
+        assert result.lower_fuzzy() == lower_fuzzy, (
+            f"Lower fuzzy date does not match. Expected {lower_fuzzy}, got {result.lower_fuzzy()}"
+        )
+        assert result.upper_fuzzy() == upper_fuzzy, (
+            f"Upper fuzzy date does not match. Expected {upper_fuzzy}, got {result.upper_fuzzy()}"
+        )
 
 
 @pytest.mark.parametrize("bad_input", BAD_EXAMPLES)
