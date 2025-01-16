@@ -1,6 +1,5 @@
 """Utilities to derive an EDTF string from an (English) natural language string."""
 
-import functools
 import re
 from datetime import datetime
 from typing import Optional
@@ -52,7 +51,7 @@ MENTIONS_DAY = re.compile(r"\bday\b.+(in|during)\b")
 REJECT_RULES = re.compile(r".*dynasty.*")  # Don't parse '23rd Dynasty' to 'uuuu-uu-23'
 
 
-@functools.lru_cache
+# @functools.lru_cache
 def text_to_edtf(text: str) -> Optional[str]:
     """
     Generate EDTF string equivalent of a given natural language date string.
@@ -133,7 +132,7 @@ def text_to_edtf(text: str) -> Optional[str]:
     return result
 
 
-@functools.lru_cache
+# @functools.lru_cache
 def text_to_edtf_date(text: str) -> Optional[str]:
     """
     Return EDTF string equivalent of a given natural language date string.
