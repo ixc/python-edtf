@@ -171,7 +171,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
     # detect CE/BCE year form
     is_ce = re.findall(CE_RE, t)
     if is_century:
-        result = "%02dXX" % (int(is_century[0][0]) - 1,)
+        result = f"{int(is_century[0][0]) - 1:02d}XX"
         is_approximate = is_approximate or re.findall(APPROX_CENTURY_RE, t)
         is_uncertain = is_uncertain or re.findall(UNCERTAIN_CENTURY_RE, t)
 
@@ -182,7 +182,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
             pass
 
     elif is_ce:
-        result = "%04d" % (int(is_ce[0][0]))
+        result = f"{int(is_ce[0][0]):04d}"
         is_approximate = is_approximate or re.findall(APPROX_CE_RE, t)
         is_uncertain = is_uncertain or re.findall(UNCERTAIN_CE_RE, t)
 

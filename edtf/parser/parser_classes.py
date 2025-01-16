@@ -304,11 +304,7 @@ class Date(EDTFObject):
         return r
 
     def isoformat(self, default=date.max):
-        return "%s-%02d-%02d" % (
-            self._year,
-            int(self._month or default.month),
-            int(self._day or default.day),
-        )
+        return f"{self._year}-{int(self._month or default.month):02d}-{int(self._day or default.day):02d}"
 
     def lower_fuzzy(self):
         if not hasattr(self, "significant_digits") or not self.significant_digits:
