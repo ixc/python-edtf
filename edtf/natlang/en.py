@@ -230,7 +230,7 @@ def text_to_edtf_date(text: str) -> Optional[str]:
         mentions_month = re.findall(MENTIONS_MONTH, t)
         mentions_day = re.findall(MENTIONS_DAY, t)
 
-        for i in range(len(date1)):
+        for i, char in enumerate(date1):
             # if the given year could be a century (e.g. '1800s') then use
             # approximate/uncertain markers to decide whether we treat it as
             # a century or a decade.
@@ -241,10 +241,10 @@ def text_to_edtf_date(text: str) -> Optional[str]:
                     result += "X"  # year precision
                 else:
                     result += "X"  # decade precision
-            elif date1[i] == date2[i]:
+            elif char == date2[i]:
                 # since both attempts at parsing produced the same result
                 # it must be parsed value, not a default
-                result += date1[i]
+                result += char
             else:
                 # different values were produced, meaning that it's likely
                 # a default. Use 'unspecified'
