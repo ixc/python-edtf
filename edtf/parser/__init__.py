@@ -1,5 +1,5 @@
 from .edtf_exceptions import EDTFParseException
-from .grammar import parse_edtf
+from .grammar import parse_edtf, validate_edtf
 from .parser_classes import (
     UA,
     Consecutives,
@@ -26,6 +26,7 @@ from .parser_classes import (
 
 __all__ = [
     "parse_edtf",
+    "validate_edtf",
     "EDTFParseException",
     "EDTFObject",
     "Date",
