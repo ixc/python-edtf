@@ -361,6 +361,6 @@ def parse_edtf(input_string, parse_all=True, fail_silently=False, debug=None):
         raise EDTFParseException(input_string, err) from None
 
 
-def validate_edtf(input_string: str) -> bool:
+def is_valid_edtf(input_string: str) -> bool:
     """Returns True if the input string was successfully parsed; False if it isn't."""
     return parse_edtf(input_string, fail_silently=True) is not None
