@@ -8,7 +8,7 @@ dependencies = [
     "pyparsing",
 ]
 description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
     { name = "The Interaction Consortium", email = "studio@interaction.net.au"},
@@ -111,7 +111,7 @@ exclude_lines = [
 
 [tool.ruff]
 # Python 3.8
-target-version = "py38"
+target-version = "py311"
 
 extend-exclude = [
     '**/migrations/*',

@@ -343,15 +343,16 @@ edtfParser = (
 )
 
 
-def parse_edtf(input_string, parseAll=True, fail_silently=False, debug=None):
+def parse_edtf(input_string, parse_all=True, fail_silently=False, debug=None):
     if debug is None:
         debug = DEBUG_PYPARSING
     if not input_string:
         raise EDTFParseException(input_string)
     try:
-        p = edtfParser.parseString(input_string.strip(), parseAll)
+        p = edtfParser.parseString(input_string.strip(), parse_all)
         if p:
             return p[0]
+        return None
     except ParseException as err:
         if fail_silently:
             return None

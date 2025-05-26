@@ -396,7 +396,7 @@ class datetime(dt.datetime):
 
             return jd_to_datetime(combined)
 
-        elif isinstance(other, (datetime, dt.datetime)):
+        elif isinstance(other, datetime | dt.datetime):
             diff = datetime_to_jd(self) - datetime_to_jd(other)
 
             return dt.timedelta(diff)
@@ -407,7 +407,7 @@ class datetime(dt.datetime):
             raise TypeError(s)
 
     def __rsub__(self, other):
-        if not isinstance(other, (datetime, dt.datetime)):
+        if not isinstance(other, datetime | dt.datetime):
             s = "jdutil.datetime supports '-' with: "
             s += "jdutil.datetime and datetime.datetime"
             raise TypeError(s)

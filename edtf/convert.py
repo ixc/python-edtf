@@ -21,7 +21,7 @@ def old_specs_to_new_specs_expression(expression):
     return expression
 
 
-def dt_to_struct_time(dt):
+def dt_to_struct_time(dt) -> struct_time:
     """
     Convert a `datetime.date` or `datetime.datetime` to a `struct_time`
     representation *with zero values* for data fields that we cannot always

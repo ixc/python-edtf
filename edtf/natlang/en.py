@@ -3,7 +3,6 @@
 import functools
 import re
 from datetime import datetime
-from typing import Optional
 
 from dateutil.parser import ParserError, parse
 
@@ -53,7 +52,7 @@ REJECT_RULES = re.compile(r".*dynasty.*")  # Don't parse '23rd Dynasty' to 'uuuu
 
 
 @functools.lru_cache
-def text_to_edtf(text: str) -> Optional[str]:
+def text_to_edtf(text: str) -> str | None:
     """
     Generate EDTF string equivalent of a given natural language date string.
     """
@@ -63,7 +62,7 @@ def text_to_edtf(text: str) -> Optional[str]:
     t = text.lower()
 
     # try parsing the whole thing
-    result: Optional[str] = text_to_edtf_date(t)
+    result: str | None = text_to_edtf_date(t)
 
     if not result:
         # split by list delims and move fwd with the first thing that returns a non-empty string.
@@ -134,7 +133,7 @@ def text_to_edtf(text: str) -> Optional[str]:
 
 
 @functools.lru_cache
-def text_to_edtf_date(text: str) -> Optional[str]:
+def text_to_edtf_date(text: str) -> str | None:
     """
     Return EDTF string equivalent of a given natural language date string.
 
@@ -215,9 +214,9 @@ def text_to_edtf_date(text: str) -> Optional[str]:
             )
 
         except ParserError:
-            return
+            return None
         except Exception:
-            return
+            return None
 
         if dt1.date() == DEFAULT_DATE_1.date() and dt2.date() == DEFAULT_DATE_2.date():
             # couldn't parse anything - defaults are untouched.
