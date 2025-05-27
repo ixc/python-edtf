@@ -1,6 +1,5 @@
 import calendar
 import math
-import re
 from collections.abc import Callable
 from datetime import date, datetime
 from operator import add, sub
@@ -123,7 +122,7 @@ class EDTFObject:
     def __repr__(self) -> str:
         return f"{type(self).__name__}: '{str(self)}'"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         message: str = f"{type(self).__name__}.__init__(*{args}, **{kwargs})"
         raise NotImplementedError(f"{message} is not implemented.")
 
@@ -143,7 +142,7 @@ class EDTFObject:
         """
         Subclasses should override this to pad based on how precise they are.
         """
-        return relativedelta(0)
+        return relativedelta(None)
 
     def get_is_approximate(self) -> bool:
         return getattr(self, "_is_approximate", False)
@@ -269,7 +268,7 @@ class Date(EDTFObject):
             int(significant_digits) if significant_digits else None
         )
 
-    def set_year(self, y: str):
+    def set_year(self, y: str | None):
         if y is None:
             raise AttributeError("Year must not be None")
         self._year = y
@@ -300,10 +299,10 @@ class Date(EDTFObject):
     day = property(get_day, set_day)  # noqa
 
     def __str__(self) -> str:
-        r = self._year
-        if self._month:
+        r = f"{self._year}"
+        if self._month is not None:
             r += f"-{self._month}"
-            if self._day:
+            if self._day is not None:
                 r += f"-{self._day}"
         if self.significant_digits:
             r += f"S{self.significant_digits}"
@@ -318,10 +317,11 @@ class Date(EDTFObject):
                 sub, self.lower_strict(), self._get_fuzzy_padding(EARLIEST)
             )
 
-        total_digits = len(self._year)
-        insignificant_digits = total_digits - self.significant_digits
-        lower_year = (
-            int(self._year) // (10**insignificant_digits) * (10**insignificant_digits)
+        total_digits: int = len(self._year) if self._year else 0
+        i_year: int = int(self._year) if self._year else 0
+        insignificant_digits: int = total_digits - self.significant_digits
+        lower_year: int = (
+            i_year // (10**insignificant_digits) * (10**insignificant_digits)
         )
         return struct_time([lower_year, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
@@ -331,18 +331,25 @@ class Date(EDTFObject):
                 add, self.upper_strict(), self._get_fuzzy_padding(LATEST)
             )
 
-        total_digits: int = len(self._year)
+        total_digits: int = len(self._year) if self._year else 0
+        i_year: int = int(self._year) if self._year else 0
         insignificant_digits: int = total_digits - self.significant_digits
-        upper_year: int = (int(self._year) // (10**insignificant_digits) + 1) * (
+        upper_year: int = (i_year // (10**insignificant_digits) + 1) * (
             10**insignificant_digits
         ) - 1
         return struct_time([upper_year, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
     def _precise_year(self, lean: str) -> int:
         # Replace any ambiguous characters in the year string with 0s or 9s
+        if not self._year:
+            return 0
+
         if lean == EARLIEST:
-            return int(re.sub(r"X", r"0", self._year))
-        return int(re.sub(r"X", r"9", self._year))
+            rep = self._year.replace("X", "0")
+        else:
+            rep = self._year.replace("X", "9")
+
+        return int(rep)
 
     def _precise_month(self, lean: str) -> int:
         if self._month and self._month != "XX":
@@ -448,7 +455,7 @@ class UA(EDTFObject):
         args = toks.asList()
         return cls(*args)
 
-    def __init__(self, *args):  # noqa: super() raises not implemented
+    def __init__(self, *args) -> None:  # noqa: super() raises not implemented
         if len(args) != 1:
             raise AssertionError("UA must have exactly one argument")
         ua = args[0]
@@ -944,7 +951,7 @@ class PartialUncertainOrApproximate(Date):
         redundant uncertainly modifiers e.g. (2006~)~ will get two sets of
         fuzziness.
         """
-        result = relativedelta(0)
+        result = relativedelta(None)
 
         if self.year_ua:
             result += (
@@ -1040,9 +1047,9 @@ class OneOfASet(EDTFObject):
         args = [t for t in toks.asList() if isinstance(t, EDTFObject)]
         return cls(*args)
 
-    def __str__(self):
-        repr: str = ", ".join([str(o) for o in self.objects])
-        return f"[{repr}]"
+    def __str__(self) -> str:
+        out: str = ", ".join([str(o) for o in self.objects])
+        return f"[{out}]"
 
     def _strict_date(self, lean: str = EARLIEST) -> float:
         strict_dates = [x._strict_date(lean) for x in self.objects]
@@ -1074,9 +1081,9 @@ class MultipleDates(EDTFObject):
         args = [t for t in toks.asList() if isinstance(t, EDTFObject)]
         return cls(*args)
 
-    def __str__(self):
-        repr: str = ", ".join([str(o) for o in self.objects])
-        return f"{{{repr}}}"
+    def __str__(self) -> str:
+        out: str = ", ".join([str(o) for o in self.objects])
+        return f"{{{out}}}"
 
     def _strict_date(self, lean: str = EARLIEST) -> float:
         if lean == LATEST:
