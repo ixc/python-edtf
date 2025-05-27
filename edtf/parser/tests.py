@@ -257,6 +257,18 @@ APPROXIMATE_UNCERTAIN_EXAMPLES = (
     ("2011-~06-~04", (False, True, False)),
     ("2004-06-~01/2004-06-~20", (False, True, False)),
     ("156X~", (False, True, False)),
+    ("?1945/1959", (True, False, False)),
+    ("?1945", (True, False, False)),
+    ("?1945-01", (True, False, False)),
+    ("?1945-01-01", (True, False, False)),
+    ("~1945/1959", (False, True, False)),
+    ("~1945", (False, True, False)),
+    ("~1945-01", (False, True, False)),
+    ("~1945-01-01", (False, True, False)),
+    ("%1945/1959", (False, False, True)),
+    ("%1945", (False, False, True)),
+    ("%1945-01", (False, False, True)),
+    ("%1945-01-01", (False, False, True)),
 )
 
 BAD_EXAMPLES = (
