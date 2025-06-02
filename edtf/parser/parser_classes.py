@@ -757,17 +757,17 @@ class Level1Interval(Interval):
 
 class LongYear(EDTFObject):
     def __init__(self, year: str, significant_digits: str | None = None):  # noqa
-        self.year = year
-        self.significant_digits = (
+        self.year: str = year
+        self.significant_digits: int | None = (
             int(significant_digits) if significant_digits else None
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.significant_digits:
             return f"Y{self.year}S{self.significant_digits}"
         return f"Y{self.year}"
 
-    def _precise_year(self):
+    def _precise_year(self) -> int:
         return int(self.year)
 
     def _strict_date(self, lean: str = EARLIEST) -> struct_time:
@@ -776,10 +776,10 @@ class LongYear(EDTFObject):
             return struct_time([py, 1, 1] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
         return struct_time([py, 12, 31] + TIME_EMPTY_TIME + TIME_EMPTY_EXTRAS)
 
-    def estimated(self):
+    def estimated(self) -> int:
         return self._precise_year()
 
-    def lower_fuzzy(self):
+    def lower_fuzzy(self) -> struct_time:
         full_year = self._precise_year()
         strict_val = self.lower_strict()
         if not self.significant_digits:
@@ -798,7 +798,7 @@ class LongYear(EDTFObject):
             self._get_fuzzy_padding(EARLIEST),
         )
 
-    def upper_fuzzy(self):
+    def upper_fuzzy(self) -> struct_time:
         full_year = self._precise_year()
         strict_val = self.upper_strict()
         if not self.significant_digits:
@@ -828,7 +828,7 @@ class Season(Date):
     def __str__(self) -> str:
         return f"{self.year}-{self.season}"
 
-    def _precise_month(self, lean):
+    def _precise_month(self, lean: str) -> int:
         rng = appsettings.SEASON_L2_MONTHS_RANGE[int(self.season)]
         if lean == EARLIEST:
             return rng[0]
@@ -881,13 +881,13 @@ class PartialUncertainOrApproximate(Date):
             season_ua,
             all_ua,
         ]
-        self.is_uncertain = any(
+        self.is_uncertain: bool = any(
             item.is_uncertain for item in uas if hasattr(item, "is_uncertain")
         )
-        self.is_approximate = any(
+        self.is_approximate: bool = any(
             item.is_approximate for item in uas if hasattr(item, "is_approximate")
         )
-        self.is_uncertain_and_approximate = any(
+        self.is_uncertain_and_approximate: bool = any(
             item.is_uncertain_and_approximate
             for item in uas
             if hasattr(item, "is_uncertain_and_approximate")
@@ -930,22 +930,22 @@ class PartialUncertainOrApproximate(Date):
 
     year = property(Date.get_year, set_year)  # noqa
 
-    def _precise_year(self, lean: str):
+    def _precise_year(self, lean: str) -> int:
         if self.season:
             return self.season._precise_year(lean)
         return super()._precise_year(lean)
 
-    def _precise_month(self, lean: str):
+    def _precise_month(self, lean: str) -> int:
         if self.season:
             return self.season._precise_month(lean)
         return super()._precise_month(lean)
 
-    def _precise_day(self, lean: str):
+    def _precise_day(self, lean: str) -> int:
         if self.season:
             return self.season._precise_day(lean)
         return super()._precise_day(lean)
 
-    def _get_fuzzy_padding(self, lean: str):
+    def _get_fuzzy_padding(self, lean: str) -> struct_time:
         """
         This is not a perfect interpretation as fuzziness is introduced for
         redundant uncertainly modifiers e.g. (2006~)~ will get two sets of
@@ -1024,17 +1024,17 @@ class Consecutives(Interval):
         else:
             self.upper = upper
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.lower or ''}..{self.upper or ''}"
 
 
 class EarlierConsecutives(Level1Interval):
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.lower}{self.upper}"
 
 
 class LaterConsecutives(Level1Interval):
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.lower}{self.upper}"
 
 
