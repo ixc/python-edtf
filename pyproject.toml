@@ -8,7 +8,7 @@ dependencies = [
     "pyparsing",
 ]
 description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
     { name = "The Interaction Consortium", email = "studio@interaction.net.au"},
