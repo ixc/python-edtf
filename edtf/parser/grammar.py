@@ -49,15 +49,15 @@ from edtf.parser.parser_classes import (
     Unspecified,
 )
 
-oneThru12 = oneOf(["%.2d" % i for i in range(1, 13)])
-oneThru13 = oneOf(["%.2d" % i for i in range(1, 14)])
-oneThru23 = oneOf(["%.2d" % i for i in range(1, 24)])
-zeroThru23 = oneOf(["%.2d" % i for i in range(0, 24)])
-oneThru29 = oneOf(["%.2d" % i for i in range(1, 30)])
-oneThru30 = oneOf(["%.2d" % i for i in range(1, 31)])
-oneThru31 = oneOf(["%.2d" % i for i in range(1, 32)])
-oneThru59 = oneOf(["%.2d" % i for i in range(1, 60)])
-zeroThru59 = oneOf(["%.2d" % i for i in range(0, 60)])
+oneThru12 = oneOf([f"{i:02}" for i in range(1, 13)])
+oneThru13 = oneOf([f"{i:02}" for i in range(1, 14)])
+oneThru23 = oneOf([f"{i:02}" for i in range(1, 24)])
+zeroThru23 = oneOf([f"{i:02}" for i in range(0, 24)])
+oneThru29 = oneOf([f"{i:02}" for i in range(1, 30)])
+oneThru30 = oneOf([f"{i:02}" for i in range(1, 31)])
+oneThru31 = oneOf([f"{i:02}" for i in range(1, 32)])
+oneThru59 = oneOf([f"{i:02}" for i in range(1, 60)])
+zeroThru59 = oneOf([f"{i:02}" for i in range(0, 60)])
 
 digit = Word(nums, exact=1)
 positiveDigit = Word(nums, exact=1, excludeChars="0")
@@ -343,18 +343,31 @@ edtfParser = (
 )
 
 
-def parse_edtf(input_string, parseAll=True, fail_silently=False, debug=None):
+def parse_edtf(
+    input_string: str,
+    parse_all: bool = True,
+    fail_silently: bool = False,
+    debug: bool | None = None,
+):
     if debug is None:
         debug = DEBUG_PYPARSING
+
     if not input_string:
         raise EDTFParseException(input_string)
+
     try:
-        p = edtfParser.parseString(input_string.strip(), parseAll)
+        p = edtfParser.parse_string(input_string.strip(), parse_all)
         if p:
             return p[0]
+        return None
     except ParseException as err:
         if fail_silently:
             return None
         if debug:
             raise
         raise EDTFParseException(input_string, err) from None
+
+
+def is_valid_edtf(input_string: str) -> bool:
+    """Returns True if the input string was successfully parsed; False if it isn't."""
+    return parse_edtf(input_string, fail_silently=True) is not None

@@ -12,7 +12,7 @@ try:
 except ImportError:
     EDTF = {}
 
-SEASON_MONTHS_RANGE = EDTF.get(
+SEASON_MONTHS_RANGE: dict[int, list[int]] = EDTF.get(
     "SEASON_MONTHS_RANGE",
     {
         # season id: [earliest_month, last_month]
@@ -27,7 +27,7 @@ SEASON_MONTHS_RANGE = EDTF.get(
     },
 )
 
-SEASON_L2_MONTHS_RANGE = EDTF.get(
+SEASON_L2_MONTHS_RANGE: dict[int, list[int]] = EDTF.get(
     "SEASON_L2_MONTHS_RANGE",
     {
         # season id: [earliest_month, last_month]
@@ -67,9 +67,9 @@ SEASON_L2_MONTHS_RANGE = EDTF.get(
     },
 )
 
-DAY_FIRST = EDTF.get("DAY_FIRST", False)  # Americans!
+DAY_FIRST: bool = EDTF.get("DAY_FIRST", False)  # Americans!
 
-SEASONS = EDTF.get(
+SEASONS: dict[int, str] = EDTF.get(
     "SEASONS",
     {
         21: "spring",
@@ -78,25 +78,38 @@ SEASONS = EDTF.get(
         24: "winter",
     },
 )
-INVERSE_SEASONS = EDTF.get("INVERSE_SEASONS", {v: k for k, v in SEASONS.items()})
+INVERSE_SEASONS: dict[str, int] = EDTF.get(
+    "INVERSE_SEASONS", {v: k for k, v in SEASONS.items()}
+)
 # also need to interpret `fall`
 INVERSE_SEASONS["fall"] = 23
 
 # changing these will break tests
-PADDING_DAY_PRECISION = EDTF.get("PADDING_DAY_PRECISION", relativedelta(days=1))
-PADDING_MONTH_PRECISION = EDTF.get("PADDING_MONTH_PRECISION", relativedelta(months=1))
-PADDING_YEAR_PRECISION = EDTF.get("PADDING_YEAR_PRECISION", relativedelta(years=1))
-PADDING_SEASON_PRECISION = EDTF.get("PADDING_SEASON_PRECISION", relativedelta(weeks=12))
-PADDING_DECADE_PRECISION = EDTF.get("PADDING_DECADE_PRECISION", relativedelta(years=10))
-PADDING_CENTURY_PRECISION = EDTF.get(
+PADDING_DAY_PRECISION: relativedelta = EDTF.get(
+    "PADDING_DAY_PRECISION", relativedelta(days=1)
+)
+PADDING_MONTH_PRECISION: relativedelta = EDTF.get(
+    "PADDING_MONTH_PRECISION", relativedelta(months=1)
+)
+PADDING_YEAR_PRECISION: relativedelta = EDTF.get(
+    "PADDING_YEAR_PRECISION", relativedelta(years=1)
+)
+PADDING_SEASON_PRECISION: relativedelta = EDTF.get(
+    "PADDING_SEASON_PRECISION", relativedelta(weeks=12)
+)
+PADDING_DECADE_PRECISION: relativedelta = EDTF.get(
+    "PADDING_DECADE_PRECISION", relativedelta(years=10)
+)
+PADDING_CENTURY_PRECISION: relativedelta = EDTF.get(
     "PADDING_CENTURY_PRECISION", relativedelta(years=100)
 )
-PADDING_MILLENNIUM_PRECISION = EDTF.get(
+PADDING_MILLENNIUM_PRECISION: relativedelta = EDTF.get(
     "PADDING_MILLENNIUM_PRECISION", relativedelta(years=1000)
 )
-MULTIPLIER_IF_UNCERTAIN = EDTF.get("MULTIPLIER_IF_UNCERTAIN", 1.0)
-MULTIPLIER_IF_APPROXIMATE = EDTF.get("MULTIPLIER_IF_APPROXIMATE", 1.0)
-MULTIPLIER_IF_BOTH = EDTF.get("MULTIPLIER_IF_BOTH", 2.0)
-DELTA_IF_UNKNOWN = EDTF.get("DELTA_IF_UNKNOWN", relativedelta(years=10))
+MULTIPLIER_IF_UNCERTAIN: float = EDTF.get("MULTIPLIER_IF_UNCERTAIN", 1.0)
+MULTIPLIER_IF_APPROXIMATE: float = EDTF.get("MULTIPLIER_IF_APPROXIMATE", 1.0)
+MULTIPLIER_IF_BOTH: float = EDTF.get("MULTIPLIER_IF_BOTH", 2.0)
+DELTA_IF_UNKNOWN: relativedelta = EDTF.get("DELTA_IF_UNKNOWN", relativedelta(years=10))
+DELTA_IF_EMPTY: relativedelta = relativedelta(None)
 
-DEBUG_PYPARSING = False
+DEBUG_PYPARSING: bool = False

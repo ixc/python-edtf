@@ -22,6 +22,7 @@ from edtf.parser import (
     UncertainOrApproximate,
     Unspecified,
     UnspecifiedIntervalSection,
+    is_valid_edtf,
     parse_edtf,
 )
 
@@ -46,6 +47,7 @@ __all__ = [
     "trim_struct_time",
     "text_to_edtf",
     "parse_edtf",
+    "is_valid_edtf",
     # parser_exceptions
     "EDTFParseException",
     # parser_classes

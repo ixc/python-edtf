@@ -64,3 +64,5 @@ docs/_build/
 
 # PyBuilder
 target/
+.idea
+.DS_Store
