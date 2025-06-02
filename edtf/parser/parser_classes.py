@@ -465,14 +465,13 @@ class UA(EDTFObject):
         self.is_uncertain_and_approximate: bool = "%" in ua
 
     def __str__(self) -> str:
-        d: list = []
         if self.is_uncertain:
-            d.append("?")
-        if self.is_approximate:
-            d.append("~")
-        if self.is_uncertain_and_approximate:
-            d.append("%")
-        return "".join(d)
+            return "?"
+        elif self.is_approximate:
+            return "~"
+        elif self.is_uncertain_and_approximate:
+            return "%"
+        return ""
 
     def _get_multiplier(self) -> float | None:
         if self.is_uncertain_and_approximate:
