@@ -873,6 +873,7 @@ class PartialUncertainOrApproximate(Date):
 
         uas = [
             year_ua,
+            year_ua_b,
             month_ua,
             day_ua,
             year_month_ua,
@@ -901,7 +902,10 @@ class PartialUncertainOrApproximate(Date):
         else:
             y = f"{self.year_ua_b}{self.year}" if self.year_ua_b else str(self.year)
 
-        m = f"{self.month_ua}{self.month}" if self.month_ua else str(self.month)
+        if self.month:
+            m = f"{self.month_ua}{self.month}" if self.month_ua else str(self.month)
+        else:
+            m = None
 
         if self.day:
             d = f"{self.day_ua}{self.day}" if self.day_ua else str(self.day)
@@ -917,7 +921,12 @@ class PartialUncertainOrApproximate(Date):
             else:
                 result = f"{y}-({m}-{d}){self.month_day_ua}"
         else:
-            result = f"{y}-{m}-{d}" if d else f"{y}-{m}"
+            if d:
+                result = f"{y}-{m}-{d}"
+            elif m:
+                result = f"{y}-{m}"
+            else:
+                result = y
 
         if self.all_ua:
             result = f"({result}){self.all_ua}"

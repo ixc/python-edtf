@@ -1,13 +1,11 @@
 # python-edtf
 
 <!-- Pytest Coverage Comment:Begin -->
-<!-- Pytest Coverage Comment:End -->
+\n<!-- Pytest Coverage Comment:End -->
 
 An implementation of EDTF format in Python, together with utility functions for parsing natural language date texts, and converting EDTF dates to related Python `date` or `struct_time` objects.
 
 See <http://www.loc.gov/standards/datetime/> for the final draft specification.
-
-This project is based on python-edtf and was developed to include the newest specification
 
 ## To install
 

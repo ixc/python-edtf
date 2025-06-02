@@ -2,6 +2,7 @@
 django>=4.2,<5.0
 pytest
 pytest-benchmark
+pytest-cov
 pytest-django
 ruff
 pre-commit
