@@ -26,8 +26,8 @@ UncertainOrApproximate: '1979-08~'
 
 # normalised string representation (some different EDTF strings have identical meanings)
 >>>
->>> unicode(e)
-u'1979-08~'
+>>> str(e)
+'1979-08~'
 
 # Derive Python date objects
 
@@ -446,7 +446,7 @@ False
 
 ### Comparisons
 
-Two EDTF dates are considered equal if their `unicode()` representations are the same. An EDTF date is considered greater than another if its `lower_strict` value is later.
+Two EDTF dates are considered equal if their `str()` representations are the same. An EDTF date is considered greater than another if its `lower_strict` value is later.
 
 ## Django ORM field
 
