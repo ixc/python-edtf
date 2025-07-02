@@ -91,7 +91,7 @@ Level2Season
 ExponentialYear
 ```
 
-All of these implement `upper/lower_strict/fuzzy()` methods to derive `struct_time` objects, except of UnspecifiedIntervalSection, that can also return math.inf value
+All of these implement `upper_strict()/lower_strict()/fuzzy()` methods to derive `struct_time` objects, except of UnspecifiedIntervalSection, that can also return math.inf value
 
 The `*Interval` instances have `upper` and `lower` properties that are themselves `EDTFObject` instances.
 
