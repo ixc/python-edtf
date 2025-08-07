@@ -8,6 +8,7 @@ from functools import update_wrapper
 from logging import warning
 from traceback import extract_stack
 
+
 def remapparams(**remap):
     '''
     Remap the specified named parameters.
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     def parser(s, parse_all=True):
         pass
 
-    assert parser.__name__ == 'parser'
+    assert parser.__name__ == 'parser' # noqa: S101
     parser('foo')
     # this should not warn
     parser('foo', parse_all=False)
@@ -77,7 +78,9 @@ if __name__ == '__main__':
     except ValueError:
         pass
     else:
-        assert False, "expected ValueError because of duplicated parameters"
+        raise AssertionError(
+            "expected ValueError because of duplicated parameters"
+        )
 
     try:
         @remapparams()
@@ -86,7 +89,9 @@ if __name__ == '__main__':
     except ValueError:
         pass
     else:
-        assert False, "expected ValueError from @remapparams() because no remappings"
+        raise AssertionError(
+            "expected ValueError from @remapparams() because no remappings"
+        )
     try:
         @remapparams(p1='p2', p2='p3')
         def no_remappings():
@@ -94,4 +99,6 @@ if __name__ == '__main__':
     except ValueError:
         pass
     else:
-        assert False, "expected ValueError from @remapparams() because p1 remaps to another remapped parameter"
+        raise AssertionError(
+            "expected ValueError from @remapparams() because p1 remaps to another remapped parameter"
+        )
