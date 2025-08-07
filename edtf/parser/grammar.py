@@ -344,7 +344,7 @@ edtfParser = (
 )
 
 
-@remapparams(parseAll='parse_all')
+@remapparams(parseAll="parse_all")
 def parse_edtf(
     input_string: str,
     parse_all: bool = True,
