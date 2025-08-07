@@ -4,6 +4,7 @@ from datetime import date, datetime
 from time import struct_time
 
 from edtf import convert
+from edtf.utils import remapparams
 
 
 def test_dt_to_struct_time_for_datetime():
@@ -107,3 +108,46 @@ def test_roll_negative_time_fields():
     assert convert._roll_negative_time_fields(
         year, month, day, hour, minute, second
     ) == (-102, 5, 24, 21, 41, 47)
+
+def test_remapparams():
+
+    @remapparams(parseAll="parse_all")
+    def parser(s, parse_all=True):
+        pass
+
+    assert parser.__name__ == "parser"  # noqa: S101
+    parser("foo")
+    # this should not warn
+    parser("foo", parse_all=False)
+    # this should warn, but only once
+    for _ in 1, 2:
+        parser("foo", parseAll=False)
+    try:
+        parser("foo", parseAll=False, parse_all=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError because of duplicated parameters")
+
+    try:
+
+        @remapparams()
+        def no_remappings():
+            pass
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "expected ValueError from @remapparams() because no remappings"
+        )
+    try:
+
+        @remapparams(p1="p2", p2="p3")
+        def no_remappings():
+            pass
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "expected ValueError from @remapparams() because p1 remaps to another remapped parameter"
+        )
