@@ -4,7 +4,9 @@ from datetime import date, datetime
 from time import struct_time
 
 from edtf import convert
-from edtf.utils import remapparams
+from edtf.parser.edtf_exceptions import EDTFParseException
+from edtf.parser.grammar import parse_edtf
+from edtf.util import remapparams
 
 
 def test_dt_to_struct_time_for_datetime():
@@ -151,3 +153,31 @@ def test_remapparams():
         raise AssertionError(
             "expected ValueError from @remapparams() because p1 remaps to another remapped parameter"
         )
+
+def test_remapparams_parse_edtf():
+    edtf_s = '2005-09-24T10:00:00' # ISO8601 example from the EDTF spec
+    dat = parse_edtf(edtf_s) # implicit parse_all=True
+    assert dat.isoformat() == edtf_s
+    assert parse_edtf(edtf_s, parse_all=True).isoformat() == edtf_s
+    assert parse_edtf(edtf_s, parseAll=True).isoformat() == edtf_s
+    assert parse_edtf(f'{edtf_s} SNORT', parse_all=False).isoformat() == edtf_s
+    assert parse_edtf(f'{edtf_s} SNORT', parseAll=False).isoformat() == edtf_s
+    # make sure parse_all=True fails the SNORT parse
+    try:
+        parse_edtf(f'{edtf_s} SNORT')
+    except EDTFParseException:
+        pass
+    else:
+        raise AssertionError('expected EDTFParseException')
+    try:
+        parse_edtf(f'{edtf_s} SNORT', parse_all=True)
+    except EDTFParseException:
+        pass
+    else:
+        raise AssertionError('expected EDTFParseException')
+    try:
+        parse_edtf(f'{edtf_s} SNORT', parseAll=True)
+    except EDTFParseException:
+        pass
+    else:
+        raise AssertionError('expected EDTFParseException')
