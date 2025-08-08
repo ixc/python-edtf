@@ -111,8 +111,8 @@ def test_roll_negative_time_fields():
         year, month, day, hour, minute, second
     ) == (-102, 5, 24, 21, 41, 47)
 
-def test_remapparams():
 
+def test_remapparams():
     @remapparams(parseAll="parse_all")
     def parser(s, parse_all=True):
         pass
@@ -154,30 +154,31 @@ def test_remapparams():
             "expected ValueError from @remapparams() because p1 remaps to another remapped parameter"
         )
 
+
 def test_remapparams_parse_edtf():
-    edtf_s = '2005-09-24T10:00:00' # ISO8601 example from the EDTF spec
-    dat = parse_edtf(edtf_s) # implicit parse_all=True
+    edtf_s = "2005-09-24T10:00:00"  # ISO8601 example from the EDTF spec
+    dat = parse_edtf(edtf_s)  # implicit parse_all=True
     assert dat.isoformat() == edtf_s
     assert parse_edtf(edtf_s, parse_all=True).isoformat() == edtf_s
     assert parse_edtf(edtf_s, parseAll=True).isoformat() == edtf_s
-    assert parse_edtf(f'{edtf_s} SNORT', parse_all=False).isoformat() == edtf_s
-    assert parse_edtf(f'{edtf_s} SNORT', parseAll=False).isoformat() == edtf_s
+    assert parse_edtf(f"{edtf_s} SNORT", parse_all=False).isoformat() == edtf_s
+    assert parse_edtf(f"{edtf_s} SNORT", parseAll=False).isoformat() == edtf_s
     # make sure parse_all=True fails the SNORT parse
     try:
-        parse_edtf(f'{edtf_s} SNORT')
+        parse_edtf(f"{edtf_s} SNORT")
     except EDTFParseException:
         pass
     else:
-        raise AssertionError('expected EDTFParseException')
+        raise AssertionError("expected EDTFParseException")
     try:
-        parse_edtf(f'{edtf_s} SNORT', parse_all=True)
+        parse_edtf(f"{edtf_s} SNORT", parse_all=True)
     except EDTFParseException:
         pass
     else:
-        raise AssertionError('expected EDTFParseException')
+        raise AssertionError("expected EDTFParseException")
     try:
-        parse_edtf(f'{edtf_s} SNORT', parseAll=True)
+        parse_edtf(f"{edtf_s} SNORT", parseAll=True)
     except EDTFParseException:
         pass
     else:
-        raise AssertionError('expected EDTFParseException')
+        raise AssertionError("expected EDTFParseException")
