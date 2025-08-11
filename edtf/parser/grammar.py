@@ -5,6 +5,7 @@
 
 import pyparsing
 from edtf.appsettings import DEBUG_PYPARSING
+from edtf.util import remapparams
 
 pyparsing.ParserElement.enablePackrat()
 
@@ -343,6 +344,7 @@ edtfParser = (
 )
 
 
+@remapparams(parseAll="parse_all")
 def parse_edtf(
     input_string: str,
     parse_all: bool = True,
