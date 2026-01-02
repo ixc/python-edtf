@@ -104,7 +104,7 @@ class EDTFObject:
     @classmethod
     def set_parser(cls, p):
         cls.parser = p
-        p.addParseAction(cls.parse_action)
+        p.add_parse_action(cls.parse_action)
 
     @classmethod
     def parse_action(cls, toks):
@@ -117,7 +117,7 @@ class EDTFObject:
 
     @classmethod
     def parse(cls, s):
-        return cls.parser.parseString(s)[0]
+        return cls.parser.parse_string(s)[0]
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}: '{str(self)}'"
