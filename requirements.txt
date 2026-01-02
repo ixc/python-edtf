@@ -1,2 +1,2 @@
 python-dateutil
-pyparsing
+pyparsing >= 3.0.0
