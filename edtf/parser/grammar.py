@@ -7,8 +7,7 @@ import pyparsing
 from edtf.appsettings import DEBUG_PYPARSING
 from edtf.util import remapparams
 
-pyparsing.ParserElement.enablePackrat()
-
+pyparsing.ParserElement.enable_packrat()
 from pyparsing import (
     Combine,
     NotAny,
@@ -20,7 +19,7 @@ from pyparsing import (
     Word,
     ZeroOrMore,
     nums,
-    oneOf,
+    one_of,
 )
 from pyparsing import Literal as L
 
@@ -50,18 +49,18 @@ from edtf.parser.parser_classes import (
     Unspecified,
 )
 
-oneThru12 = oneOf([f"{i:02}" for i in range(1, 13)])
-oneThru13 = oneOf([f"{i:02}" for i in range(1, 14)])
-oneThru23 = oneOf([f"{i:02}" for i in range(1, 24)])
-zeroThru23 = oneOf([f"{i:02}" for i in range(0, 24)])
-oneThru29 = oneOf([f"{i:02}" for i in range(1, 30)])
-oneThru30 = oneOf([f"{i:02}" for i in range(1, 31)])
-oneThru31 = oneOf([f"{i:02}" for i in range(1, 32)])
-oneThru59 = oneOf([f"{i:02}" for i in range(1, 60)])
-zeroThru59 = oneOf([f"{i:02}" for i in range(0, 60)])
+oneThru12 = one_of([f"{i:02}" for i in range(1, 13)])
+oneThru13 = one_of([f"{i:02}" for i in range(1, 14)])
+oneThru23 = one_of([f"{i:02}" for i in range(1, 24)])
+zeroThru23 = one_of([f"{i:02}" for i in range(0, 24)])
+oneThru29 = one_of([f"{i:02}" for i in range(1, 30)])
+oneThru30 = one_of([f"{i:02}" for i in range(1, 31)])
+oneThru31 = one_of([f"{i:02}" for i in range(1, 32)])
+oneThru59 = one_of([f"{i:02}" for i in range(1, 60)])
+zeroThru59 = one_of([f"{i:02}" for i in range(0, 60)])
 
 digit = Word(nums, exact=1)
-positiveDigit = Word(nums, exact=1, excludeChars="0")
+positiveDigit = Word(nums, exact=1, exclude_chars="0")
 positiveInteger = Combine(positiveDigit + ZeroOrMore(digit))
 
 second = zeroThru59
@@ -71,8 +70,8 @@ day = oneThru31("day")
 
 month = oneThru12("month")
 monthDay = (
-    (oneOf("01 03 05 07 08 10 12")("month") + "-" + oneThru31("day"))
-    ^ (oneOf("04 06 09 11")("month") + "-" + oneThru30("day"))
+    (one_of("01 03 05 07 08 10 12")("month") + "-" + oneThru31("day"))
+    ^ (one_of("04 06 09 11")("month") + "-" + oneThru30("day"))
     ^ (L("02")("month") + "-" + oneThru29("day"))
 )
 
@@ -95,15 +94,15 @@ yearMonthDay = year + "-" + monthDay  # o hai iso date
 date = Combine(year ^ yearMonth ^ yearMonthDay)("date")
 Date.set_parser(date)
 
-zoneOffsetHour = oneThru13
-zoneOffset = L("Z") ^ (
+zone_offsetHour = oneThru13
+zone_offset = L("Z") ^ (
     Regex("[+-]")
-    + (zoneOffsetHour + Optional(":" + minute) ^ L("14:00") ^ ("00:" + oneThru59))
+    + (zone_offsetHour + Optional(":" + minute) ^ L("14:00") ^ ("00:" + oneThru59))
 )
 
 baseTime = Combine(hour + ":" + minute + ":" + second ^ "24:00:00")
 
-time = Combine(baseTime + Optional(zoneOffset))("time")
+time = Combine(baseTime + Optional(zone_offset))("time")
 
 dateAndTime = date + "T" + time
 DateAndTime.set_parser(dateAndTime)
@@ -117,10 +116,10 @@ level0Expression = date ^ dateAndTime ^ l0Interval
 # (* ************************** Level 1 *************************** *)
 
 # (* ** Auxiliary Assignments for Level 1 ** *)
-UASymbol = Combine(oneOf("? ~ %"))
+UASymbol = Combine(one_of("? ~ %"))
 UA.set_parser(UASymbol)
 
-seasonNumber = oneOf("21 22 23 24")
+seasonNumber = one_of("21 22 23 24")
 
 # (* *** Season (unqualified) *** *)
 season = year + "-" + seasonNumber("season")
@@ -153,9 +152,9 @@ def f(toks):
 
 
 l1Start = ".." ^ uaDateOrSeason
-l1Start.addParseAction(f)
+l1Start.add_parse_action(f)
 l1End = uaDateOrSeason ^ ".."
-l1End.addParseAction(f)
+l1End.add_parse_action(f)
 
 level1Interval = Optional(l1Start)("lower") + "/" + l1End("upper") ^ l1Start(
     "lower"
@@ -197,7 +196,7 @@ digitOrX = Word(nums + "X", exact=1)
 dayWithX = Combine(("X" + digitOrX) ^ (digitOrX + "X"))("day")
 
 # 2-digit month with at least one 'X' present
-monthWithX = Combine(oneOf("0X 1X") ^ ("X" + digitOrX))("month")
+monthWithX = Combine(one_of("0X 1X") ^ ("X" + digitOrX))("month")
 
 # 4-digit year with at least one 'X' present
 yearWithX = Combine(
@@ -301,8 +300,8 @@ listElement = (
     ^ consecutives
 )
 
-earlier = L("..").addParseAction(f)("lower") + date("upper").addParseAction(f)
-later = date("lower").addParseAction(f) + L("..").addParseAction(f)("upper")
+earlier = L("..").add_parse_action(f)("lower") + date("upper").add_parse_action(f)
+later = date("lower").add_parse_action(f) + L("..").add_parse_action(f)("upper")
 
 EarlierConsecutives.set_parser(earlier)
 LaterConsecutives.set_parser(later)
@@ -323,7 +322,9 @@ MultipleDates.set_parser(inclusiveList)
 
 
 # (* *** L2 Season *** *)
-seasonL2Number = oneOf("21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41")
+seasonL2Number = one_of(
+    "21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41"
+)
 l2season = year + "-" + seasonL2Number("season")
 Level2Season.set_parser(l2season)
 

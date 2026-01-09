@@ -5,7 +5,7 @@ license = { file = "LICENSE" }
 keywords = ['edtf']
 dependencies = [
     "python-dateutil",
-    "pyparsing",
+    "pyparsing>=3.0.0",
 ]
 description = "Python implementation of Library of Congress EDTF (Extended Date Time Format) specification"
 requires-python = ">=3.10"
