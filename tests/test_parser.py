@@ -179,11 +179,19 @@ EXAMPLES = (
     ("[1760-01, 1760-02, 1760-12..]", ("1760-01-01", "inf")),
     # Either the year 1667 or the month December of 1760.
     ("[1667, 1760-12]", ("1667-01-01", "1760-12-31")),
+    # November or December 1774 (consecutive months, #79)
+    ("[1774-11..1774-12]", ("1774-11-01", "1774-12-31")),
+    # One of the days from 30 July to 6 August 1785 (consecutive days, #79)
+    ("[1785-07-30..1785-08-06]", ("1785-07-30", "1785-08-06")),
+    # The year 1667 or one of the months March to May 1912
+    ("[1667, 1912-03..1912-05]", ("1667-01-01", "1912-05-31")),
     # Multiple Dates
     # All of the years 1667, 1668, 1670, 1671, 1672
     ("{1667,1668, 1670..1672}", ("1667-01-01", "1672-12-31")),
     # The year 1960 and the month December of 1961.
     ("{1960, 1961-12}", ("1960-01-01", "1961-12-31")),
+    # All of the months March to May 1912 (consecutive months, #79)
+    ("{1912-03..1912-05}", ("1912-03-01", "1912-05-31")),
     # Previously tested masked precision, now eliminated from the spec
     # A date during the 1960s
     ("196X", ("1960-01-01", "1969-12-31")),
