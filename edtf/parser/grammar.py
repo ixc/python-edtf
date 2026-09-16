@@ -284,8 +284,10 @@ Level2Interval.set_parser(level2Interval)
 
 # (* ** Inclusive list and choice list** *)
 consecutives = (
-    (yearMonthDay("lower") + ".." + yearMonthDay("upper"))
-    ^ (yearMonth("lower") + ".." + yearMonth("upper"))
+    # Combine so each bound reaches Consecutives as one string, e.g. "1912-03",
+    # rather than as the list of its parts.
+    (Combine(yearMonthDay)("lower") + ".." + Combine(yearMonthDay)("upper"))
+    ^ (Combine(yearMonth)("lower") + ".." + Combine(yearMonth)("upper"))
     ^ (
         year_basic("lower") + ".." + year_basic("upper")
     )  # using year_basic because some tests were throwing `'list' object has no attribute 'expandtabs'` - somewhere, pyparsing.parse_string() was being passed a list

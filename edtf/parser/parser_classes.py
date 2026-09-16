@@ -7,6 +7,7 @@ from time import struct_time
 from typing import Optional
 
 from dateutil.relativedelta import relativedelta
+from pyparsing import ParseResults
 
 from edtf import appsettings
 from edtf.convert import (
@@ -1021,6 +1022,17 @@ class PartialUnspecified(Unspecified):
 
 class Consecutives(Interval):
     # Treating Consecutive ranges as intervals where one bound is optional
+    @classmethod
+    def parse_action(cls, toks):
+        # Only the two bounds, each as its string. A month or day bound keeps
+        # the results names of its parts (year, month, day), so it arrives as
+        # a ParseResults holding the combined string, and those names are not
+        # arguments of __init__ (#79).
+        def bound(value):
+            return value[0] if isinstance(value, ParseResults) else value
+
+        return cls(lower=bound(toks.get("lower")), upper=bound(toks.get("upper")))
+
     def __init__(self, lower=None, upper=None):  # noqa
         if lower and not isinstance(lower, EDTFObject):
             self.lower = Date.parse(lower)
