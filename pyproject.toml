@@ -1,6 +1,6 @@
 [project]
 name = "edtf"
-version = "5.0.1"
+version = "5.0.2"
 license = { file = "LICENSE" }
 keywords = ['edtf']
 dependencies = [
@@ -20,6 +20,7 @@ authors = [
     { name = "Cole Crawford" },
     { name = "Klaus Rettinghaus" },
     { name = "Andrew Hankinson", email = "andrew.hankinson@rism.digital" },
+    { name = "Waldir Lisboa Rocha" },
 ]
 maintainers = [
     { name = "The Interaction Consortium", email = "studio@interaction.net.au" }
