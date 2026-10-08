@@ -43,7 +43,7 @@ classifiers = [
 
 [project.optional-dependencies]
 test = [
-    "django>=4.2,<5.0",
+    "django>=4.2,<6.0",
     "pytest",
     "pytest-django",
     "pytest-benchmark",

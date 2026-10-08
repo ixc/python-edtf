@@ -1,5 +1,5 @@
 -r requirements.txt  # Include all main requirements
-django>=4.2,<5.0
+django>=4.2,<6.0
 pytest
 pytest-benchmark
 pytest-cov
